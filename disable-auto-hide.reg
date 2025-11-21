@@ -1,0 +1,20 @@
+Windows Registry Editor Version 5.00
+
+; ============================================================================
+; Windows 11 - Restore Default System Tray Icon Behavior
+; ============================================================================
+; Author: Mikhail Deynekin (mid1977@gmail.com)
+; Website: https://deynekin.com
+; Description: This registry file restores Windows 11 default behavior for
+;              system tray icons (auto-hide inactive icons).
+; 
+; This is the REVERT script for enable-all-tray-icons.reg
+; ============================================================================
+
+; Enable automatic hiding of system tray icons (Windows default)
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer]
+"EnableAutoTray"=dword:00000001
+
+; ============================================================================
+; After applying, restart Windows Explorer or log off/log on for full effect
+; ============================================================================
