@@ -9,14 +9,15 @@
     Author: Mikhail Deynekin (mid1977@gmail.com)
     Website: https://deynekin.com
     Repository: https://github.com/paulmann/windows-show-all-tray-icons
-    Version: 3.2 (Enterprise Edition)
+    Version: 3.3 (Enterprise Edition)
 
 .PARAMETER Action
     Specifies the action to perform:
     - 'Enable'  : Show all system tray icons (disable auto-hide) [Value: 0]
     - 'Disable' : Restore Windows default behavior (enable auto-hide) [Value: 1]
     - 'Status'  : Check current configuration without making changes
-    - 'Rollback': Revert to previous configuration if available
+    - 'Rollback': Revert to previous configuration if backup exists
+    - 'Backup'  : Create registry backup without making changes
 
 .PARAMETER RestartExplorer
     If specified, automatically restarts Windows Explorer to apply changes immediately.
@@ -55,6 +56,10 @@
     Displays comprehensive system status.
 
 .EXAMPLE
+    .\Enable-AllTrayIcons.ps1 -Action Backup
+    Creates registry backup without making changes.
+
+.EXAMPLE
     .\Enable-AllTrayIcons.ps1 -Action Rollback
     Reverts to previous configuration if backup exists.
 
@@ -67,7 +72,7 @@
     Displays detailed help information.
 
 .NOTES
-    Version:        3.2 (Enterprise Edition)
+    Version:        3.3 (Enterprise Edition)
     Creation Date:  2025-11-21
     Last Updated:   2025-11-21
     Compatibility:  Windows 10 (All versions), Windows 11 (All versions), Server 2019+
@@ -85,6 +90,7 @@
     - Auto-update functionality
     - Professional UI/UX design
     - PowerShell 7+ enhanced features
+    - Standalone backup functionality
 
 .LINK
     GitHub Repository: https://github.com/paulmann/windows-show-all-tray-icons
@@ -93,7 +99,7 @@
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
 param (
     [Parameter(Mandatory = $false, Position = 0)]
-    [ValidateSet('Enable', 'Disable', 'Status', 'Rollback')]
+    [ValidateSet('Enable', 'Disable', 'Status', 'Rollback', 'Backup')]
     [string]$Action,
 
     [Parameter(Mandatory = $false)]
@@ -127,7 +133,7 @@ $Script:Configuration = @{
     DisableValue = 1
     
     # Script Metadata
-    ScriptVersion = "3.2"
+    ScriptVersion = "3.3"
     ScriptAuthor = "Mikhail Deynekin (mid1977@gmail.com)"
     ScriptName = "Enable-AllTrayIcons.ps1"
     GitHubRepository = "https://github.com/paulmann/windows-show-all-tray-icons"
@@ -151,6 +157,7 @@ $Script:Configuration = @{
         PowerShellVersion = 4
         RollbackFailed = 5
         UpdateFailed = 6
+        BackupFailed = 7
     }
 }
 
@@ -229,15 +236,8 @@ function Write-ModernHeader {
         [string]$Title,
         
         [Parameter(Mandatory = $false)]
-        [string]$Subtitle = "",
-        
-        [Parameter(Mandatory = $false)]
-        [switch]$NoBanner
+        [string]$Subtitle = ""
     )
-    
-    if (-not $NoBanner) {
-        Show-ModernBanner
-    }
     
     Write-Host ""
     Write-Host "=" -NoNewline -ForegroundColor $Script:ConsoleColors.Primary
@@ -347,7 +347,9 @@ function Show-ModernHelp {
         Displays modern, comprehensive help information.
     #>
     
-    Write-ModernHeader "Windows System Tray Icons Configuration Tool" "v$($Script:Configuration.ScriptVersion)" -NoBanner
+    Show-ModernBanner
+    
+    Write-ModernHeader "Windows System Tray Icons Configuration Tool" "v$($Script:Configuration.ScriptVersion)"
     
     Write-EnhancedOutput "DESCRIPTION:" -Type Primary -Bold
     Write-EnhancedOutput "  Professional tool for managing system tray icon visibility in Windows 10/11." -Type Light
@@ -362,6 +364,7 @@ function Show-ModernHelp {
     Write-ModernCard "Show All Icons" ".\$($Script:Configuration.ScriptName) -Action Enable"
     Write-ModernCard "Restore Default" ".\$($Script:Configuration.ScriptName) -Action Disable"
     Write-ModernCard "Check Status" ".\$($Script:Configuration.ScriptName) -Action Status"
+    Write-ModernCard "Create Backup" ".\$($Script:Configuration.ScriptName) -Action Backup"
     Write-ModernCard "Update Script" ".\$($Script:Configuration.ScriptName) -Update"
     Write-ModernCard "Show Help" ".\$($Script:Configuration.ScriptName) -Help"
     Write-Host ""
@@ -370,6 +373,7 @@ function Show-ModernHelp {
     Write-ModernCard "-Action Enable" "Show all system tray icons"
     Write-ModernCard "-Action Disable" "Restore Windows default behavior"
     Write-ModernCard "-Action Status" "Display current configuration"
+    Write-ModernCard "-Action Backup" "Create registry backup"
     Write-ModernCard "-Action Rollback" "Revert to previous configuration"
     Write-Host ""
     
@@ -388,6 +392,9 @@ function Show-ModernHelp {
     Write-Host ""
     Write-Host "  .\$($Script:Configuration.ScriptName) -Action Status" -ForegroundColor $Script:ConsoleColors.Light
     Write-Host "    # Display current system configuration" -ForegroundColor $Script:ConsoleColors.Dark
+    Write-Host ""
+    Write-Host "  .\$($Script:Configuration.ScriptName) -Action Backup" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "    # Create registry backup without changes" -ForegroundColor $Script:ConsoleColors.Dark
     Write-Host ""
     Write-Host "  .\$($Script:Configuration.ScriptName) -Action Disable -BackupRegistry -Force" -ForegroundColor $Script:ConsoleColors.Light
     Write-Host "    # Restore defaults with backup, no prompts" -ForegroundColor $Script:ConsoleColors.Dark
@@ -414,7 +421,7 @@ function Show-ApplicationInfo {
         Displays brief application information.
     #>
     
-    Write-ModernHeader "Application Information" "v$($Script:Configuration.ScriptVersion)" -NoBanner
+    Write-ModernHeader "Application Information" "v$($Script:Configuration.ScriptVersion)"
     
     Write-ModernCard "Script Name" $Script:Configuration.ScriptName
     Write-ModernCard "Version" $Script:Configuration.ScriptVersion
@@ -426,6 +433,116 @@ function Show-ApplicationInfo {
     Write-Host ""
     Write-EnhancedOutput "Use '-Help' for detailed usage information." -Type Info
     Write-Host ""
+}
+
+# ============================================================================
+# ENHANCED BACKUP SYSTEM
+# ============================================================================
+
+function Backup-RegistryConfiguration {
+    <#
+    .SYNOPSIS
+        Creates registry backup for rollback capability.
+    #>
+    param(
+        [Parameter(Mandatory = $false)]
+        [switch]$Force
+    )
+    
+    try {
+        $backupPath = $Script:Configuration.BackupRegistryPath
+        
+        # Check if backup already exists
+        if (Test-Path $backupPath) {
+            if (-not $Force) {
+                Write-ModernStatus "Backup already exists: $backupPath" -Status Warning
+                Write-ModernStatus "Use -Force to overwrite existing backup" -Status Info
+                return $false
+            } else {
+                Write-ModernStatus "Overwriting existing backup..." -Status Warning
+            }
+        }
+        
+        $currentConfig = Get-CurrentTrayConfiguration
+        
+        $backupData = @{
+            Timestamp = Get-Date
+            OriginalValue = $currentConfig
+            RegistryPath = $Script:Configuration.RegistryPath
+            ValueName = $Script:Configuration.RegistryValue
+            ScriptVersion = $Script:Configuration.ScriptVersion
+            ComputerName = $env:COMPUTERNAME
+            UserName = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+        }
+        
+        $backupData | ConvertTo-Json | Out-File -FilePath $backupPath -Encoding UTF8
+        Write-ModernStatus "Registry configuration backed up to: $backupPath" -Status Success
+        
+        # Display backup information
+        Write-ModernCard "Backup Location" $backupPath
+        Write-ModernCard "Backup Time" $backupData.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")
+        Write-ModernCard "Original Value" $(if ($null -eq $currentConfig) { "Not Set (Default)" } else { $currentConfig })
+        
+        return $true
+    }
+    catch {
+        Write-ModernStatus "Failed to create registry backup: $($_.Exception.Message)" -Status Error
+        return $false
+    }
+}
+
+function Invoke-ConfigurationRollback {
+    <#
+    .SYNOPSIS
+        Restores previous configuration from backup.
+    #>
+    
+    $backupPath = $Script:Configuration.BackupRegistryPath
+    
+    if (-not (Test-Path $backupPath)) {
+        Write-ModernStatus "No backup found for rollback: $backupPath" -Status Error
+        return $false
+    }
+    
+    try {
+        $backupData = Get-Content -Path $backupPath -Raw | ConvertFrom-Json
+        $originalValue = $backupData.OriginalValue
+        
+        Write-ModernStatus "Attempting rollback to previous configuration..." -Status Info
+        
+        # Display backup information
+        Write-ModernCard "Backup Created" $backupData.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")
+        Write-ModernCard "Original Value" $(if ($null -eq $originalValue) { "Not Set (Default)" } else { $originalValue })
+        
+        if ($null -eq $originalValue) {
+            # Original value was not set (Windows default), so remove the registry value
+            Remove-ItemProperty -Path $Script:Configuration.RegistryPath `
+                               -Name $Script:Configuration.RegistryValue `
+                               -Force `
+                               -ErrorAction Stop
+            Write-ModernStatus "Restored Windows default behavior (registry value removed)" -Status Success
+        }
+        else {
+            # Restore original value
+            Set-ItemProperty -Path $Script:Configuration.RegistryPath `
+                           -Name $Script:Configuration.RegistryValue `
+                           -Value $originalValue `
+                           -Type DWord `
+                           -Force `
+                           -ErrorAction Stop
+            Write-ModernStatus "Restored original configuration: $originalValue" -Status Success
+        }
+        
+        # Remove backup file after successful rollback
+        Remove-Item -Path $backupPath -Force -ErrorAction SilentlyContinue
+        Write-ModernStatus "Backup file removed after successful rollback" -Status Info
+        
+        return $true
+    }
+    catch {
+        Write-ModernStatus "Rollback failed: $($_.Exception.Message)" -Status Error
+        return $false
+    }
 }
 
 # ============================================================================
@@ -475,14 +592,18 @@ function Invoke-ScriptUpdate {
             $currentScriptPath = $MyInvocation.MyCommand.Path
             $backupPath = "$currentScriptPath.backup"
             
-            # Create backup
-            Copy-Item -Path $currentScriptPath -Destination $backupPath -Force
+            # Create backup of current script (don't overwrite if exists)
+            if (-not (Test-Path $backupPath)) {
+                Copy-Item -Path $currentScriptPath -Destination $backupPath -Force
+                Write-ModernStatus "Script backup created: $backupPath" -Status Success
+            } else {
+                Write-ModernStatus "Script backup already exists, preserving: $backupPath" -Status Info
+            }
             
             # Write new version
             $latestScriptContent | Out-File -FilePath $currentScriptPath -Encoding UTF8
             
             Write-ModernStatus "Update completed successfully!" -Status Success
-            Write-ModernStatus "Backup created: $backupPath" -Status Info
             Write-ModernStatus "Please restart the script to use the new version." -Status Info
             
             return $true
@@ -555,7 +676,9 @@ function Show-EnhancedStatus {
     Write-ModernCard "Backup Available" $(if ($backupExists) { "Yes" } else { "No" }) -ValueColor $(if ($backupExists) { "Success" } else { "Info" })
     if ($backupExists) {
         $backupInfo = Get-Item $Script:Configuration.BackupRegistryPath
-        Write-ModernCard "Backup Created" $backupInfo.CreationTime.ToString("yyyy-MM-dd HH:mm")
+        $backupData = Get-Content -Path $Script:Configuration.BackupRegistryPath -Raw | ConvertFrom-Json
+        Write-ModernCard "Backup Created" $backupData.Timestamp.ToString("yyyy-MM-dd HH:mm")
+        Write-ModernCard "Backup Value" $(if ($null -eq $backupData.OriginalValue) { "Not Set (Default)" } else { $backupData.OriginalValue })
     }
     
     Write-Host ""
@@ -625,6 +748,14 @@ function Set-TrayIconConfiguration {
     )) {
         Write-ModernStatus "Operation cancelled by ShouldProcess" -Status Info
         return $false
+    }
+    
+    # Create backup if requested
+    if ($BackupRegistry) {
+        Write-ModernStatus "Creating registry backup before changes..." -Status Info
+        if (-not (Backup-RegistryConfiguration -Force:$Force)) {
+            Write-ModernStatus "Backup failed, but continuing with operation..." -Status Warning
+        }
     }
     
     try {
@@ -772,21 +903,27 @@ function Invoke-MainExecution {
         Enhanced main execution engine with better parameter handling.
     #>
     
-    # Show banner only for specific scenarios
+    # Show banner only once at the very beginning
     $showBanner = $true
     
-    # Handle update first (with banner)
+    # Handle update first
     if ($Update) {
-        Show-ModernBanner
+        if ($showBanner) {
+            Show-ModernBanner
+            $showBanner = $false
+        }
         $updateResult = Invoke-ScriptUpdate
         if ($updateResult) {
             exit $Script:Configuration.ExitCodes.Success
         }
-        $showBanner = $false
     }
     
     # Show help if requested
     if ($Help) {
+        if ($showBanner) {
+            Show-ModernBanner
+            $showBanner = $false
+        }
         Show-ModernHelp
         exit $Script:Configuration.ExitCodes.Success
     }
@@ -795,6 +932,7 @@ function Invoke-MainExecution {
     if (-not $Action -and -not $Update) {
         if ($showBanner) {
             Show-ModernBanner
+            $showBanner = $false
         }
         Show-ApplicationInfo
         exit $Script:Configuration.ExitCodes.Success
@@ -803,6 +941,7 @@ function Invoke-MainExecution {
     # Show banner for actions if not already shown
     if ($showBanner -and $Action) {
         Show-ModernBanner
+        $showBanner = $false
     }
     
     # Execute the requested action
@@ -811,8 +950,19 @@ function Invoke-MainExecution {
             Show-EnhancedStatus
         }
         
+        'backup' {
+            Write-ModernHeader "Create Registry Backup" "Saving current configuration"
+            
+            if (Backup-RegistryConfiguration -Force:$Force) {
+                Write-ModernStatus "Backup completed successfully!" -Status Success
+            } else {
+                $Script:Configuration.ExitCode = $Script:Configuration.ExitCodes.BackupFailed
+                Write-ModernStatus "Backup operation failed or was cancelled" -Status Error
+            }
+        }
+        
         'enable' {
-            Write-ModernHeader "Enable All Tray Icons" "Making all icons always visible" -NoBanner
+            Write-ModernHeader "Enable All Tray Icons" "Making all icons always visible"
             
             if (Set-TrayIconConfiguration -Behavior 'Enable') {
                 if ($RestartExplorer) {
@@ -830,7 +980,7 @@ function Invoke-MainExecution {
         }
         
         'disable' {
-            Write-ModernHeader "Restore Default Behavior" "Enabling auto-hide for tray icons" -NoBanner
+            Write-ModernHeader "Restore Default Behavior" "Enabling auto-hide for tray icons"
             
             if (Set-TrayIconConfiguration -Behavior 'Disable') {
                 if ($RestartExplorer) {
@@ -848,9 +998,22 @@ function Invoke-MainExecution {
         }
         
         'rollback' {
-            Write-ModernHeader "Configuration Rollback" "Reverting to previous settings" -NoBanner
-            Write-ModernStatus "Rollback feature requires backup file implementation" -Status Info
-            Write-ModernStatus "This feature will be available in future versions" -Status Warning
+            Write-ModernHeader "Configuration Rollback" "Reverting to previous settings"
+            
+            if (Invoke-ConfigurationRollback) {
+                if ($RestartExplorer) {
+                    Write-ModernStatus "Applying changes immediately..." -Status Processing
+                    $null = Restart-WindowsExplorerSafely
+                }
+                else {
+                    Write-ModernStatus "Rollback completed successfully!" -Status Success
+                    Write-ModernStatus "Restart Explorer or use -RestartExplorer to apply changes" -Status Info
+                }
+            }
+            else {
+                $Script:Configuration.ExitCode = $Script:Configuration.ExitCodes.RollbackFailed
+                Write-ModernStatus "Rollback operation failed" -Status Error
+            }
         }
     }
 }
