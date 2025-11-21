@@ -23,19 +23,19 @@
     Use with -Action Enable or -Action Disable for immediate effect.
 
 .EXAMPLE
-    .\\Enable-AllTrayIcons.ps1 -Action Enable
+    .\Enable-AllTrayIcons.ps1 -Action Enable
     Shows all system tray icons. Explorer restart required for effect.
 
 .EXAMPLE
-    .\\Enable-AllTrayIcons.ps1 -Action Enable -RestartExplorer
+    .\Enable-AllTrayIcons.ps1 -Action Enable -RestartExplorer
     Shows all icons and restarts Explorer immediately.
 
 .EXAMPLE
-    .\\Enable-AllTrayIcons.ps1 -Action Status
+    .\Enable-AllTrayIcons.ps1 -Action Status
     Displays current system tray icon configuration.
 
 .EXAMPLE
-    .\\Enable-AllTrayIcons.ps1 -Action Disable -RestartExplorer
+    .\Enable-AllTrayIcons.ps1 -Action Disable -RestartExplorer
     Restores Windows default auto-hide behavior.
 
 .NOTES
@@ -74,7 +74,7 @@ param (
 # GLOBAL CONFIGURATION
 # ============================================================================
 
-$script:RegistryPath = "HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer"
+$script:RegistryPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
 $script:RegistryValue = "EnableAutoTray"
 $script:RegistryValueTypeEnable = 0
 $script:RegistryValueTypeDisable = 1
@@ -123,22 +123,22 @@ function Write-ColorOutput {
     switch ($Type) {
         "Success" {
             Write-Host "[$timestamp] " -NoNewline -ForegroundColor Gray
-            Write-Host "[✓ SUCCESS] " -NoNewline -ForegroundColor $color
+            Write-Host "[OK SUCCESS] " -NoNewline -ForegroundColor $color
             Write-Host $Message -ForegroundColor White
         }
         "Error" {
             Write-Host "[$timestamp] " -NoNewline -ForegroundColor Gray
-            Write-Host "[✗ ERROR] " -NoNewline -ForegroundColor $color
+            Write-Host "[XX ERROR] " -NoNewline -ForegroundColor $color
             Write-Host $Message -ForegroundColor White
         }
         "Warning" {
             Write-Host "[$timestamp] " -NoNewline -ForegroundColor Gray
-            Write-Host "[⚠ WARNING] " -NoNewline -ForegroundColor $color
+            Write-Host "[!! WARNING] " -NoNewline -ForegroundColor $color
             Write-Host $Message -ForegroundColor White
         }
         "Info" {
             Write-Host "[$timestamp] " -NoNewline -ForegroundColor Gray
-            Write-Host "[ℹ INFO] " -NoNewline -ForegroundColor $color
+            Write-Host "[ii INFO] " -NoNewline -ForegroundColor $color
             Write-Host $Message -ForegroundColor White
         }
         "Header" {
@@ -149,7 +149,7 @@ function Write-ColorOutput {
             Write-Host ""
         }
         "Separator" {
-            Write-Host ("─" * 80) -ForegroundColor $color
+            Write-Host ("-" * 80) -ForegroundColor $color
         }
     }
 }
@@ -543,65 +543,7 @@ function Show-CurrentStatus {
     Write-Host $interactiveStatus -ForegroundColor $interactiveColor
     
     Write-Host ""
-    Write-Host ("─" * 80) -ForegroundColor Gray
-    Write-Host ""
-}
-
-function Show-Help {
-    <#
-    .SYNOPSIS
-        Displays comprehensive help and usage information.
-    #>
-    Write-Section "Windows Show All System Tray Icons - PowerShell Script"
-    
-    Write-Host "Script Version : " -NoNewline -ForegroundColor Cyan
-    Write-Host $script:ScriptVersion -ForegroundColor Yellow
-    Write-Host "Author         : " -NoNewline -ForegroundColor Cyan
-    Write-Host $script:ScriptAuthor -ForegroundColor Yellow
-    Write-Host "Repository     : " -NoNewline -ForegroundColor Cyan
-    Write-Host "https://github.com/paulmann/windows-show-all-tray-icons" -ForegroundColor Yellow
-    
-    Write-Host ""
-    Write-Host "USAGE:" -ForegroundColor Cyan
-    Write-Host "  .\Enable-AllTrayIcons.ps1 -Action <Enable|Disable|Status> [-RestartExplorer]"
-    
-    Write-Host ""
-    Write-Host "ACTIONS:" -ForegroundColor Cyan
-    Write-Host "  Enable       Show all system tray icons (disable auto-hide)"
-    Write-Host "  Disable      Restore Windows default (enable auto-hide)"
-    Write-Host "  Status       Display current configuration"
-    
-    Write-Host ""
-    Write-Host "OPTIONS:" -ForegroundColor Cyan
-    Write-Host "  -RestartExplorer    Automatically restart Windows Explorer"
-    Write-Host "  -WhatIf             Preview changes without applying"
-    
-    Write-Host ""
-    Write-Host "EXAMPLES:" -ForegroundColor Cyan
-    Write-Host "  # Enable all icons"
-    Write-Host "  .\Enable-AllTrayIcons.ps1 -Action Enable"
-    
-    Write-Host ""
-    Write-Host "  # Enable with immediate Explorer restart"
-    Write-Host "  .\Enable-AllTrayIcons.ps1 -Action Enable -RestartExplorer"
-    
-    Write-Host ""
-    Write-Host "  # Check current status"
-    Write-Host "  .\Enable-AllTrayIcons.ps1 -Action Status"
-    
-    Write-Host ""
-    Write-Host "  # Revert to Windows default"
-    Write-Host "  .\Enable-AllTrayIcons.ps1 -Action Disable -RestartExplorer"
-    
-    Write-Host ""
-    Write-Host "REQUIREMENTS:" -ForegroundColor Cyan
-    Write-Host "  • PowerShell 5.1 or higher"
-    Write-Host "  • Windows 10 or Windows 11"
-    Write-Host "  • Active user session (not SYSTEM)"
-    Write-Host "  • No administrator privileges required*"
-    
-    Write-Host ""
-    Write-Host "*Admin privileges optional: Standard users can apply via UAC prompt"
+    Write-ColorOutput "" -Type Separator
     Write-Host ""
 }
 
@@ -659,7 +601,7 @@ function Main {
             Write-ColorOutput "Configuring Windows to display all system tray icons..." -Type Info
             
             if ($PSCmdlet.ShouldProcess(
-                "Registry: $script:RegistryPath\\$script:RegistryValue",
+                "Registry: $script:RegistryPath\$script:RegistryValue",
                 "Set value to 0 (show all icons)"
             )) {
                 $success = Set-TrayIconConfiguration -Value $script:RegistryValueTypeEnable
@@ -682,9 +624,9 @@ function Main {
                     }
                     else {
                         Write-ColorOutput "To apply changes immediately, restart Windows Explorer:" -Type Warning
-                        Write-Host "  • Press Ctrl + Shift + Esc (Task Manager)"
-                        Write-Host "  • Find 'Windows Explorer' → Right-click → Restart"
-                        Write-Host "  • Or use: taskkill /f /im explorer.exe && start explorer.exe"
+                        Write-Host "  - Press Ctrl + Shift + Esc (Task Manager)"
+                        Write-Host "  - Find 'Windows Explorer' -> Right-click -> Restart"
+                        Write-Host "  - Or use: taskkill /f /im explorer.exe && start explorer.exe"
                         Write-Host ""
                         Write-ColorOutput "Use -RestartExplorer parameter to restart automatically" -Type Info
                     }
@@ -701,7 +643,7 @@ function Main {
             Write-ColorOutput "Configuring Windows to auto-hide system tray icons..." -Type Info
             
             if ($PSCmdlet.ShouldProcess(
-                "Registry: $script:RegistryPath\\$script:RegistryValue",
+                "Registry: $script:RegistryPath\$script:RegistryValue",
                 "Set value to 1 (auto-hide icons)"
             )) {
                 $success = Set-TrayIconConfiguration -Value $script:RegistryValueTypeDisable
@@ -724,9 +666,9 @@ function Main {
                     }
                     else {
                         Write-ColorOutput "To apply changes immediately, restart Windows Explorer:" -Type Warning
-                        Write-Host "  • Press Ctrl + Shift + Esc (Task Manager)"
-                        Write-Host "  • Find 'Windows Explorer' → Right-click → Restart"
-                        Write-Host "  • Or use: taskkill /f /im explorer.exe && start explorer.exe"
+                        Write-Host "  - Press Ctrl + Shift + Esc (Task Manager)"
+                        Write-Host "  - Find 'Windows Explorer' -> Right-click -> Restart"
+                        Write-Host "  - Or use: taskkill /f /im explorer.exe && start explorer.exe"
                         Write-Host ""
                         Write-ColorOutput "Use -RestartExplorer parameter to restart automatically" -Type Info
                     }
