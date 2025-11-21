@@ -1,0 +1,45 @@
+Windows Registry Editor Version 5.00
+
+; ============================================================================
+; Windows 11 - Enable All System Tray Icons
+; ============================================================================
+; Author: Mikhail Deynekin (mid1977@gmail.com)
+; Website: https://deynekin.com
+; Description: This registry file forces Windows 11 to display ALL notification
+;              area icons in the system tray, preventing auto-hide behavior.
+; 
+; Technical Details:
+; - Modifies HKEY_CURRENT_USER registry hive (per-user setting)
+; - Sets EnableAutoTray to 0 (disabled) to show all icons
+; - Changes take effect immediately after applying
+; - No system restart required
+; 
+; Compatibility:
+; - Windows 11 (all versions)
+; - Windows 10 (all versions)
+; 
+; Safety: This change is user-specific and can be easily reverted
+; ============================================================================
+
+; Disable automatic hiding of system tray icons
+; EnableAutoTray = 0 means "do NOT auto-hide icons" (show all)
+; EnableAutoTray = 1 means "auto-hide icons" (default Windows behavior)
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer]
+"EnableAutoTray"=dword:00000000
+
+; ============================================================================
+; NOTES:
+; ============================================================================
+; 1. After applying this registry change, you may need to restart Windows Explorer
+;    or log off/log on for changes to take full effect in some cases
+; 
+; 2. To restart Windows Explorer without logging off:
+;    - Press Ctrl+Shift+Esc to open Task Manager
+;    - Find "Windows Explorer" in the list
+;    - Right-click and select "Restart"
+; 
+; 3. Individual application icon visibility can still be managed in:
+;    Settings → Personalization → Taskbar → Other system tray icons
+; 
+; 4. To revert this change, set EnableAutoTray back to 1 (see disable script)
+; ============================================================================
