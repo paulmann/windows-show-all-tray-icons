@@ -1,53 +1,84 @@
 @echo off
-rem =====================================================================
-rem Windows 11/10 - Show All System Tray Icons (Enable AutoTray = 0)
-rem Professional BAT Script for System Administrators
-rem Author: Mikhail Deynekin (mid1977@gmail.com) | https://deynekin.com
-rem Version: 2.2 | Last Updated: 2025-11-21
-rem ---------------------------------------------------------------------
-rem This script disables automatic hiding of tray icons (EnableAutoTray=0)
-rem - Applies setting to current user (HKCU registry)
-rem - Restarts Explorer for immediate effect
-rem - Creates a backup of the registry key before changing
-rem =====================================================================
+REM ============================================================================
+REM  Windows 11/10 - SHOW ALL SYSTEM TRAY ICONS (EnableAutoTray=0)
+REM  Professional BAT Script for Modern System Administrators
+REM  Author: Mikhail Deynekin (mid1977@gmail.com) | https://deynekin.com
+REM  Repository: https://github.com/paulmann/windows-show-all-tray-icons
+REM  Version: 2.2 (Enterprise-ready, with error handling and backup)
+REM ============================================================================
 
-setlocal
+setlocal EnableDelayedExpansion
+
 set "KEY=HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
 set "VAL=EnableAutoTray"
-set "BACKUP=%TEMP%\trayicons_backup.reg"
+set "VREG=REG_DWORD"
+set "BACKUP=%TEMP%\trayicons_backup_%USERNAME%.reg"
+set "LOG=%TEMP%\EnableTrayIcons_%USERNAME%.log"
 
-echo [INFO] Backing up registry key...
+echo ==================================================
+echo   Show All System Tray Icons - Setup Script
+echo   Author: Mikhail Deynekin (mid1977@gmail.com)
+echo   Website: https://deynekin.com
+echo   Log: %LOG%
+echo ==================================================
+echo.
+
+:: --- Logging macro ---------------------------
+call :log "[INFO] Script start: %DATE% %TIME%" 
+:: --------------------------------------------
+
+:: Backup registry key for safety
+call :log "[INFO] Backing up registry key: %KEY%"
 reg export "%KEY%" "%BACKUP%" /y >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [WARNING] Registry backup was NOT successful - proceeding anyway.
+    call :log "[WARNING] Registry backup was NOT successful (may not exist yet)."
 ) else (
-    echo [SUCCESS] Backup created: %BACKUP%
+    call :log "[SUCCESS] Backup created: %BACKUP%"
 )
 
-echo [INFO] Setting %VAL% to 0 (Show ALL icons)...
-reg add "%KEY%" /v %VAL% /t REG_DWORD /d 0 /f >nul
+:: Set registry value
+call :log "[INFO] Setting %VAL% to 0 (Show ALL icons)..."
+reg add "%KEY%" /v "%VAL%" /t %VREG% /d 0 /f >nul
 if %errorlevel% neq 0 (
-    echo [ERROR] Failed to set registry value.
-    echo   Make sure you have rights to modify HKCU registry.
-    echo   Try running as administrator if you see errors.
-    goto :END
+    call :log "[ERROR] Failed to set registry value. Try running as administrator."
+    echo [ERROR] Could not set registry value. See log %LOG%
+    goto:END
 ) else (
-    echo [SUCCESS] %VAL% set to 0.
+    call :log "[SUCCESS] Registry value '%VAL%' set to 0."
 )
 
-rem Restart Windows Explorer for changes to take effect
-echo [INFO] Restarting Windows Explorer...
-taskkill /f /im explorer.exe >nul
+:: Restart Explorer (for effect)
+call :log "[INFO] Attempting to restart Windows Explorer."
+taskkill /f /im explorer.exe >nul 2>&1
 timeout /t 2 /nobreak >nul
 start explorer.exe
 if %errorlevel% neq 0 (
-    echo [WARNING] Explorer restart failed. Restart manually if needed.
+    call :log "[WARNING] Explorer restart failed, may need manual restart."
 ) else (
-    echo [SUCCESS] Explorer restarted.
+    call :log "[SUCCESS] Explorer restarted."
 )
 
-echo [DONE] All notification area (tray) icons should now be visible!
+:: Verify
+call :log "[INFO] Verifying registry value..."
+reg query "%KEY%" /v "%VAL%" | find "0x0" >nul 2>&1
+if %errorlevel% neq 0 (
+    call :log "[ERROR] Value not set as expected."
+) else (
+    call :log "[SUCCESS] Tray icon setting verified."
+)
+
+:: Final message
+echo.
+echo [DONE] All system tray icons should now be visible. 
+echo See %LOG% for details or troubleshooting steps.
+call :log "[INFO] Script completed successfully."
 
 :END
 endlocal
+exit /b
+
+:: Logging function
+:log
+echo %~1
+echo %~1>>"%LOG%"
 exit /b
