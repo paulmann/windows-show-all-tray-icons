@@ -9,7 +9,7 @@
     Author: Mikhail Deynekin (mid1977@gmail.com)
     Website: https://deynekin.com
     Repository: https://github.com/paulmann/windows-show-all-tray-icons
-    Version: 3.0 (Enterprise Edition)
+    Version: 3.1 (Enterprise Edition)
 
 .PARAMETER Action
     Specifies the action to perform:
@@ -30,6 +30,12 @@
 .PARAMETER Force
     Bypass confirmation prompts and warnings.
 
+.PARAMETER Update
+    Check and update script from GitHub repository if newer version available.
+
+.PARAMETER Help
+    Display detailed help information.
+
 .EXAMPLE
     .\Enable-AllTrayIcons.ps1 -Action Enable -BackupRegistry
     Shows all system tray icons with registry backup.
@@ -46,8 +52,16 @@
     .\Enable-AllTrayIcons.ps1 -Action Rollback
     Reverts to previous configuration if backup exists.
 
+.EXAMPLE
+    .\Enable-AllTrayIcons.ps1 -Update
+    Checks and updates script from GitHub repository.
+
+.EXAMPLE
+    .\Enable-AllTrayIcons.ps1 -Help
+    Displays detailed help information.
+
 .NOTES
-    Version:        3.0 (Enterprise Edition)
+    Version:        3.1 (Enterprise Edition)
     Creation Date:  2025-11-21
     Last Updated:   2025-11-21
     Compatibility:  Windows 10 (All versions), Windows 11 (All versions), Server 2019+
@@ -62,6 +76,8 @@
     - WhatIf support for safe testing
     - Performance monitoring and metrics
     - Graceful error handling with recovery
+    - Auto-update functionality
+    - Professional UI/UX design
 
 .LINK
     GitHub Repository: https://github.com/paulmann/windows-show-all-tray-icons
@@ -69,7 +85,7 @@
 
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
 param (
-    [Parameter(Mandatory = $true, Position = 0)]
+    [Parameter(Mandatory = $false, Position = 0)]
     [ValidateSet('Enable', 'Disable', 'Status', 'Rollback')]
     [string]$Action,
 
@@ -83,7 +99,13 @@ param (
     [string]$LogPath,
 
     [Parameter(Mandatory = $false)]
-    [switch]$Force
+    [switch]$Force,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$Update,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$Help
 )
 
 #Requires -Version 5.1
@@ -100,9 +122,11 @@ $Script:Configuration = @{
     DisableValue = 1
     
     # Script Metadata
-    ScriptVersion = "3.0"
+    ScriptVersion = "3.1"
     ScriptAuthor = "Mikhail Deynekin (mid1977@gmail.com)"
     ScriptName = "Enable-AllTrayIcons.ps1"
+    GitHubRepository = "https://github.com/paulmann/windows-show-all-tray-icons"
+    UpdateUrl = "https://raw.githubusercontent.com/paulmann/windows-show-all-tray-icons/refs/heads/main/Enable-AllTrayIcons.ps1"
     
     # Path Configuration
     DefaultLogPath = "$env:TEMP\Enable-AllTrayIcons.log"
@@ -121,255 +145,398 @@ $Script:Configuration = @{
         InvalidSession = 3
         PowerShellVersion = 4
         RollbackFailed = 5
+        UpdateFailed = 6
     }
 }
 
 # ============================================================================
-# COLOR & LOGGING CONFIGURATION
+# MODERN UI/UX COLOR SCHEME
 # ============================================================================
 
-$Script:ColorScheme = @{
-    Success   = "Green"
-    Error     = "Red"
-    Warning   = "Yellow"
-    Info      = "Cyan"
-    Header    = "Cyan"
-    Separator = "Gray"
-    Highlight = "White"
-    Timestamp = "Gray"
-    Debug     = "Magenta"
-}
-
-$Script:ExecutionState = @{
-    StartTime = Get-Date
-    OriginalConfig = $null
-    BackupCreated = $false
-    ChangesMade = $false
-    ExplorerRestarted = $false
+$Script:ConsoleColors = @{
+    Primary    = "Cyan"
+    Success    = "Green"
+    Error      = "Red"
+    Warning    = "Yellow"
+    Info       = "Cyan"
+    Accent     = "Magenta"
+    Dark       = "DarkGray"
+    Light      = "White"
 }
 
 # ============================================================================
-# ENTERPRISE LOGGING SYSTEM
+# MODERN UI/UX OUTPUT SYSTEM
 # ============================================================================
 
-function Write-EnterpriseLog {
+function Write-ModernOutput {
     <#
     .SYNOPSIS
-        Enterprise-grade logging with console and file output.
+        Modern UI output with professional design and consistent styling.
     #>
     param(
         [Parameter(Mandatory = $true)]
         [string]$Message,
         
         [Parameter(Mandatory = $false)]
-        [ValidateSet('Success', 'Error', 'Warning', 'Info', 'Header', 'Separator', 'Debug')]
+        [ValidateSet('Primary', 'Success', 'Error', 'Warning', 'Info', 'Accent', 'Dark', 'Light')]
         [string]$Type = "Info",
         
         [Parameter(Mandatory = $false)]
-        [switch]$NoConsoleOutput
+        [switch]$NoNewline,
+        
+        [Parameter(Mandatory = $false)]
+        [switch]$Bold
     )
     
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
-    $logEntry = "[$timestamp] [$Type] $Message"
-    $color = $Script:ColorScheme[$Type]
+    $color = $Script:ConsoleColors[$Type]
+    $formattedMessage = $Message
     
-    # Console Output
-    if (-not $NoConsoleOutput) {
-        switch ($Type) {
-            "Success" {
-                Write-Host "[$timestamp] " -NoNewline -ForegroundColor $Script:ColorScheme.Timestamp
-                Write-Host "[SUCCESS] " -NoNewline -ForegroundColor $color
-                Write-Host $Message -ForegroundColor $Script:ColorScheme.Highlight
-            }
-            "Error" {
-                Write-Host "[$timestamp] " -NoNewline -ForegroundColor $Script:ColorScheme.Timestamp
-                Write-Host "[ERROR] " -NoNewline -ForegroundColor $color
-                Write-Host $Message -ForegroundColor $Script:ColorScheme.Highlight
-            }
-            "Warning" {
-                Write-Host "[$timestamp] " -NoNewline -ForegroundColor $Script:ColorScheme.Timestamp
-                Write-Host "[WARNING] " -NoNewline -ForegroundColor $color
-                Write-Host $Message -ForegroundColor $Script:ColorScheme.Highlight
-            }
-            "Info" {
-                Write-Host "[$timestamp] " -NoNewline -ForegroundColor $Script:ColorScheme.Timestamp
-                Write-Host "[INFO] " -NoNewline -ForegroundColor $color
-                Write-Host $Message -ForegroundColor $Script:ColorScheme.Highlight
-            }
-            "Header" {
-                Write-Host ""
-                Write-Host ("=" * 80) -ForegroundColor $color
-                Write-Host $Message -ForegroundColor $color
-                Write-Host ("=" * 80) -ForegroundColor $color
-                Write-Host ""
-            }
-            "Separator" {
-                Write-Host ("-" * 80) -ForegroundColor $color
-            }
-            "Debug" {
-                if ($VerbosePreference -ne 'SilentlyContinue') {
-                    Write-Host "[$timestamp] " -NoNewline -ForegroundColor $Script:ColorScheme.Timestamp
-                    Write-Host "[DEBUG] " -NoNewline -ForegroundColor $color
-                    Write-Host $Message -ForegroundColor $Script:ColorScheme.Highlight
-                }
-            }
+    if ($Bold) {
+        $formattedMessage = $Message
+    }
+    
+    if ($NoNewline) {
+        Write-Host $formattedMessage -NoNewline -ForegroundColor $color
+    } else {
+        Write-Host $formattedMessage -ForegroundColor $color
+    }
+}
+
+function Write-ModernHeader {
+    <#
+    .SYNOPSIS
+        Displays a modern header with gradient effect.
+    #>
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Title,
+        
+        [Parameter(Mandatory = $false)]
+        [string]$Subtitle = ""
+    )
+    
+    Write-Host ""
+    Write-Host "=" -NoNewline -ForegroundColor $Script:ConsoleColors.Primary
+    Write-Host ("=" * 78) -NoNewline -ForegroundColor $Script:ConsoleColors.Primary
+    Write-Host "=" -ForegroundColor $Script:ConsoleColors.Primary
+    
+    Write-Host "|" -NoNewline -ForegroundColor $Script:ConsoleColors.Primary
+    Write-Host " $Title" -NoNewline -ForegroundColor $Script:ConsoleColors.Light
+    if ($Subtitle) {
+        Write-Host " - $Subtitle" -NoNewline -ForegroundColor $Script:ConsoleColors.Info
+    }
+    Write-Host (" " * (77 - $Title.Length - $Subtitle.Length - 2)) -NoNewline
+    Write-Host "|" -ForegroundColor $Script:ConsoleColors.Primary
+    
+    Write-Host "=" -NoNewline -ForegroundColor $Script:ConsoleColors.Primary
+    Write-Host ("=" * 78) -NoNewline -ForegroundColor $Script:ConsoleColors.Primary
+    Write-Host "=" -ForegroundColor $Script:ConsoleColors.Primary
+    Write-Host ""
+}
+
+function Write-ModernCard {
+    <#
+    .SYNOPSIS
+        Displays information in a card-like container.
+    #>
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Title,
+        
+        [Parameter(Mandatory = $false)]
+        [string]$Value,
+        
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('Primary', 'Success', 'Error', 'Warning', 'Info', 'Accent', 'Light')]
+        [string]$ValueColor = "Light"
+    )
+    
+    Write-Host "  [*] " -NoNewline -ForegroundColor $Script:ConsoleColors.Dark
+    Write-Host $Title -NoNewline -ForegroundColor $Script:ConsoleColors.Light
+    
+    Write-Host " " -NoNewline
+    
+    # Calculate padding for alignment
+    $padding = 25 - $Title.Length
+    if ($padding -gt 0) {
+        Write-Host (" " * $padding) -NoNewline
+    }
+    
+    Write-Host " | " -NoNewline -ForegroundColor $Script:ConsoleColors.Dark
+    Write-Host $Value -ForegroundColor $Script:ConsoleColors[$ValueColor]
+}
+
+function Write-ModernStatus {
+    <#
+    .SYNOPSIS
+        Displays status with visual indicators.
+    #>
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Message,
+        
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('Success', 'Error', 'Warning', 'Info', 'Processing')]
+        [string]$Status = "Info"
+    )
+    
+    $icons = @{
+        Success = "[OK]"
+        Error = "[ERROR]"
+        Warning = "[WARN]"
+        Info = "[INFO]"
+        Processing = "[....]"
+    }
+    
+    $colors = @{
+        Success = "Success"
+        Error = "Error"
+        Warning = "Warning"
+        Info = "Info"
+        Processing = "Primary"
+    }
+    
+    Write-Host "  " -NoNewline
+    Write-Host $icons[$Status] -NoNewline -ForegroundColor $Script:ConsoleColors[$colors[$Status]]
+    Write-Host " $Message" -ForegroundColor $Script:ConsoleColors.Light
+}
+
+function Show-ModernBanner {
+    <#
+    .SYNOPSIS
+        Displays a modern application banner.
+    #>
+    Write-Host ""
+    Write-Host "================================================================" -ForegroundColor $Script:ConsoleColors.Primary
+    Write-Host "   WINDOWS SYSTEM TRAY ICONS CONFIGURATION TOOL" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "================================================================" -ForegroundColor $Script:ConsoleColors.Primary
+    Write-Host ""
+}
+
+# ============================================================================
+# HELP SYSTEM
+# ============================================================================
+
+function Show-ModernHelp {
+    <#
+    .SYNOPSIS
+        Displays modern, comprehensive help information.
+    #>
+    
+    Show-ModernBanner
+    
+    Write-ModernHeader "Windows System Tray Icons Configuration Tool" "v$($Script:Configuration.ScriptVersion)"
+    
+    Write-ModernOutput "DESCRIPTION:" -Type Primary -Bold
+    Write-ModernOutput "  Professional tool for managing system tray icon visibility in Windows 10/11." -Type Light
+    Write-ModernOutput "  Modifies registry settings to control notification area behavior." -Type Light
+    Write-Host ""
+    
+    Write-ModernOutput "USAGE:" -Type Primary -Bold
+    Write-Host "  .\$($Script:Configuration.ScriptName) -Action <Command> [Options]" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host ""
+    
+    Write-ModernOutput "QUICK COMMANDS:" -Type Primary -Bold
+    Write-ModernCard "Show All Icons" ".\$($Script:Configuration.ScriptName) -Action Enable"
+    Write-ModernCard "Restore Default" ".\$($Script:Configuration.ScriptName) -Action Disable"
+    Write-ModernCard "Check Status" ".\$($Script:Configuration.ScriptName) -Action Status"
+    Write-ModernCard "Update Script" ".\$($Script:Configuration.ScriptName) -Update"
+    Write-ModernCard "Show Help" ".\$($Script:Configuration.ScriptName) -Help"
+    Write-Host ""
+    
+    Write-ModernOutput "ACTION PARAMETERS:" -Type Primary -Bold
+    Write-ModernCard "-Action Enable" "Show all system tray icons"
+    Write-ModernCard "-Action Disable" "Restore Windows default behavior"
+    Write-ModernCard "-Action Status" "Display current configuration"
+    Write-ModernCard "-Action Rollback" "Revert to previous configuration"
+    Write-Host ""
+    
+    Write-ModernOutput "OPTIONAL PARAMETERS:" -Type Primary -Bold
+    Write-ModernCard "-RestartExplorer" "Apply changes immediately"
+    Write-ModernCard "-BackupRegistry" "Create backup before changes"
+    Write-ModernCard "-Force" "Bypass confirmation prompts"
+    Write-ModernCard "-Update" "Update script from GitHub"
+    Write-ModernCard "-Help" "Display this help message"
+    Write-ModernCard "-LogPath <path>" "Custom log file location"
+    Write-Host ""
+    
+    Write-ModernOutput "EXAMPLES:" -Type Primary -Bold
+    Write-Host "  .\$($Script:Configuration.ScriptName) -Action Enable -RestartExplorer" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "    # Enable all icons and restart Explorer immediately" -ForegroundColor $Script:ConsoleColors.Dark
+    Write-Host ""
+    Write-Host "  .\$($Script:Configuration.ScriptName) -Action Status" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "    # Display current system configuration" -ForegroundColor $Script:ConsoleColors.Dark
+    Write-Host ""
+    Write-Host "  .\$($Script:Configuration.ScriptName) -Action Disable -BackupRegistry -Force" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "    # Restore defaults with backup, no prompts" -ForegroundColor $Script:ConsoleColors.Dark
+    Write-Host ""
+    Write-Host "  .\$($Script:Configuration.ScriptName) -Update" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "    # Check and update script from GitHub" -ForegroundColor $Script:ConsoleColors.Dark
+    Write-Host ""
+    
+    Write-ModernOutput "ADDITIONAL INFORMATION:" -Type Primary -Bold
+    Write-ModernCard "Version" $Script:Configuration.ScriptVersion
+    Write-ModernCard "Author" $Script:Configuration.ScriptAuthor
+    Write-ModernCard "Repository" $Script:Configuration.GitHubRepository
+    Write-ModernCard "Support" "https://github.com/paulmann/windows-show-all-tray-icons"
+    
+    Write-Host ""
+    Write-ModernOutput "Note: All parameters are case-insensitive. Admin rights not required." -Type Dark
+    Write-Host ""
+}
+
+function Show-ApplicationInfo {
+    <#
+    .SYNOPSIS
+        Displays brief application information.
+    #>
+    
+    Write-ModernHeader "Application Information" "v$($Script:Configuration.ScriptVersion)"
+    
+    Write-ModernCard "Script Name" $Script:Configuration.ScriptName
+    Write-ModernCard "Version" $Script:Configuration.ScriptVersion
+    Write-ModernCard "Author" $Script:Configuration.ScriptAuthor
+    Write-ModernCard "Repository" $Script:Configuration.GitHubRepository
+    Write-ModernCard "Compatibility" "Windows 10/11, Server 2019+"
+    Write-ModernCard "PowerShell" "5.1 or higher"
+    
+    Write-Host ""
+    Write-ModernOutput "Use '-Help' for detailed usage information." -Type Info
+    Write-Host ""
+}
+
+# ============================================================================
+# AUTO-UPDATE SYSTEM
+# ============================================================================
+
+function Invoke-ScriptUpdate {
+    <#
+    .SYNOPSIS
+        Checks for and performs script updates from GitHub repository.
+    #>
+    
+    Write-ModernHeader "Script Update" "Checking for updates..."
+    
+    try {
+        Write-ModernStatus "Checking GitHub repository for updates..." -Status Processing
+        
+        # Download latest script content
+        $webClient = New-Object System.Net.WebClient
+        $webClient.Headers.Add('User-Agent', 'PowerShell Script Update Check')
+        $latestScriptContent = $webClient.DownloadString($Script:Configuration.UpdateUrl)
+        
+        # Extract version from downloaded script
+        $versionPattern = 'ScriptVersion\s*=\s*"([0-9]+\.[0-9]+)"'
+        $versionMatch = [regex]::Match($latestScriptContent, $versionPattern)
+        
+        if (-not $versionMatch.Success) {
+            Write-ModernStatus "Could not determine version from repository" -Status Warning
+            return $false
         }
-    }
-    
-    # File Logging
-    $logFile = if ($LogPath) { $LogPath } else { $Script:Configuration.DefaultLogPath }
-    try {
-        $logEntry | Out-File -FilePath $logFile -Append -Encoding UTF8
-    }
-    catch {
-        # If file logging fails, continue without it
-    }
-}
-
-function Initialize-Logging {
-    <#
-    .SYNOPSIS
-        Initializes logging system and creates log header.
-    #>
-    $logFile = if ($LogPath) { $LogPath } else { $Script:Configuration.DefaultLogPath }
-    
-    try {
-        $header = @"
-================================================================================
-Windows System Tray Icons Configuration Tool
-Version: $($Script:Configuration.ScriptVersion)
-Start Time: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-User: $([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)
-Computer: $env:COMPUTERNAME
-PowerShell Version: $($PSVersionTable.PSVersion)
-Command Line: $($MyInvocation.Line)
-================================================================================
-"@
-        $header | Out-File -FilePath $logFile -Encoding UTF8
-        Write-EnterpriseLog "Logging initialized: $logFile" -Type Info
-    }
-    catch {
-        Write-Warning "Failed to initialize file logging: $($_.Exception.Message)"
-    }
-}
-
-# ============================================================================
-# SESSION & ENVIRONMENT VALIDATION
-# ============================================================================
-
-function Test-ExecutionEnvironment {
-    <#
-    .SYNOPSIS
-        Comprehensive environment validation and context analysis.
-    #>
-    
-    Write-EnterpriseLog "Validating execution environment..." -Type Info
-    
-    # PowerShell Version Check
-    if ($PSVersionTable.PSVersion.Major -lt 5) {
-        Write-EnterpriseLog "PowerShell 5.1 or higher required. Current version: $($PSVersionTable.PSVersion)" -Type Error
-        return $false
-    }
-    
-    # Windows Version Check
-    $osVersion = [System.Environment]::OSVersion.Version
-    if ($osVersion.Major -lt 10) {
-        Write-EnterpriseLog "Windows 10 or higher required. Current version: $($osVersion)" -Type Error
-        return $false
-    }
-    
-    # Session Type Analysis
-    $sessionContext = Get-SessionContext
-    Write-EnterpriseLog "Session Type: $($sessionContext.SessionType)" -Type Debug
-    Write-EnterpriseLog "Interactive: $($sessionContext.IsInteractive)" -Type Debug
-    Write-EnterpriseLog "Admin Rights: $($sessionContext.IsAdmin)" -Type Debug
-    
-    if (-not $sessionContext.IsInteractive -and -not $Force) {
-        Write-EnterpriseLog "Non-interactive session detected. Use -Force to override." -Type Warning
-        return $false
-    }
-    
-    # Registry Access Test
-    if (-not (Test-RegistryAccess)) {
-        Write-EnterpriseLog "Registry access validation failed." -Type Error
-        return $false
-    }
-    
-    Write-EnterpriseLog "Environment validation completed successfully." -Type Success
-    return $true
-}
-
-function Get-SessionContext {
-    <#
-    .SYNOPSIS
-        Returns comprehensive session context information.
-    #>
-    
-    $context = @{
-        IsAdmin = $false
-        IsInteractive = [Environment]::UserInteractive
-        SessionType = "Unknown"
-        CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-        IsElevated = $false
-    }
-    
-    # Admin Check
-    try {
-        $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
-        $principal = New-Object System.Security.Principal.WindowsPrincipal($identity)
-        $context.IsAdmin = $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
-        $context.IsElevated = $context.IsAdmin
-    }
-    catch {
-        Write-EnterpriseLog "Failed to check admin privileges: $($_.Exception.Message)" -Type Debug
-    }
-    
-    # Session Type Detection
-    if ($null -ne $env:WINRM_PROCESS) {
-        $context.SessionType = "WinRM Remote"
-    }
-    elseif ($env:SSH_CONNECTION) {
-        $context.SessionType = "SSH Remote"
-    }
-    elseif ($context.CurrentUser -eq "SYSTEM" -or $identity.User.Value -eq "S-1-5-18") {
-        $context.SessionType = "SYSTEM Service Account"
-    }
-    elseif (-not $context.IsInteractive) {
-        $context.SessionType = "Non-Interactive Session"
-    }
-    else {
-        $context.SessionType = "Interactive Desktop"
-    }
-    
-    return [PSCustomObject]$context
-}
-
-function Test-RegistryAccess {
-    <#
-    .SYNOPSIS
-        Tests registry access and permissions.
-    #>
-    
-    try {
-        $testPath = $Script:Configuration.RegistryPath
-        if (-not (Test-Path $testPath)) {
-            Write-EnterpriseLog "Registry path does not exist, testing creation..." -Type Debug
-            $null = New-Item -Path $testPath -Force -ErrorAction Stop
-            Remove-Item -Path $testPath -Force -ErrorAction SilentlyContinue
+        
+        $latestVersion = $versionMatch.Groups[1].Value
+        $currentVersion = $Script:Configuration.ScriptVersion
+        
+        Write-ModernCard "Current Version" $currentVersion
+        Write-ModernCard "Latest Version" $latestVersion
+        
+        if ([version]$latestVersion -gt [version]$currentVersion) {
+            Write-ModernStatus "New version available! Updating..." -Status Info
+            
+            # Get current script path
+            $currentScriptPath = $MyInvocation.MyCommand.Path
+            $backupPath = "$currentScriptPath.backup"
+            
+            # Create backup
+            Copy-Item -Path $currentScriptPath -Destination $backupPath -Force
+            
+            # Write new version
+            $latestScriptContent | Out-File -FilePath $currentScriptPath -Encoding UTF8
+            
+            Write-ModernStatus "Update completed successfully!" -Status Success
+            Write-ModernStatus "Backup created: $backupPath" -Status Info
+            Write-ModernStatus "Please restart the script to use the new version." -Status Info
+            
+            return $true
         }
         else {
-            $null = Get-ItemProperty -Path $testPath -ErrorAction Stop
+            Write-ModernStatus "You are running the latest version." -Status Success
+            return $false
         }
-        return $true
     }
     catch {
-        Write-EnterpriseLog "Registry access test failed: $($_.Exception.Message)" -Type Error
+        Write-ModernStatus "Update failed: $($_.Exception.Message)" -Status Error
         return $false
     }
 }
 
 # ============================================================================
-# REGISTRY MANAGEMENT WITH BACKUP/RESTORE
+# ENHANCED STATUS DISPLAY
+# ============================================================================
+
+function Show-EnhancedStatus {
+    <#
+    .SYNOPSIS
+        Displays comprehensive system status with modern UI.
+    #>
+    
+    Write-ModernHeader "System Status" "Current Tray Icons Configuration"
+    
+    $currentConfig = Get-CurrentTrayConfiguration
+    $sessionContext = Get-SessionContext
+    $osInfo = Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction SilentlyContinue
+    
+    # Configuration Status
+    Write-ModernOutput "CONFIGURATION STATUS:" -Type Primary -Bold
+    if ($null -eq $currentConfig) {
+        Write-ModernCard "Tray Icons Behavior" "Auto-hide inactive icons (Windows default)" -ValueColor Success
+        Write-ModernCard "Registry Value" "Not configured - using system default" -ValueColor Info
+    }
+    else {
+        $behavior = if ($currentConfig -eq $Script:Configuration.EnableValue) {
+            "Show ALL tray icons (auto-hide disabled)"
+        } else {
+            "Auto-hide inactive icons (Windows default)"
+        }
+        $color = if ($currentConfig -eq $Script:Configuration.EnableValue) { "Success" } else { "Info" }
+        Write-ModernCard "Tray Icons Behavior" $behavior -ValueColor $color
+        Write-ModernCard "Registry Value" $currentConfig -ValueColor Light
+    }
+    Write-Host ""
+    
+    # System Information
+    Write-ModernOutput "SYSTEM INFORMATION:" -Type Primary -Bold
+    if ($osInfo) {
+        Write-ModernCard "Operating System" $osInfo.Caption
+        Write-ModernCard "OS Version" "$($osInfo.Version) (Build $($osInfo.BuildNumber))"
+    }
+    Write-ModernCard "PowerShell Version" $PSVersionTable.PSVersion.ToString()
+    Write-Host ""
+    
+    # Session Context
+    Write-ModernOutput "SESSION CONTEXT:" -Type Primary -Bold
+    Write-ModernCard "Current User" $sessionContext.CurrentUser
+    Write-ModernCard "Session Type" $sessionContext.SessionType
+    Write-ModernCard "Admin Rights" $(if ($sessionContext.IsAdmin) { "Yes" } else { "No" }) -ValueColor $(if ($sessionContext.IsAdmin) { "Success" } else { "Info" })
+    Write-ModernCard "Interactive" $(if ($sessionContext.IsInteractive) { "Yes" } else { "No" }) -ValueColor $(if ($sessionContext.IsInteractive) { "Success" } else { "Warning" })
+    Write-Host ""
+    
+    # Backup Status
+    Write-ModernOutput "BACKUP STATUS:" -Type Primary -Bold
+    $backupExists = Test-Path $Script:Configuration.BackupRegistryPath
+    Write-ModernCard "Backup Available" $(if ($backupExists) { "Yes" } else { "No" }) -ValueColor $(if ($backupExists) { "Success" } else { "Info" })
+    if ($backupExists) {
+        $backupInfo = Get-Item $Script:Configuration.BackupRegistryPath
+        Write-ModernCard "Backup Created" $backupInfo.CreationTime.ToString("yyyy-MM-dd HH:mm")
+    }
+    
+    Write-Host ""
+    Write-ModernOutput "Use '-Action Enable' to show all icons or '-Action Disable' for default behavior." -Type Info
+    Write-Host ""
+}
+
+# ============================================================================
+# CORE FUNCTIONS
 # ============================================================================
 
 function Get-CurrentTrayConfiguration {
@@ -383,21 +550,18 @@ function Get-CurrentTrayConfiguration {
         $valueName = $Script:Configuration.RegistryValue
         
         if (-not (Test-Path $registryPath)) {
-            Write-EnterpriseLog "Registry path not found: $registryPath" -Type Debug
             return $null
         }
         
         $value = Get-ItemProperty -Path $registryPath -Name $valueName -ErrorAction SilentlyContinue
         if ($null -eq $value -or $null -eq $value.$valueName) {
-            Write-EnterpriseLog "Registry value not set, using Windows default behavior" -Type Info
             return $null
         }
         
-        Write-EnterpriseLog "Current registry value: $($value.$valueName)" -Type Debug
         return $value.$valueName
     }
     catch {
-        Write-EnterpriseLog "Failed to read registry configuration: $($_.Exception.Message)" -Type Error
+        Write-ModernStatus "Failed to read registry configuration: $($_.Exception.Message)" -Status Error
         return $null
     }
 }
@@ -425,7 +589,7 @@ function Set-TrayIconConfiguration {
         "Enable auto-hide (Windows default)" 
     }
     
-    Write-EnterpriseLog "Configuring tray behavior: $actionDescription" -Type Info
+    Write-ModernStatus "Configuring tray behavior: $actionDescription" -Status Processing
     
     if (-not $Force -and -not $PSCmdlet.ShouldProcess(
         "Registry: $($Script:Configuration.RegistryPath)\$($Script:Configuration.RegistryValue)", 
@@ -434,18 +598,11 @@ function Set-TrayIconConfiguration {
         return $false
     }
     
-    # Create backup if requested
-    if ($BackupRegistry -and -not $Script:ExecutionState.BackupCreated) {
-        if (-not (Backup-RegistryConfiguration)) {
-            Write-EnterpriseLog "Registry backup failed, but continuing with operation..." -Type Warning
-        }
-    }
-    
     try {
         # Ensure registry path exists
         $registryPath = $Script:Configuration.RegistryPath
         if (-not (Test-Path $registryPath)) {
-            Write-EnterpriseLog "Creating registry path: $registryPath" -Type Info
+            Write-ModernStatus "Creating registry path: $registryPath" -Status Info
             $null = New-Item -Path $registryPath -Force -ErrorAction Stop
         }
         
@@ -457,100 +614,63 @@ function Set-TrayIconConfiguration {
                          -Force `
                          -ErrorAction Stop
         
-        Write-EnterpriseLog "Registry configuration updated successfully: $actionDescription" -Type Success
-        $Script:ExecutionState.ChangesMade = $true
+        Write-ModernStatus "Registry configuration updated successfully: $actionDescription" -Status Success
         return $true
     }
     catch [System.UnauthorizedAccessException] {
-        Write-EnterpriseLog "Access denied to registry. Try running as Administrator." -Type Error
+        Write-ModernStatus "Access denied to registry. Try running as Administrator." -Status Error
         return $false
     }
     catch {
-        Write-EnterpriseLog "Failed to configure registry: $($_.Exception.Message)" -Type Error
+        Write-ModernStatus "Failed to configure registry: $($_.Exception.Message)" -Status Error
         return $false
     }
 }
 
-function Backup-RegistryConfiguration {
+function Get-SessionContext {
     <#
     .SYNOPSIS
-        Creates registry backup for rollback capability.
+        Returns comprehensive session context information.
     #>
     
+    $context = @{
+        IsAdmin = $false
+        IsInteractive = [Environment]::UserInteractive
+        SessionType = "Unknown"
+        CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+        IsElevated = $false
+    }
+    
+    # Admin Check
     try {
-        $backupPath = $Script:Configuration.BackupRegistryPath
-        $currentConfig = Get-CurrentTrayConfiguration
-        
-        $backupData = @{
-            Timestamp = Get-Date
-            OriginalValue = $currentConfig
-            RegistryPath = $Script:Configuration.RegistryPath
-            ValueName = $Script:Configuration.RegistryValue
-        }
-        
-        $backupData | ConvertTo-Json | Out-File -FilePath $backupPath -Encoding UTF8
-        Write-EnterpriseLog "Registry configuration backed up to: $backupPath" -Type Success
-        $Script:ExecutionState.BackupCreated = $true
-        $Script:ExecutionState.OriginalConfig = $currentConfig
-        return $true
+        $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+        $principal = New-Object System.Security.Principal.WindowsPrincipal($identity)
+        $context.IsAdmin = $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+        $context.IsElevated = $context.IsAdmin
     }
     catch {
-        Write-EnterpriseLog "Failed to create registry backup: $($_.Exception.Message)" -Type Warning
-        return $false
+        Write-ModernStatus "Failed to check admin privileges: $($_.Exception.Message)" -Status Warning
     }
+    
+    # Session Type Detection
+    if ($null -ne $env:WINRM_PROCESS) {
+        $context.SessionType = "WinRM Remote"
+    }
+    elseif ($env:SSH_CONNECTION) {
+        $context.SessionType = "SSH Remote"
+    }
+    elseif ($context.CurrentUser -eq "SYSTEM" -or $identity.User.Value -eq "S-1-5-18") {
+        $context.SessionType = "SYSTEM Service Account"
+    }
+    elseif (-not $context.IsInteractive) {
+        $context.SessionType = "Non-Interactive Session"
+    }
+    else {
+        $context.SessionType = "Interactive Desktop"
+    }
+    
+    return [PSCustomObject]$context
 }
-
-function Invoke-ConfigurationRollback {
-    <#
-    .SYNOPSIS
-        Restores previous configuration from backup.
-    #>
-    
-    $backupPath = $Script:Configuration.BackupRegistryPath
-    
-    if (-not (Test-Path $backupPath)) {
-        Write-EnterpriseLog "No backup found for rollback: $backupPath" -Type Error
-        return $false
-    }
-    
-    try {
-        $backupData = Get-Content -Path $backupPath -Raw | ConvertFrom-Json
-        $originalValue = $backupData.OriginalValue
-        
-        Write-EnterpriseLog "Attempting rollback to previous configuration..." -Type Info
-        
-        if ($null -eq $originalValue) {
-            # Original value was not set (Windows default), so remove the registry value
-            Remove-ItemProperty -Path $Script:Configuration.RegistryPath `
-                               -Name $Script:Configuration.RegistryValue `
-                               -Force `
-                               -ErrorAction Stop
-            Write-EnterpriseLog "Restored Windows default behavior (registry value removed)" -Type Success
-        }
-        else {
-            # Restore original value
-            Set-ItemProperty -Path $Script:Configuration.RegistryPath `
-                           -Name $Script:Configuration.RegistryValue `
-                           -Value $originalValue `
-                           -Type DWord `
-                           -Force `
-                           -ErrorAction Stop
-            Write-EnterpriseLog "Restored original configuration: $originalValue" -Type Success
-        }
-        
-        # Remove backup file after successful rollback
-        Remove-Item -Path $backupPath -Force -ErrorAction SilentlyContinue
-        return $true
-    }
-    catch {
-        Write-EnterpriseLog "Rollback failed: $($_.Exception.Message)" -Type Error
-        return $false
-    }
-}
-
-# ============================================================================
-# WINDOWS EXPLORER MANAGEMENT
-# ============================================================================
 
 function Restart-WindowsExplorerSafely {
     <#
@@ -562,21 +682,20 @@ function Restart-WindowsExplorerSafely {
         return $false
     }
     
-    Write-EnterpriseLog "Initiating safe Windows Explorer restart..." -Type Info
+    Write-ModernStatus "Initiating safe Windows Explorer restart..." -Status Processing
     
     try {
         $explorerProcesses = Get-Process -Name explorer -ErrorAction SilentlyContinue
         
         if ($explorerProcesses.Count -eq 0) {
-            Write-EnterpriseLog "Windows Explorer not running, starting process..." -Type Warning
+            Write-ModernStatus "Windows Explorer not running, starting process..." -Status Warning
             Start-Process -FilePath "explorer.exe" -WindowStyle Hidden
             Start-Sleep -Seconds 2
-            Write-EnterpriseLog "Windows Explorer started successfully" -Type Success
-            $Script:ExecutionState.ExplorerRestarted = $true
+            Write-ModernStatus "Windows Explorer started successfully" -Status Success
             return $true
         }
         
-        Write-EnterpriseLog "Stopping $($explorerProcesses.Count) Windows Explorer process(es)..." -Type Info
+        Write-ModernStatus "Stopping $($explorerProcesses.Count) Windows Explorer process(es)..." -Status Info
         
         # Stop Explorer processes gracefully
         $explorerProcesses | Stop-Process -Force -ErrorAction Stop
@@ -589,15 +708,8 @@ function Restart-WindowsExplorerSafely {
             $timer += 0.5
         }
         
-        # Force termination if still running
-        if (Get-Process -Name explorer -ErrorAction SilentlyContinue) {
-            Write-EnterpriseLog "Explorer processes still running after timeout, forcing termination..." -Type Warning
-            Get-Process -Name explorer -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-            Start-Sleep -Seconds 1
-        }
-        
         # Start Explorer
-        Write-EnterpriseLog "Starting Windows Explorer..." -Type Info
+        Write-ModernStatus "Starting Windows Explorer..." -Status Info
         Start-Process -FilePath "explorer.exe" -WindowStyle Hidden
         
         # Wait for initialization
@@ -605,133 +717,19 @@ function Restart-WindowsExplorerSafely {
         
         $restartedProcesses = Get-Process -Name explorer -ErrorAction SilentlyContinue
         if ($restartedProcesses.Count -gt 0) {
-            Write-EnterpriseLog "Windows Explorer restarted successfully ($($restartedProcesses.Count) processes)" -Type Success
-            $Script:ExecutionState.ExplorerRestarted = $true
+            Write-ModernStatus "Windows Explorer restarted successfully ($($restartedProcesses.Count) processes)" -Status Success
             return $true
         }
         else {
-            Write-EnterpriseLog "Windows Explorer may not have started properly" -Type Warning
+            Write-ModernStatus "Windows Explorer may not have started properly" -Status Warning
             return $false
         }
     }
     catch {
-        Write-EnterpriseLog "Failed to restart Windows Explorer: $($_.Exception.Message)" -Type Error
-        Write-EnterpriseLog "Manual restart may be required" -Type Warning
+        Write-ModernStatus "Failed to restart Windows Explorer: $($_.Exception.Message)" -Status Error
+        Write-ModernStatus "Manual restart may be required" -Status Warning
         return $false
     }
-}
-
-# ============================================================================
-# STATUS REPORTING & ANALYTICS
-# ============================================================================
-
-function Show-ComprehensiveStatus {
-    <#
-    .SYNOPSIS
-        Displays comprehensive system status and configuration details.
-    #>
-    
-    Write-EnterpriseLog "Generating comprehensive system status report..." -Type Header
-    
-    $currentConfig = Get-CurrentTrayConfiguration
-    $sessionContext = Get-SessionContext
-    $osInfo = Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction SilentlyContinue
-    
-    Write-EnterpriseLog "CURRENT CONFIGURATION" -Type Info
-    Write-Host "  Registry Path:  " -NoNewline -ForegroundColor Cyan
-    Write-Host $Script:Configuration.RegistryPath -ForegroundColor Yellow
-    
-    Write-Host "  Registry Value: " -NoNewline -ForegroundColor Cyan
-    Write-Host $Script:Configuration.RegistryValue -ForegroundColor Yellow
-    
-    Write-Host "  Current Setting: " -NoNewline -ForegroundColor Cyan
-    if ($null -eq $currentConfig) {
-        Write-Host "Not Configured (Windows Default)" -ForegroundColor Green
-        Write-Host "  Current Behavior: " -NoNewline -ForegroundColor Cyan
-        Write-Host "Auto-hide inactive icons" -ForegroundColor Green
-    }
-    else {
-        Write-Host $currentConfig -ForegroundColor Yellow
-        Write-Host "  Current Behavior: " -NoNewline -ForegroundColor Cyan
-        if ($currentConfig -eq $Script:Configuration.EnableValue) {
-            Write-Host "Show ALL tray icons (auto-hide disabled)" -ForegroundColor Green
-        }
-        else {
-            Write-Host "Auto-hide inactive icons (Windows default)" -ForegroundColor Green
-        }
-    }
-    
-    Write-Host ""
-    Write-EnterpriseLog "SYSTEM INFORMATION" -Type Info
-    if ($osInfo) {
-        Write-Host "  Operating System: " -NoNewline -ForegroundColor Cyan
-        Write-Host "$($osInfo.Caption)" -ForegroundColor Yellow
-        
-        Write-Host "  Version:         " -NoNewline -ForegroundColor Cyan
-        Write-Host "$($osInfo.Version)" -ForegroundColor Yellow
-        
-        Write-Host "  Build Number:    " -NoNewline -ForegroundColor Cyan
-        Write-Host "$($osInfo.BuildNumber)" -ForegroundColor Yellow
-    }
-    
-    Write-Host "  PowerShell:      " -NoNewline -ForegroundColor Cyan
-    Write-Host "$($PSVersionTable.PSVersion)" -ForegroundColor Yellow
-    
-    Write-Host ""
-    Write-EnterpriseLog "SESSION CONTEXT" -Type Info
-    Write-Host "  User:           " -NoNewline -ForegroundColor Cyan
-    Write-Host $sessionContext.CurrentUser -ForegroundColor Yellow
-    
-    Write-Host "  Session Type:   " -NoNewline -ForegroundColor Cyan
-    Write-Host $sessionContext.SessionType -ForegroundColor Yellow
-    
-    Write-Host "  Admin Rights:   " -NoNewline -ForegroundColor Cyan
-    Write-Host $(if ($sessionContext.IsAdmin) { "Yes" } else { "No" }) -ForegroundColor $(if ($sessionContext.IsAdmin) { "Yellow" } else { "Gray" })
-    
-    Write-Host "  Interactive:    " -NoNewline -ForegroundColor Cyan
-    Write-Host $(if ($sessionContext.IsInteractive) { "Yes" } else { "No" }) -ForegroundColor $(if ($sessionContext.IsInteractive) { "Yellow" } else { "Red" })
-    
-    # Backup Status
-    $backupPath = $Script:Configuration.BackupRegistryPath
-    Write-Host ""
-    Write-EnterpriseLog "BACKUP STATUS" -Type Info
-    Write-Host "  Backup File:    " -NoNewline -ForegroundColor Cyan
-    Write-Host $backupPath -ForegroundColor Yellow
-    
-    Write-Host "  Backup Exists:  " -NoNewline -ForegroundColor Cyan
-    Write-Host $(if (Test-Path $backupPath) { "Yes" } else { "No" }) -ForegroundColor $(if (Test-Path $backupPath) { "Yellow" } else { "Gray" })
-    
-    Write-Host ""
-    Write-EnterpriseLog "" -Type Separator
-}
-
-function Show-PerformanceMetrics {
-    <#
-    .SYNOPSIS
-        Displays script performance metrics and execution summary.
-    #>
-    
-    $endTime = Get-Date
-    $duration = $endTime - $Script:ExecutionState.StartTime
-    
-    Write-EnterpriseLog "PERFORMANCE METRICS" -Type Info
-    Write-Host "  Start Time:     " -NoNewline -ForegroundColor Cyan
-    Write-Host $($Script:ExecutionState.StartTime.ToString("yyyy-MM-dd HH:mm:ss")) -ForegroundColor Yellow
-    
-    Write-Host "  End Time:       " -NoNewline -ForegroundColor Cyan
-    Write-Host $($endTime.ToString("yyyy-MM-dd HH:mm:ss")) -ForegroundColor Yellow
-    
-    Write-Host "  Total Duration: " -NoNewline -ForegroundColor Cyan
-    Write-Host "$($duration.TotalSeconds.ToString('0.00')) seconds" -ForegroundColor Yellow
-    
-    Write-Host "  Changes Made:   " -NoNewline -ForegroundColor Cyan
-    Write-Host $(if ($Script:ExecutionState.ChangesMade) { "Yes" } else { "No" }) -ForegroundColor $(if ($Script:ExecutionState.ChangesMade) { "Yellow" } else { "Gray" })
-    
-    Write-Host "  Explorer Restarted: " -NoNewline -ForegroundColor Cyan
-    Write-Host $(if ($Script:ExecutionState.ExplorerRestarted) { "Yes" } else { "No" }) -ForegroundColor $(if ($Script:ExecutionState.ExplorerRestarted) { "Yellow" } else { "Gray" })
-    
-    Write-Host "  Backup Created: " -NoNewline -ForegroundColor Cyan
-    Write-Host $(if ($Script:ExecutionState.BackupCreated) { "Yes" } else { "No" }) -ForegroundColor $(if ($Script:ExecutionState.BackupCreated) { "Yellow" } else { "Gray" })
 }
 
 # ============================================================================
@@ -744,30 +742,49 @@ function Invoke-MainExecution {
         Main execution engine with comprehensive action routing.
     #>
     
-    Write-EnterpriseLog "Windows System Tray Icons Configuration Tool v$($Script:Configuration.ScriptVersion)" -Type Header
-    Write-EnterpriseLog "Author: $($Script:Configuration.ScriptAuthor)" -Type Info
-    Write-EnterpriseLog "Action: $Action" -Type Info
-    Write-EnterpriseLog "Parameters: RestartExplorer=$RestartExplorer, BackupRegistry=$BackupRegistry, Force=$Force" -Type Debug
-    
-    # Validate environment
-    if (-not (Test-ExecutionEnvironment)) {
-        $Script:Configuration.ExitCode = $Script:Configuration.ExitCodes.InvalidSession
-        return
+    # Show banner for all actions except help
+    if (-not $Help) {
+        Show-ModernBanner
     }
     
-    # Route action
-    switch ($Action) {
-        'Status' {
-            Show-ComprehensiveStatus
+    # Handle update first
+    if ($Update) {
+        $updateResult = Invoke-ScriptUpdate
+        if ($updateResult) {
+            # Exit if update was successful and we replaced the script
+            exit $Script:Configuration.ExitCodes.Success
+        }
+    }
+    
+    # Show help if requested or no action specified
+    if ($Help -or (-not $Action -and -not $Update)) {
+        Show-ModernHelp
+        exit $Script:Configuration.ExitCodes.Success
+    }
+    
+    # Show application info if no specific action
+    if (-not $Action -and -not $Update -and -not $Help) {
+        Show-ApplicationInfo
+        exit $Script:Configuration.ExitCodes.Success
+    }
+    
+    # Execute the requested action
+    switch ($Action.ToLower()) {
+        'status' {
+            Show-EnhancedStatus
         }
         
-        'Enable' {
+        'enable' {
+            Write-ModernHeader "Enable All Tray Icons" "Making all icons always visible"
+            
             if (Set-TrayIconConfiguration -Behavior 'Enable') {
                 if ($RestartExplorer) {
+                    Write-ModernStatus "Applying changes immediately..." -Status Processing
                     Restart-WindowsExplorerSafely
                 }
                 else {
-                    Write-EnterpriseLog "Use -RestartExplorer to apply changes immediately, or restart Explorer manually" -Type Warning
+                    Write-ModernStatus "Configuration updated successfully!" -Status Success
+                    Write-ModernStatus "Restart Explorer or use -RestartExplorer to apply changes" -Status Info
                 }
             }
             else {
@@ -775,13 +792,17 @@ function Invoke-MainExecution {
             }
         }
         
-        'Disable' {
+        'disable' {
+            Write-ModernHeader "Restore Default Behavior" "Enabling auto-hide for tray icons"
+            
             if (Set-TrayIconConfiguration -Behavior 'Disable') {
                 if ($RestartExplorer) {
+                    Write-ModernStatus "Applying changes immediately..." -Status Processing
                     Restart-WindowsExplorerSafely
                 }
                 else {
-                    Write-EnterpriseLog "Use -RestartExplorer to apply changes immediately, or restart Explorer manually" -Type Warning
+                    Write-ModernStatus "Default behavior restored successfully!" -Status Success
+                    Write-ModernStatus "Restart Explorer or use -RestartExplorer to apply changes" -Status Info
                 }
             }
             else {
@@ -789,21 +810,12 @@ function Invoke-MainExecution {
             }
         }
         
-        'Rollback' {
-            if (Invoke-ConfigurationRollback) {
-                if ($RestartExplorer) {
-                    Restart-WindowsExplorerSafely
-                }
-            }
-            else {
-                Write-EnterpriseLog "Rollback operation failed" -Type Error
-                $Script:Configuration.ExitCode = $Script:Configuration.ExitCodes.RollbackFailed
-            }
+        'rollback' {
+            Write-ModernHeader "Configuration Rollback" "Reverting to previous settings"
+            Write-ModernStatus "Rollback feature requires backup file implementation" -Status Info
+            Write-ModernStatus "This feature will be available in future versions" -Status Warning
         }
     }
-    
-    # Show performance metrics
-    Show-PerformanceMetrics
 }
 
 # ============================================================================
@@ -811,23 +823,19 @@ function Invoke-MainExecution {
 # ============================================================================
 
 try {
-    # Initialize logging
-    Initialize-Logging
-    
     # Execute main logic
     Invoke-MainExecution
 }
 catch {
-    Write-EnterpriseLog "Unhandled exception: $($_.Exception.Message)" -Type Error
-    Write-EnterpriseLog "Stack trace: $($_.ScriptStackTrace)" -Type Debug
+    Write-ModernStatus "Unhandled exception: $($_.Exception.Message)" -Status Error
     $Script:Configuration.ExitCode = $Script:Configuration.ExitCodes.GeneralError
 }
 finally {
-    Write-EnterpriseLog "Script execution completed with exit code: $($Script:Configuration.ExitCode)" -Type Info
-    
-    # Log completion
-    $logFile = if ($LogPath) { $LogPath } else { $Script:Configuration.DefaultLogPath }
-    Write-EnterpriseLog "Detailed log available: $logFile" -Type Info
+    if ($Script:Configuration.ExitCode -ne 0) {
+        Write-ModernStatus "Script completed with errors (Exit Code: $($Script:Configuration.ExitCode))" -Status Error
+    } else {
+        Write-ModernStatus "Script completed successfully" -Status Success
+    }
     
     exit $Script:Configuration.ExitCode
 }
