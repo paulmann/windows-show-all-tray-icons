@@ -9,7 +9,7 @@
     Author: Mikhail Deynekin (mid1977@gmail.com)
     Website: https://deynekin.com
     Repository: https://github.com/paulmann/windows-show-all-tray-icons
-    Version: 3.1 (Enterprise Edition)
+    Version: 3.2 (Enterprise Edition)
 
 .PARAMETER Action
     Specifies the action to perform:
@@ -36,6 +36,12 @@
 .PARAMETER Help
     Display detailed help information.
 
+.PARAMETER WhatIf
+    Shows what would happen if the cmdlet runs without actually executing.
+
+.PARAMETER Confirm
+    Prompts for confirmation before executing the operation.
+
 .EXAMPLE
     .\Enable-AllTrayIcons.ps1 -Action Enable -BackupRegistry
     Shows all system tray icons with registry backup.
@@ -61,11 +67,11 @@
     Displays detailed help information.
 
 .NOTES
-    Version:        3.1 (Enterprise Edition)
+    Version:        3.2 (Enterprise Edition)
     Creation Date:  2025-11-21
     Last Updated:   2025-11-21
     Compatibility:  Windows 10 (All versions), Windows 11 (All versions), Server 2019+
-    Requires:       PowerShell 5.1 or higher
+    Requires:       PowerShell 5.1 or higher (with enhanced features for PowerShell 7+)
     Privileges:     Standard User (HKCU registry key only - no admin required)
     
     FEATURES:
@@ -78,6 +84,7 @@
     - Graceful error handling with recovery
     - Auto-update functionality
     - Professional UI/UX design
+    - PowerShell 7+ enhanced features
 
 .LINK
     GitHub Repository: https://github.com/paulmann/windows-show-all-tray-icons
@@ -108,8 +115,6 @@ param (
     [switch]$Help
 )
 
-#Requires -Version 5.1
-
 # ============================================================================
 # ENTERPRISE CONFIGURATION
 # ============================================================================
@@ -122,7 +127,7 @@ $Script:Configuration = @{
     DisableValue = 1
     
     # Script Metadata
-    ScriptVersion = "3.1"
+    ScriptVersion = "3.2"
     ScriptAuthor = "Mikhail Deynekin (mid1977@gmail.com)"
     ScriptName = "Enable-AllTrayIcons.ps1"
     GitHubRepository = "https://github.com/paulmann/windows-show-all-tray-icons"
@@ -150,6 +155,12 @@ $Script:Configuration = @{
 }
 
 # ============================================================================
+# POWERSHELL VERSION COMPATIBILITY
+# ============================================================================
+
+$Script:IsPS7Plus = $PSVersionTable.PSVersion.Major -ge 7
+
+# ============================================================================
 # MODERN UI/UX COLOR SCHEME
 # ============================================================================
 
@@ -164,14 +175,20 @@ $Script:ConsoleColors = @{
     Light      = "White"
 }
 
+# PowerShell 7+ enhanced colors
+if ($Script:IsPS7Plus) {
+    $Script:ConsoleColors.Primary = "Blue"
+    $Script:ConsoleColors.Info = "Cyan"
+}
+
 # ============================================================================
-# MODERN UI/UX OUTPUT SYSTEM
+# ENHANCED OUTPUT SYSTEM WITH PS7+ FEATURES
 # ============================================================================
 
-function Write-ModernOutput {
+function Write-EnhancedOutput {
     <#
     .SYNOPSIS
-        Modern UI output with professional design and consistent styling.
+        Enhanced output with PowerShell 7+ features when available.
     #>
     param(
         [Parameter(Mandatory = $true)]
@@ -189,16 +206,16 @@ function Write-ModernOutput {
     )
     
     $color = $Script:ConsoleColors[$Type]
-    $formattedMessage = $Message
     
-    if ($Bold) {
-        $formattedMessage = $Message
-    }
-    
-    if ($NoNewline) {
-        Write-Host $formattedMessage -NoNewline -ForegroundColor $color
+    # PowerShell 7+ enhanced formatting
+    if ($Script:IsPS7Plus -and $Bold) {
+        Write-Host $Message -NoNewline:$NoNewline -ForegroundColor $color -BackgroundColor "DarkBlue"
     } else {
-        Write-Host $formattedMessage -ForegroundColor $color
+        if ($NoNewline) {
+            Write-Host $Message -NoNewline -ForegroundColor $color
+        } else {
+            Write-Host $Message -ForegroundColor $color
+        }
     }
 }
 
@@ -212,8 +229,15 @@ function Write-ModernHeader {
         [string]$Title,
         
         [Parameter(Mandatory = $false)]
-        [string]$Subtitle = ""
+        [string]$Subtitle = "",
+        
+        [Parameter(Mandatory = $false)]
+        [switch]$NoBanner
     )
+    
+    if (-not $NoBanner) {
+        Show-ModernBanner
+    }
     
     Write-Host ""
     Write-Host "=" -NoNewline -ForegroundColor $Script:ConsoleColors.Primary
@@ -323,20 +347,18 @@ function Show-ModernHelp {
         Displays modern, comprehensive help information.
     #>
     
-    Show-ModernBanner
+    Write-ModernHeader "Windows System Tray Icons Configuration Tool" "v$($Script:Configuration.ScriptVersion)" -NoBanner
     
-    Write-ModernHeader "Windows System Tray Icons Configuration Tool" "v$($Script:Configuration.ScriptVersion)"
-    
-    Write-ModernOutput "DESCRIPTION:" -Type Primary -Bold
-    Write-ModernOutput "  Professional tool for managing system tray icon visibility in Windows 10/11." -Type Light
-    Write-ModernOutput "  Modifies registry settings to control notification area behavior." -Type Light
+    Write-EnhancedOutput "DESCRIPTION:" -Type Primary -Bold
+    Write-EnhancedOutput "  Professional tool for managing system tray icon visibility in Windows 10/11." -Type Light
+    Write-EnhancedOutput "  Modifies registry settings to control notification area behavior." -Type Light
     Write-Host ""
     
-    Write-ModernOutput "USAGE:" -Type Primary -Bold
+    Write-EnhancedOutput "USAGE:" -Type Primary -Bold
     Write-Host "  .\$($Script:Configuration.ScriptName) -Action <Command> [Options]" -ForegroundColor $Script:ConsoleColors.Light
     Write-Host ""
     
-    Write-ModernOutput "QUICK COMMANDS:" -Type Primary -Bold
+    Write-EnhancedOutput "QUICK COMMANDS:" -Type Primary -Bold
     Write-ModernCard "Show All Icons" ".\$($Script:Configuration.ScriptName) -Action Enable"
     Write-ModernCard "Restore Default" ".\$($Script:Configuration.ScriptName) -Action Disable"
     Write-ModernCard "Check Status" ".\$($Script:Configuration.ScriptName) -Action Status"
@@ -344,14 +366,14 @@ function Show-ModernHelp {
     Write-ModernCard "Show Help" ".\$($Script:Configuration.ScriptName) -Help"
     Write-Host ""
     
-    Write-ModernOutput "ACTION PARAMETERS:" -Type Primary -Bold
+    Write-EnhancedOutput "ACTION PARAMETERS:" -Type Primary -Bold
     Write-ModernCard "-Action Enable" "Show all system tray icons"
     Write-ModernCard "-Action Disable" "Restore Windows default behavior"
     Write-ModernCard "-Action Status" "Display current configuration"
     Write-ModernCard "-Action Rollback" "Revert to previous configuration"
     Write-Host ""
     
-    Write-ModernOutput "OPTIONAL PARAMETERS:" -Type Primary -Bold
+    Write-EnhancedOutput "OPTIONAL PARAMETERS:" -Type Primary -Bold
     Write-ModernCard "-RestartExplorer" "Apply changes immediately"
     Write-ModernCard "-BackupRegistry" "Create backup before changes"
     Write-ModernCard "-Force" "Bypass confirmation prompts"
@@ -360,7 +382,7 @@ function Show-ModernHelp {
     Write-ModernCard "-LogPath <path>" "Custom log file location"
     Write-Host ""
     
-    Write-ModernOutput "EXAMPLES:" -Type Primary -Bold
+    Write-EnhancedOutput "EXAMPLES:" -Type Primary -Bold
     Write-Host "  .\$($Script:Configuration.ScriptName) -Action Enable -RestartExplorer" -ForegroundColor $Script:ConsoleColors.Light
     Write-Host "    # Enable all icons and restart Explorer immediately" -ForegroundColor $Script:ConsoleColors.Dark
     Write-Host ""
@@ -374,14 +396,15 @@ function Show-ModernHelp {
     Write-Host "    # Check and update script from GitHub" -ForegroundColor $Script:ConsoleColors.Dark
     Write-Host ""
     
-    Write-ModernOutput "ADDITIONAL INFORMATION:" -Type Primary -Bold
+    Write-EnhancedOutput "ADDITIONAL INFORMATION:" -Type Primary -Bold
     Write-ModernCard "Version" $Script:Configuration.ScriptVersion
     Write-ModernCard "Author" $Script:Configuration.ScriptAuthor
     Write-ModernCard "Repository" $Script:Configuration.GitHubRepository
-    Write-ModernCard "Support" "https://github.com/paulmann/windows-show-all-tray-icons"
+    Write-ModernCard "PowerShell Version" "$($PSVersionTable.PSVersion) ($(if($Script:IsPS7Plus){'Enhanced'}else{'Standard'}))"
+    Write-ModernCard "Compatibility" "Windows 10/11, Server 2019+"
     
     Write-Host ""
-    Write-ModernOutput "Note: All parameters are case-insensitive. Admin rights not required." -Type Dark
+    Write-EnhancedOutput "Note: All parameters are case-insensitive. Admin rights not required." -Type Dark
     Write-Host ""
 }
 
@@ -391,28 +414,28 @@ function Show-ApplicationInfo {
         Displays brief application information.
     #>
     
-    Write-ModernHeader "Application Information" "v$($Script:Configuration.ScriptVersion)"
+    Write-ModernHeader "Application Information" "v$($Script:Configuration.ScriptVersion)" -NoBanner
     
     Write-ModernCard "Script Name" $Script:Configuration.ScriptName
     Write-ModernCard "Version" $Script:Configuration.ScriptVersion
     Write-ModernCard "Author" $Script:Configuration.ScriptAuthor
     Write-ModernCard "Repository" $Script:Configuration.GitHubRepository
     Write-ModernCard "Compatibility" "Windows 10/11, Server 2019+"
-    Write-ModernCard "PowerShell" "5.1 or higher"
+    Write-ModernCard "PowerShell" "$($PSVersionTable.PSVersion) ($(if($Script:IsPS7Plus){'Enhanced'}else{'Compatible'}))"
     
     Write-Host ""
-    Write-ModernOutput "Use '-Help' for detailed usage information." -Type Info
+    Write-EnhancedOutput "Use '-Help' for detailed usage information." -Type Info
     Write-Host ""
 }
 
 # ============================================================================
-# AUTO-UPDATE SYSTEM
+# ENHANCED AUTO-UPDATE SYSTEM
 # ============================================================================
 
 function Invoke-ScriptUpdate {
     <#
     .SYNOPSIS
-        Checks for and performs script updates from GitHub repository.
+        Enhanced script update with PowerShell 7+ features when available.
     #>
     
     Write-ModernHeader "Script Update" "Checking for updates..."
@@ -420,10 +443,15 @@ function Invoke-ScriptUpdate {
     try {
         Write-ModernStatus "Checking GitHub repository for updates..." -Status Processing
         
-        # Download latest script content
-        $webClient = New-Object System.Net.WebClient
-        $webClient.Headers.Add('User-Agent', 'PowerShell Script Update Check')
-        $latestScriptContent = $webClient.DownloadString($Script:Configuration.UpdateUrl)
+        # Use Invoke-RestMethod for PowerShell 7+, WebClient for 5.1
+        if ($Script:IsPS7Plus) {
+            Write-ModernStatus "Using enhanced download method (PowerShell 7+)" -Status Info
+            $latestScriptContent = Invoke-RestMethod -Uri $Script:Configuration.UpdateUrl -UserAgent "PowerShell Script Update Check"
+        } else {
+            $webClient = New-Object System.Net.WebClient
+            $webClient.Headers.Add('User-Agent', 'PowerShell Script Update Check')
+            $latestScriptContent = $webClient.DownloadString($Script:Configuration.UpdateUrl)
+        }
         
         # Extract version from downloaded script
         $versionPattern = 'ScriptVersion\s*=\s*"([0-9]+\.[0-9]+)"'
@@ -487,7 +515,7 @@ function Show-EnhancedStatus {
     $osInfo = Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction SilentlyContinue
     
     # Configuration Status
-    Write-ModernOutput "CONFIGURATION STATUS:" -Type Primary -Bold
+    Write-EnhancedOutput "CONFIGURATION STATUS:" -Type Primary -Bold
     if ($null -eq $currentConfig) {
         Write-ModernCard "Tray Icons Behavior" "Auto-hide inactive icons (Windows default)" -ValueColor Success
         Write-ModernCard "Registry Value" "Not configured - using system default" -ValueColor Info
@@ -505,16 +533,16 @@ function Show-EnhancedStatus {
     Write-Host ""
     
     # System Information
-    Write-ModernOutput "SYSTEM INFORMATION:" -Type Primary -Bold
+    Write-EnhancedOutput "SYSTEM INFORMATION:" -Type Primary -Bold
     if ($osInfo) {
         Write-ModernCard "Operating System" $osInfo.Caption
         Write-ModernCard "OS Version" "$($osInfo.Version) (Build $($osInfo.BuildNumber))"
     }
-    Write-ModernCard "PowerShell Version" $PSVersionTable.PSVersion.ToString()
+    Write-ModernCard "PowerShell Version" "$($PSVersionTable.PSVersion) ($(if($Script:IsPS7Plus){'Enhanced'}else{'Compatible'}))"
     Write-Host ""
     
     # Session Context
-    Write-ModernOutput "SESSION CONTEXT:" -Type Primary -Bold
+    Write-EnhancedOutput "SESSION CONTEXT:" -Type Primary -Bold
     Write-ModernCard "Current User" $sessionContext.CurrentUser
     Write-ModernCard "Session Type" $sessionContext.SessionType
     Write-ModernCard "Admin Rights" $(if ($sessionContext.IsAdmin) { "Yes" } else { "No" }) -ValueColor $(if ($sessionContext.IsAdmin) { "Success" } else { "Info" })
@@ -522,7 +550,7 @@ function Show-EnhancedStatus {
     Write-Host ""
     
     # Backup Status
-    Write-ModernOutput "BACKUP STATUS:" -Type Primary -Bold
+    Write-EnhancedOutput "BACKUP STATUS:" -Type Primary -Bold
     $backupExists = Test-Path $Script:Configuration.BackupRegistryPath
     Write-ModernCard "Backup Available" $(if ($backupExists) { "Yes" } else { "No" }) -ValueColor $(if ($backupExists) { "Success" } else { "Info" })
     if ($backupExists) {
@@ -531,12 +559,12 @@ function Show-EnhancedStatus {
     }
     
     Write-Host ""
-    Write-ModernOutput "Use '-Action Enable' to show all icons or '-Action Disable' for default behavior." -Type Info
+    Write-EnhancedOutput "Use '-Action Enable' to show all icons or '-Action Disable' for default behavior." -Type Info
     Write-Host ""
 }
 
 # ============================================================================
-# CORE FUNCTIONS
+# ENHANCED CORE FUNCTIONS
 # ============================================================================
 
 function Get-CurrentTrayConfiguration {
@@ -595,6 +623,7 @@ function Set-TrayIconConfiguration {
         "Registry: $($Script:Configuration.RegistryPath)\$($Script:Configuration.RegistryValue)", 
         "Set value to $value ($actionDescription)"
     )) {
+        Write-ModernStatus "Operation cancelled by ShouldProcess" -Status Info
         return $false
     }
     
@@ -679,6 +708,7 @@ function Restart-WindowsExplorerSafely {
     #>
     
     if (-not $Force -and -not $PSCmdlet.ShouldProcess("Windows Explorer", "Restart process")) {
+        Write-ModernStatus "Operation cancelled by ShouldProcess" -Status Info
         return $false
     }
     
@@ -733,39 +763,46 @@ function Restart-WindowsExplorerSafely {
 }
 
 # ============================================================================
-# MAIN EXECUTION ENGINE
+# ENHANCED MAIN EXECUTION ENGINE
 # ============================================================================
 
 function Invoke-MainExecution {
     <#
     .SYNOPSIS
-        Main execution engine with comprehensive action routing.
+        Enhanced main execution engine with better parameter handling.
     #>
     
-    # Show banner for all actions except help
-    if (-not $Help) {
-        Show-ModernBanner
-    }
+    # Show banner only for specific scenarios
+    $showBanner = $true
     
-    # Handle update first
+    # Handle update first (with banner)
     if ($Update) {
+        Show-ModernBanner
         $updateResult = Invoke-ScriptUpdate
         if ($updateResult) {
-            # Exit if update was successful and we replaced the script
             exit $Script:Configuration.ExitCodes.Success
         }
+        $showBanner = $false
     }
     
-    # Show help if requested or no action specified
-    if ($Help -or (-not $Action -and -not $Update)) {
+    # Show help if requested
+    if ($Help) {
         Show-ModernHelp
         exit $Script:Configuration.ExitCodes.Success
     }
     
     # Show application info if no specific action
-    if (-not $Action -and -not $Update -and -not $Help) {
+    if (-not $Action -and -not $Update) {
+        if ($showBanner) {
+            Show-ModernBanner
+        }
         Show-ApplicationInfo
         exit $Script:Configuration.ExitCodes.Success
+    }
+    
+    # Show banner for actions if not already shown
+    if ($showBanner -and $Action) {
+        Show-ModernBanner
     }
     
     # Execute the requested action
@@ -775,12 +812,12 @@ function Invoke-MainExecution {
         }
         
         'enable' {
-            Write-ModernHeader "Enable All Tray Icons" "Making all icons always visible"
+            Write-ModernHeader "Enable All Tray Icons" "Making all icons always visible" -NoBanner
             
             if (Set-TrayIconConfiguration -Behavior 'Enable') {
                 if ($RestartExplorer) {
                     Write-ModernStatus "Applying changes immediately..." -Status Processing
-                    Restart-WindowsExplorerSafely
+                    $null = Restart-WindowsExplorerSafely
                 }
                 else {
                     Write-ModernStatus "Configuration updated successfully!" -Status Success
@@ -793,12 +830,12 @@ function Invoke-MainExecution {
         }
         
         'disable' {
-            Write-ModernHeader "Restore Default Behavior" "Enabling auto-hide for tray icons"
+            Write-ModernHeader "Restore Default Behavior" "Enabling auto-hide for tray icons" -NoBanner
             
             if (Set-TrayIconConfiguration -Behavior 'Disable') {
                 if ($RestartExplorer) {
                     Write-ModernStatus "Applying changes immediately..." -Status Processing
-                    Restart-WindowsExplorerSafely
+                    $null = Restart-WindowsExplorerSafely
                 }
                 else {
                     Write-ModernStatus "Default behavior restored successfully!" -Status Success
@@ -811,7 +848,7 @@ function Invoke-MainExecution {
         }
         
         'rollback' {
-            Write-ModernHeader "Configuration Rollback" "Reverting to previous settings"
+            Write-ModernHeader "Configuration Rollback" "Reverting to previous settings" -NoBanner
             Write-ModernStatus "Rollback feature requires backup file implementation" -Status Info
             Write-ModernStatus "This feature will be available in future versions" -Status Warning
         }
@@ -819,15 +856,30 @@ function Invoke-MainExecution {
 }
 
 # ============================================================================
-# SCRIPT ENTRY POINT
+# ENHANCED SCRIPT ENTRY POINT
 # ============================================================================
 
+# Version check at the beginning
+if ($PSVersionTable.PSVersion.Major -lt 5) {
+    Write-Host "ERROR: PowerShell 5.1 or higher required. Current version: $($PSVersionTable.PSVersion)" -ForegroundColor Red
+    exit $Script:Configuration.ExitCodes.PowerShellVersion
+}
+
 try {
+    # Enhanced parameter validation
+    if ($PSBoundParameters.Count -eq 0 -and $MyInvocation.ExpectingInput -eq $false) {
+        # No parameters provided, show application info
+        Show-ModernBanner
+        Show-ApplicationInfo
+        exit $Script:Configuration.ExitCodes.Success
+    }
+    
     # Execute main logic
     Invoke-MainExecution
 }
 catch {
     Write-ModernStatus "Unhandled exception: $($_.Exception.Message)" -Status Error
+    Write-ModernStatus "Stack trace: $($_.ScriptStackTrace)" -Status Error
     $Script:Configuration.ExitCode = $Script:Configuration.ExitCodes.GeneralError
 }
 finally {
