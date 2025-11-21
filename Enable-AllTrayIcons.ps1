@@ -1,9 +1,3 @@
-
-Enable All Tray Icons PS1
-
-
-# Enable-AllTrayIcons.ps1 - Полный код
-
 <#
 .SYNOPSIS
     Enable or disable automatic hiding of system tray icons in Windows 11/10.
