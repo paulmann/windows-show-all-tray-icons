@@ -347,8 +347,6 @@ function Show-ModernHelp {
         Displays modern, comprehensive help information.
     #>
     
-    Show-ModernBanner
-    
     Write-ModernHeader "Windows System Tray Icons Configuration Tool" "v$($Script:Configuration.ScriptVersion)"
     
     Write-EnhancedOutput "DESCRIPTION:" -Type Primary -Bold
@@ -903,10 +901,16 @@ function Invoke-MainExecution {
         Enhanced main execution engine with better parameter handling.
     #>
     
-    # Show banner only once at the very beginning
+    # Show banner only once at the very beginning for specific scenarios
     $showBanner = $true
     
-    # Handle update first
+    # Handle help first (help doesn't need the main banner since it has its own header)
+    if ($Help) {
+        Show-ModernHelp
+        exit $Script:Configuration.ExitCodes.Success
+    }
+    
+    # Handle update
     if ($Update) {
         if ($showBanner) {
             Show-ModernBanner
@@ -916,16 +920,6 @@ function Invoke-MainExecution {
         if ($updateResult) {
             exit $Script:Configuration.ExitCodes.Success
         }
-    }
-    
-    # Show help if requested
-    if ($Help) {
-        if ($showBanner) {
-            Show-ModernBanner
-            $showBanner = $false
-        }
-        Show-ModernHelp
-        exit $Script:Configuration.ExitCodes.Success
     }
     
     # Show application info if no specific action
