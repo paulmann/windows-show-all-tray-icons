@@ -38,8 +38,13 @@
 
 **Choose your preferred method and get started in seconds:**
 
-### PowerShell (Recommended - Full Features)
+### Method 1: PowerShell (Recommended - Full Features)
 
+**Opening PowerShell:**
+- Press `Win + R`, type `powershell`, press Enter
+- Or press `Win + X`, select "Windows PowerShell"
+
+```powershell
 # Download script
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/paulmann/windows-show-all-tray-icons/main/Enable-AllTrayIcons.ps1" -OutFile "Enable-AllTrayIcons.ps1"
 
@@ -47,9 +52,15 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/paulmann/windows-show-
 .\Enable-AllTrayIcons.ps1 -Action Enable -RestartExplorer
 
 # Done! All icons now visible ✓
+```
 
-### Batch Script (Windows Native - No Dependencies)
+### Method 2: Batch Script (Windows Native - No Dependencies)
 
+**Opening Command Prompt:**
+- Press `Win + R`, type `cmd`, press Enter
+- Or press `Win + X`, select "Command Prompt"
+
+```batch
 :: Download script
 curl -O https://raw.githubusercontent.com/paulmann/windows-show-all-tray-icons/main/Enable-AllTrayIcons.bat
 
@@ -57,9 +68,15 @@ curl -O https://raw.githubusercontent.com/paulmann/windows-show-all-tray-icons/m
 Enable-AllTrayIcons.bat Enable /Restart
 
 :: Done! All icons now visible ✓
+```
 
-### Registry File (Simplest - Double-Click)
+### Method 3: Registry File (Simplest - Double-Click)
 
+**Opening File Explorer:**
+- Press `Win + E` to open File Explorer
+- Navigate to downloaded file location
+
+```batch
 :: Download registry file
 curl -O https://raw.githubusercontent.com/paulmann/windows-show-all-tray-icons/main/enable-all-tray-icons.reg
 
@@ -67,11 +84,16 @@ curl -O https://raw.githubusercontent.com/paulmann/windows-show-all-tray-icons/m
 :: Restart Explorer: Ctrl+Shift+Esc → Find "Windows Explorer" → Right-click → Restart
 
 :: Done! All icons now visible ✓
+```
 
-### One-Liner (Advanced Users)
+### Method 4: One-Liner (Advanced Users)
 
+**Using any command method:**
+
+```powershell
 # PowerShell one-liner - run as Administrator
 Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" -Name "EnableAutoTray" -Value 0 -Type DWord; Stop-Process -Name explorer -Force; Start-Process explorer.exe
+```
 
 **That's it!** Your system tray now shows all icons. Continue reading for advanced features and enterprise deployment.
 
@@ -184,6 +206,7 @@ Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer
 
 **Step 1: Download the script**
 
+```powershell
 # Option A: PowerShell download (Recommended)
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/paulmann/windows-show-all-tray-icons/main/Enable-AllTrayIcons.ps1" -OutFile "$env:USERPROFILE\Downloads\Enable-AllTrayIcons.ps1"
 
@@ -196,19 +219,24 @@ wget -O Enable-AllTrayIcons.ps1 https://raw.githubusercontent.com/paulmann/windo
 # Option D: Clone repository
 git clone https://github.com/paulmann/windows-show-all-tray-icons.git
 cd windows-show-all-tray-icons
+```
 
 **Step 2: Check PowerShell version**
 
+```powershell
 $PSVersionTable.PSVersion
 # Should show: 5.1 or higher
+```
 
 **Step 3: Configure execution policy (first time only)**
 
+```powershell
 # Check current policy
 Get-ExecutionPolicy -Scope CurrentUser
 
 # If "Restricted", enable scripts for current user
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+```
 
 **Step 4: Open PowerShell**
 
@@ -221,11 +249,14 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
 
 **Step 5: Navigate to script location**
 
+```powershell
 cd $env:USERPROFILE\Downloads
 # Or wherever you saved the script
+```
 
 **Step 6: Run the script**
 
+```powershell
 # Show all icons with automatic Explorer restart
 .\Enable-AllTrayIcons.ps1 -Action Enable -RestartExplorer
 
@@ -240,6 +271,7 @@ cd $env:USERPROFILE\Downloads
 
 # Show help
 .\Enable-AllTrayIcons.ps1 -Help
+```
 
 #### PowerShell Quick Commands
 
@@ -277,6 +309,7 @@ cd $env:USERPROFILE\Downloads
 
 **Step 1: Download the batch script**
 
+```batch
 :: Option A: Using curl (Windows 10/11)
 curl -O https://raw.githubusercontent.com/paulmann/windows-show-all-tray-icons/main/Enable-AllTrayIcons.bat
 
@@ -286,6 +319,7 @@ powershell -Command "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/p
 :: Option C: Clone repository
 git clone https://github.com/paulmann/windows-show-all-tray-icons.git
 cd windows-show-all-tray-icons
+```
 
 **Step 2: Open Command Prompt**
 
@@ -296,11 +330,14 @@ cd windows-show-all-tray-icons
 
 **Step 3: Navigate to script location**
 
+```batch
 cd %USERPROFILE%\Downloads
 :: Or wherever you saved the script
+```
 
 **Step 4: Run the batch script**
 
+```batch
 :: Show all icons with automatic Explorer restart
 Enable-AllTrayIcons.bat Enable /Restart
 
@@ -315,6 +352,7 @@ Enable-AllTrayIcons.bat Status
 
 :: Show help
 Enable-AllTrayIcons.bat Help
+```
 
 #### Batch Script Quick Commands
 
@@ -388,10 +426,16 @@ https://raw.githubusercontent.com/paulmann/windows-show-all-tray-icons/main/enab
 3. Right-click → **Restart**
 
 **Option B: Command Prompt**
+
+```batch
 taskkill /f /im explorer.exe && start explorer.exe
+```
 
 **Option C: PowerShell**
+
+```powershell
 Stop-Process -Name explorer -Force; Start-Process explorer.exe
+```
 
 ---
 
@@ -401,6 +445,7 @@ Stop-Process -Name explorer -Force; Start-Process explorer.exe
 
 #### PowerShell One-Liner
 
+```powershell
 # Enable all tray icons and restart Explorer
 Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" -Name "EnableAutoTray" -Value 0 -Type DWord; Stop-Process -Name explorer -Force; Start-Process explorer.exe
 
@@ -409,9 +454,11 @@ Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer
 
 # Check current value
 Get-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" -Name "EnableAutoTray"
+```
 
 #### Command Prompt Commands
 
+```batch
 REM Enable all tray icons
 reg add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v EnableAutoTray /t REG_DWORD /d 0 /f
 
@@ -420,6 +467,7 @@ taskkill /f /im explorer.exe && start explorer.exe
 
 REM Verify setting
 reg query "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v EnableAutoTray
+```
 
 ---
 
@@ -429,6 +477,7 @@ reg query "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v EnableAut
 
 #### Backup and Rollback
 
+```powershell
 # Create backup before making changes
 .\Enable-AllTrayIcons.ps1 -Action Enable -BackupRegistry -RestartExplorer
 
@@ -437,6 +486,7 @@ reg query "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v EnableAut
 
 # Rollback to previous configuration
 .\Enable-AllTrayIcons.ps1 -Action Rollback -RestartExplorer
+```
 
 **Backup Details:**
 - Backup location: `%TEMP%\TrayIconsBackup.reg`
@@ -446,8 +496,10 @@ reg query "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v EnableAut
 
 #### Status Checking
 
+```powershell
 # Comprehensive system status
 .\Enable-AllTrayIcons.ps1 -Action Status
+```
 
 **Status Output Includes:**
 - Current tray icon configuration
@@ -459,37 +511,46 @@ reg query "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v EnableAut
 
 #### Auto-Update
 
+```powershell
 # Check and update script from GitHub
 .\Enable-AllTrayIcons.ps1 -Update
 
 # Update creates backup of current version
 # New version downloaded automatically
+```
 
 #### WhatIf Mode (Testing)
 
+```powershell
 # Preview changes without applying
 .\Enable-AllTrayIcons.ps1 -Action Enable -WhatIf
 
 # Shows what would happen without executing
+```
 
 #### Force Mode (Bypass Prompts)
 
+```powershell
 # Skip all confirmation prompts
 .\Enable-AllTrayIcons.ps1 -Action Enable -Force -RestartExplorer
 
 # Useful for automation and scripting
+```
 
 #### Custom Logging
 
+```powershell
 # Specify custom log file location
 .\Enable-AllTrayIcons.ps1 -Action Enable -LogPath "C:\Logs\tray-config.log"
 
 # Default log location: %TEMP%\Enable-AllTrayIcons.log
+```
 
 ### Batch Script Advanced Features
 
 #### Backup and Rollback
 
+```batch
 :: Create backup before making changes
 Enable-AllTrayIcons.bat Enable /Backup /Restart
 
@@ -498,6 +559,7 @@ Enable-AllTrayIcons.bat Backup
 
 :: Rollback to previous configuration
 Enable-AllTrayIcons.bat Rollback /Restart
+```
 
 **Backup Details:**
 - Backup location: `%TEMP%\TrayIconsBackup.reg`
@@ -506,8 +568,10 @@ Enable-AllTrayIcons.bat Rollback /Restart
 
 #### Status Checking
 
+```batch
 :: Display comprehensive system status
 Enable-AllTrayIcons.bat Status
+```
 
 **Status Output Includes:**
 - Current tray icon behavior
@@ -517,11 +581,13 @@ Enable-AllTrayIcons.bat Status
 
 #### Force Mode
 
+```batch
 :: Skip confirmation prompts
 Enable-AllTrayIcons.bat Enable /Force /Restart
 
 :: Overwrite existing backup
 Enable-AllTrayIcons.bat Backup /Force
+```
 
 ---
 
@@ -546,6 +612,7 @@ Enable-AllTrayIcons.bat Backup /Force
 
 #### Advanced Parameters
 
+```powershell
 # All available parameters
 .\Enable-AllTrayIcons.ps1 `
     -Action <Enable|Disable|Status|Backup|Rollback> `
@@ -557,6 +624,7 @@ Enable-AllTrayIcons.bat Backup /Force
     [-Help] `
     [-WhatIf] `
     [-Confirm]
+```
 
 **Parameter Reference:**
 
@@ -589,6 +657,7 @@ Enable-AllTrayIcons.bat Backup /Force
 
 **Using Exit Codes:**
 
+```powershell
 # Check exit code after execution
 .\Enable-AllTrayIcons.ps1 -Action Enable -RestartExplorer
 if ($LASTEXITCODE -eq 0) {
@@ -605,6 +674,7 @@ if ($result -eq 0) {
 } else {
     # Handle error
 }
+```
 
 #### Modern UI Features
 
@@ -643,6 +713,7 @@ if ($result -eq 0) {
 
 #### Action Parameters
 
+```batch
 :: All available actions
 Enable-AllTrayIcons.bat <Action> [Options]
 
@@ -658,9 +729,11 @@ Enable-AllTrayIcons.bat <Action> [Options]
 ::   /Backup   - Create backup before changes
 ::   /Force    - Skip confirmation prompts
 ::   /Help     - Display help information
+```
 
 **Parameter Combinations:**
 
+```batch
 :: Enable with all features
 Enable-AllTrayIcons.bat Enable /Backup /Restart /Force
 
@@ -675,6 +748,7 @@ Enable-AllTrayIcons.bat Disable /Restart
 
 :: Emergency rollback
 Enable-AllTrayIcons.bat Rollback /Restart
+```
 
 #### Logging System
 
@@ -689,6 +763,7 @@ Enable-AllTrayIcons.bat Rollback /Restart
 
 **Viewing Log:**
 
+```batch
 :: View log in Notepad
 notepad %TEMP%\Enable-AllTrayIcons.log
 
@@ -697,6 +772,7 @@ type %TEMP%\Enable-AllTrayIcons.log
 
 :: Tail recent entries (PowerShell)
 Get-Content %TEMP%\Enable-AllTrayIcons.log -Tail 20
+```
 
 ---
 
@@ -706,10 +782,13 @@ Get-Content %TEMP%\Enable-AllTrayIcons.log -Tail 20
 
 #### Via PowerShell Script
 
+```powershell
 .\Enable-AllTrayIcons.ps1 -Action Status
+```
 
 **Expected Output:**
 
+```
 ================================================================
    System Status - Current Tray Icons Configuration
 ================================================================
@@ -723,10 +802,13 @@ SYSTEM INFORMATION:
   [*] OS Version          | 10.0.26100 (Build 26100)
   [*] PowerShell Version  | 7.4.1 (Enhanced)
 ...
+```
 
 #### Via Batch Script
 
+```batch
 Enable-AllTrayIcons.bat Status
+```
 
 #### Via Registry Editor
 
@@ -738,12 +820,16 @@ Enable-AllTrayIcons.bat Status
 
 #### Via Command Prompt
 
+```batch
 reg query "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v EnableAutoTray
+```
 
 **Expected Output:**
 
+```
 HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer
     EnableAutoTray    REG_DWORD    0x0
+```
 
 ### Common Issues & Solutions
 
@@ -754,13 +840,17 @@ HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer
 **Solutions:**
 
 1. **Restart Windows Explorer:**
-   
-   Stop-Process -Name explorer -Force
-   Start-Process explorer.exe
+
+```powershell
+Stop-Process -Name explorer -Force
+Start-Process explorer.exe
+```
 
 2. **Use script with restart:**
-   
-   .\Enable-AllTrayIcons.ps1 -Action Enable -RestartExplorer
+
+```powershell
+.\Enable-AllTrayIcons.ps1 -Action Enable -RestartExplorer
+```
 
 3. **Log off and log back in:**
    - Click Start → Power → Sign out
@@ -782,9 +872,11 @@ HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer
    - Run script again
 
 2. **Check user account permissions:**
-   
-   whoami /priv
-   :: Should show SeBackupPrivilege and SeRestorePrivilege
+
+```batch
+whoami /priv
+:: Should show SeBackupPrivilege and SeRestorePrivilege
+```
 
 3. **Use different admin account:**
    - Log in with administrator account
@@ -796,6 +888,7 @@ HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer
 
 **Solution:**
 
+```powershell
 # Allow scripts for current user (permanent)
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
 
@@ -804,6 +897,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
 
 # Alternative: Bypass policy for single execution
 PowerShell.exe -ExecutionPolicy Bypass -File .\Enable-AllTrayIcons.ps1 -Action Enable
+```
 
 #### ❌ Issue: Script File Not Found
 
@@ -812,19 +906,25 @@ PowerShell.exe -ExecutionPolicy Bypass -File .\Enable-AllTrayIcons.ps1 -Action E
 **Solutions:**
 
 1. **Ensure you're in correct directory:**
-   
-   cd C:\Users\YourUsername\Downloads
-   ls *.ps1
-   # Should show Enable-AllTrayIcons.ps1
+
+```powershell
+cd C:\Users\YourUsername\Downloads
+ls *.ps1
+# Should show Enable-AllTrayIcons.ps1
+```
 
 2. **Use full path:**
-   
-   C:\Users\YourUsername\Downloads\Enable-AllTrayIcons.ps1 -Action Enable
+
+```powershell
+C:\Users\YourUsername\Downloads\Enable-AllTrayIcons.ps1 -Action Enable
+```
 
 3. **Use tab completion:**
-   
-   .\Ena<TAB>
-   # Autocompletes to .\Enable-AllTrayIcons.ps1
+
+```powershell
+.\Ena<TAB>
+# Autocompletes to .\Enable-AllTrayIcons.ps1
+```
 
 #### ❌ Issue: Changes Reverted After Reboot
 
@@ -839,9 +939,11 @@ PowerShell.exe -ExecutionPolicy Bypass -File .\Enable-AllTrayIcons.ps1 -Action E
 **Solutions:**
 
 1. **Check Group Policy:**
-   
-   gpresult /h gpresult.html
-   :: Open gpresult.html and check for conflicting policies
+
+```batch
+gpresult /h gpresult.html
+:: Open gpresult.html and check for conflicting policies
+```
 
 2. **Identify conflicting software:**
    - Review recently installed privacy/optimization tools
@@ -853,13 +955,15 @@ PowerShell.exe -ExecutionPolicy Bypass -File .\Enable-AllTrayIcons.ps1 -Action E
    - Domain-level GPO prevents local overrides
 
 4. **Create scheduled task:**
-   
-   # Run at every logon
-   $action = New-ScheduledTaskAction -Execute "powershell.exe" `
-     -Argument "-NoProfile -File 'C:\Scripts\Enable-AllTrayIcons.ps1' -Action Enable"
-   $trigger = New-ScheduledTaskTrigger -AtLogon
-   Register-ScheduledTask -TaskName "Show All Tray Icons" `
-     -Action $action -Trigger $trigger -RunLevel Highest
+
+```powershell
+# Run at every logon
+$action = New-ScheduledTaskAction -Execute "powershell.exe" `
+  -Argument "-NoProfile -File 'C:\Scripts\Enable-AllTrayIcons.ps1' -Action Enable"
+$trigger = New-ScheduledTaskTrigger -AtLogon
+Register-ScheduledTask -TaskName "Show All Tray Icons" `
+  -Action $action -Trigger $trigger -RunLevel Highest
+```
 
 #### ❌ Issue: Batch Script Not Working
 
@@ -868,33 +972,42 @@ PowerShell.exe -ExecutionPolicy Bypass -File .\Enable-AllTrayIcons.ps1 -Action E
 **Solutions:**
 
 1. **Check script location:**
-   
-   where Enable-AllTrayIcons.bat
+
+```batch
+where Enable-AllTrayIcons.bat
+```
 
 2. **Run with full path:**
-   
-   C:\Users\YourUsername\Downloads\Enable-AllTrayIcons.bat Enable /Restart
+
+```batch
+C:\Users\YourUsername\Downloads\Enable-AllTrayIcons.bat Enable /Restart
+```
 
 3. **Check for UAC prompts:**
    - Watch for User Account Control dialogs
    - Click "Yes" to allow registry changes
 
 4. **View log file:**
-   
-   type %TEMP%\Enable-AllTrayIcons.log
+
+```batch
+type %TEMP%\Enable-AllTrayIcons.log
+```
 
 #### 🔍 Diagnostic Commands
 
 **Check current configuration:**
 
+```powershell
 # PowerShell
 Get-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" -Name "EnableAutoTray" -ErrorAction SilentlyContinue
 
 # Command Prompt
 reg query "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v EnableAutoTray
+```
 
 **Check backup availability:**
 
+```powershell
 # PowerShell
 Test-Path "$env:TEMP\TrayIconsBackup.reg"
 Get-Content "$env:TEMP\TrayIconsBackup.reg"
@@ -902,15 +1015,18 @@ Get-Content "$env:TEMP\TrayIconsBackup.reg"
 # Command Prompt
 if exist "%TEMP%\TrayIconsBackup.reg" echo Backup exists
 type "%TEMP%\TrayIconsBackup.reg"
+```
 
 **Check Windows version:**
 
+```powershell
 # PowerShell
 Get-CimInstance -ClassName Win32_OperatingSystem | Select-Object Caption, Version, BuildNumber
 
 # Command Prompt
 ver
 systeminfo | findstr /B /C:"OS Name" /C:"OS Version"
+```
 
 ---
 
@@ -920,11 +1036,13 @@ systeminfo | findstr /B /C:"OS Name" /C:"OS Version"
 
 **Simplest method:**
 
+```powershell
 # Restore Windows default behavior
 .\Enable-AllTrayIcons.ps1 -Action Disable -RestartExplorer
 
 # Rollback to previous configuration (if backup exists)
 .\Enable-AllTrayIcons.ps1 -Action Rollback -RestartExplorer
+```
 
 **Difference between Disable and Rollback:**
 - **Disable:** Sets registry to Windows default (value = 1)
@@ -932,11 +1050,13 @@ systeminfo | findstr /B /C:"OS Name" /C:"OS Version"
 
 ### Method 2: Batch Script
 
+```batch
 :: Restore Windows default behavior
 Enable-AllTrayIcons.bat Disable /Restart
 
 :: Rollback to previous configuration
 Enable-AllTrayIcons.bat Rollback /Restart
+```
 
 ### Method 3: Revert Registry File
 
@@ -953,33 +1073,41 @@ https://raw.githubusercontent.com/paulmann/windows-show-all-tray-icons/main/disa
 
 **PowerShell:**
 
+```powershell
 # Set to Windows default (auto-hide enabled)
 Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" -Name "EnableAutoTray" -Value 1 -Type DWord
 
 # Restart Explorer
 Stop-Process -Name explorer -Force
 Start-Process explorer.exe
+```
 
 **Command Prompt:**
 
+```batch
 REM Restore default
 reg add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v EnableAutoTray /t REG_DWORD /d 1 /f
 
 REM Restart Explorer
 taskkill /f /im explorer.exe && start explorer.exe
+```
 
 ### Method 5: Complete Removal
 
 **Delete registry entry completely:**
 
+```powershell
 # PowerShell - Remove entry (use Windows built-in default)
 Remove-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" -Name "EnableAutoTray" -ErrorAction SilentlyContinue
 Stop-Process -Name explorer -Force
 Start-Process explorer.exe
+```
 
+```batch
 REM Command Prompt - Remove entry
 reg delete "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v EnableAutoTray /f
 taskkill /f /im explorer.exe && start explorer.exe
+```
 
 ---
 
@@ -991,16 +1119,20 @@ taskkill /f /im explorer.exe && start explorer.exe
 
 #### Step 1: Open Group Policy Editor
 
+```powershell
 # On Domain Controller or with RSAT tools
 gpedit.msc
 # Or: gpmc.msc (Group Policy Management Console)
+```
 
 #### Step 2: Navigate to Registry Preferences
 
+```
 Computer Configuration (or User Configuration)
   → Preferences
     → Windows Settings
       → Registry
+```
 
 #### Step 3: Create Registry Item
 
@@ -1026,12 +1158,14 @@ Computer Configuration (or User Configuration)
 
 #### Step 5: Force Policy Update
 
+```batch
 :: On client computers
 gpupdate /force
 
 :: Verify GPO application
 gpresult /r
 gpresult /h gpresult.html
+```
 
 ### Microsoft Intune Deployment
 
@@ -1112,6 +1246,7 @@ gpresult /h gpresult.html
 
 **Deploy to multiple computers via network share:**
 
+```batch
 @echo off
 setlocal enabledelayedexpansion
 
@@ -1133,11 +1268,13 @@ for /f "usebackq tokens=*" %%A in (computers.txt) do (
 )
 
 endlocal
+```
 
 ### PowerShell Script Mass Deployment
 
 **Deploy to domain computers:**
 
+```powershell
 # Deploy to list of computers
 $computers = @("PC01", "PC02", "PC03", "PC04")
 
@@ -1160,9 +1297,11 @@ foreach ($computer in $computers) {
         Write-Host "✗ Failed: $computer - $($_.Exception.Message)" -ForegroundColor Red
     }
 }
+```
 
 **Deploy to all domain computers:**
 
+```powershell
 # Requires Active Directory module
 Import-Module ActiveDirectory
 
@@ -1186,11 +1325,13 @@ foreach ($computer in $computers) {
         } -ErrorAction SilentlyContinue
     }
 }
+```
 
 ### Scheduled Task Deployment
 
 **Create scheduled task to run at logon:**
 
+```powershell
 # PowerShell scheduled task
 $action = New-ScheduledTaskAction -Execute "powershell.exe" `
   -Argument "-NoProfile -ExecutionPolicy Bypass -File 'C:\ProgramData\Enable-AllTrayIcons.ps1' -Action Enable"
@@ -1210,6 +1351,7 @@ Register-ScheduledTask -TaskName "Show All Tray Icons" `
   -Settings $settings `
   -Description "Enable display of all system tray icons" `
   -Force
+```
 
 **Deploy scheduled task via Group Policy:**
 
@@ -1373,6 +1515,7 @@ See [Enterprise Deployment](#-enterprise-deployment) for detailed methods.
 
 **PowerShell Method:**
 
+```powershell
 # Create scheduled task
 $action = New-ScheduledTaskAction -Execute "powershell.exe" `
   -Argument "-NoProfile -File 'C:\Path\Enable-AllTrayIcons.ps1' -Action Enable"
@@ -1380,6 +1523,7 @@ $trigger = New-ScheduledTaskTrigger -AtLogon
 $principal = New-ScheduledTaskPrincipal -UserId "$env:USERNAME" -LogonType Interactive
 Register-ScheduledTask -TaskName "Show All Tray Icons" `
   -Action $action -Trigger $trigger -Principal $principal -RunLevel Highest
+```
 
 **GUI Method:**
 1. Open Task Scheduler (`taskschd.msc`)
@@ -1393,30 +1537,40 @@ Register-ScheduledTask -TaskName "Show All Tray Icons" `
 **A:** Troubleshooting steps:
 
 1. **Check PowerShell version:**
-   
-   $PSVersionTable.PSVersion
-   # Should be 5.1 or higher
+
+```powershell
+$PSVersionTable.PSVersion
+# Should be 5.1 or higher
+```
 
 2. **Check execution policy:**
-   
-   Get-ExecutionPolicy
-   # If "Restricted", run:
-   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+
+```powershell
+Get-ExecutionPolicy
+# If "Restricted", run:
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+```
 
 3. **Run with elevated privileges:**
    - Right-click PowerShell → Run as administrator
 
 4. **Check registry manually:**
-   
-   reg query "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v EnableAutoTray
+
+```batch
+reg query "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v EnableAutoTray
+```
 
 5. **View log file:**
-   
-   Get-Content "$env:TEMP\Enable-AllTrayIcons.log"
+
+```powershell
+Get-Content "$env:TEMP\Enable-AllTrayIcons.log"
+```
 
 6. **Use status command:**
-   
-   .\Enable-AllTrayIcons.ps1 -Action Status
+
+```powershell
+.\Enable-AllTrayIcons.ps1 -Action Status
+```
 
 ### Deployment Questions
 
@@ -1485,19 +1639,23 @@ See [Enterprise Deployment](#-enterprise-deployment) for step-by-step guides.
 
 **PowerShell:**
 
+```powershell
 # Create backup without making changes
 .\Enable-AllTrayIcons.ps1 -Action Backup
 
 # Create backup before enabling
 .\Enable-AllTrayIcons.ps1 -Action Enable -BackupRegistry
+```
 
 **Batch:**
 
+```batch
 :: Create backup without making changes
 Enable-AllTrayIcons.bat Backup
 
 :: Create backup before enabling
 Enable-AllTrayIcons.bat Enable /Backup
+```
 
 **Backup Location:**
 - `%TEMP%\TrayIconsBackup.reg` (both scripts)
@@ -1510,21 +1668,27 @@ Enable-AllTrayIcons.bat Enable /Backup
 
 **PowerShell:**
 
+```powershell
 # Automatic rollback from backup
 .\Enable-AllTrayIcons.ps1 -Action Rollback -RestartExplorer
+```
 
 **Batch:**
 
+```batch
 :: Automatic rollback from backup
 Enable-AllTrayIcons.bat Rollback /Restart
+```
 
 **Manual:**
 
+```powershell
 # Import backup file
 reg import "%TEMP%\TrayIconsBackup.reg"
 
 # Or use disable action
 .\Enable-AllTrayIcons.ps1 -Action Disable -RestartExplorer
+```
 
 #### Q: Is this the same as using Settings?
 
@@ -1592,21 +1756,26 @@ reg import "%TEMP%\TrayIconsBackup.reg"
 
 #### Registry Backup
 
+```powershell
 # PowerShell - Backup entire Explorer key
 reg export "HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" explorer_backup.reg
 
 # Command Prompt
 reg export "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" explorer_backup.reg /y
+```
 
 **To restore from backup:**
 
+```powershell
 # Import backup
 reg import explorer_backup.reg
 
 # Or double-click .reg file in Windows Explorer
+```
 
 #### System Restore Point
 
+```powershell
 # Create restore point (requires admin)
 Checkpoint-Computer -Description "Before System Tray Icon Change" -RestorePointType "MODIFY_SETTINGS"
 
@@ -1618,11 +1787,13 @@ rstrui.exe
 
 # Restore from point (PowerShell, requires admin)
 Restore-Computer -RestorePoint <RestorePointNumber> -Confirm
+```
 
 #### Script Built-in Backup
 
 Both PowerShell and Batch scripts include built-in backup:
 
+```powershell
 # Automatic backup before changes
 .\Enable-AllTrayIcons.ps1 -Action Enable -BackupRegistry
 
@@ -1631,6 +1802,7 @@ Both PowerShell and Batch scripts include built-in backup:
 
 # Rollback to backup
 .\Enable-AllTrayIcons.ps1 -Action Rollback
+```
 
 ### Security Best Practices
 
@@ -1660,11 +1832,13 @@ Both PowerShell and Batch scripts include built-in backup:
 
 **Verify integrity:**
 
+```powershell
 # Check file hash
 Get-FileHash .\Enable-AllTrayIcons.ps1 -Algorithm SHA256
 
 # Scan with Windows Defender
 Start-MpScan -ScanPath ".\Enable-AllTrayIcons.ps1" -ScanType CustomScan
+```
 
 **VirusTotal scan:**
 1. Upload script to [VirusTotal](https://www.virustotal.com/)
@@ -1726,6 +1900,7 @@ Contributions welcome! Help improve this tool for the community.
 
 ### Development Setup
 
+```powershell
 # Clone repository
 git clone https://github.com/paulmann/windows-show-all-tray-icons.git
 cd windows-show-all-tray-icons
@@ -1748,6 +1923,7 @@ git commit -m "Add: Your feature description"
 git push origin feature/your-feature-name
 
 # Create Pull Request on GitHub
+```
 
 ### Code Style Guidelines
 
