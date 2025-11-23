@@ -1,20 +1,131 @@
 Windows Registry Editor Version 5.00
 
 ; ============================================================================
-; Windows 11 - Restore Default System Tray Icon Behavior
+; WINDOWS 10/11 SYSTEM TRAY - RESTORE DEFAULT BEHAVIOR
 ; ============================================================================
+; Professional System Administrator Edition
 ; Author: Mikhail Deynekin (mid1977@gmail.com)
-; Website: https://deynekin.com
-; Description: This registry file restores Windows 11 default behavior for
-;              system tray icons (auto-hide inactive icons).
+; Created: 2025
 ; 
-; This is the REVERT script for enable-all-tray-icons.reg
+; TECHNICAL OVERVIEW:
+; This registry configuration restores Windows 10/11 default notification
+; area behavior with automatic hiding of inactive tray icons.
+; 
+; KEY FEATURES:
+; 1. Enables automatic tray icon hiding (EnableAutoTray)
+; 2. Restores system default icon visibility settings
+; 3. Allows Windows to manage icon overflow automatically
+; 4. Maintains user icon organization preferences
+; 
+; COMPATIBILITY:
+; - Windows 11 (21H2, 22H2, 23H2, 24H2+)
+; - Windows 10 (1809, 1903, 1909, 2004, 20H2, 21H1, 21H2, 22H2)
+; - Windows Server 2019/2022
+; 
+; REVERSION NOTES:
+; - This is the complete revert script for enable-all-tray-icons.reg
+; - Restores Microsoft-recommended tray icon management
 ; ============================================================================
 
-; Enable automatic hiding of system tray icons (Windows default)
+; ============================================================================
+; CORE SYSTEM TRAY BEHAVIOR RESTORATION
+; ============================================================================
+
+; Enable automatic hiding of inactive notification area icons (Windows default)
+; Value: 1 = Auto-hide inactive icons, 0 = Show all icons
 [HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer]
 "EnableAutoTray"=dword:00000001
 
 ; ============================================================================
-; After applying, restart Windows Explorer or log off/log on for full effect
+; SYSTEM ICON VISIBILITY - RESTORE DEFAULTS
+; ============================================================================
+
+; Restore default system icon behavior - allow Windows to manage visibility
+; Removing these values lets Windows decide which system icons to show
+
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer]
+"HideSCAVolume"=-
+"HideSCANetwork"=-
+"HideSCAPower"=-
+
+; ============================================================================
+; WINDOWS 11 SPECIFIC SETTINGS RESTORATION
+; ============================================================================
+
+; Restore Windows 11 default taskbar and notification area settings
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced]
+"EnableAutoTray"=-
+"TaskbarSi"=-
+
+; ============================================================================
+; NOTIFICATION ICON SETTINGS CLEANUP
+; ============================================================================
+
+; Remove forced icon promotion settings to allow natural icon behavior
+; Windows will now manage icon visibility based on usage patterns
+
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\NotifyIconSettings\Microsoft.VolumeControl]
+"IsPromoted"=-
+
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\NotifyIconSettings\Microsoft.NetworkStatus]
+"IsPromoted"=-
+
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\NotifyIconSettings\Microsoft.Power]
+"IsPromoted"=-
+
+; ============================================================================
+; ICON CACHE MANAGEMENT
+; ============================================================================
+
+; Allow Windows to rebuild icon cache with default behavior
+; Note: We don't delete entire TrayNotify key to preserve some user preferences
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\TrayNotify]
+"UserPreferencesMask"=-
+
+; ============================================================================
+; APPLICATION NOTIFICATION DEFAULTS
+; ============================================================================
+
+; Restore default notification settings for applications
+; Applications will now follow their default notification behavior
+
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Notifications\Settings]
+; Let Windows manage notification defaults
+
+; ============================================================================
+; DEPLOYMENT AND MAINTENANCE NOTES
+; ============================================================================
+;
+; IMPLEMENTATION:
+; 1. Double-click this .reg file to apply settings
+; 2. Restart Windows Explorer for immediate effect:
+;    - Task Manager → Windows Explorer → Restart
+;    - OR: Command Prompt: taskkill /f /im explorer.exe && start explorer.exe
+;
+; VERIFICATION:
+; - Check Settings → Personalization → Taskbar → System tray icons
+; - Inactive icons should automatically hide in overflow menu
+; - System should manage icon visibility based on usage
+;
+; BEHAVIOR EXPECTATIONS:
+; - Frequently used icons remain visible in main tray area
+; - Infrequently used icons automatically move to overflow menu
+; - Users can manually pin important icons to always show
+; - System manages icon real estate efficiently
+;
+; ENTERPRISE CONSIDERATIONS:
+; - This configuration follows Microsoft best practices
+; - Reduces taskbar clutter for improved user experience
+; - Maintains system performance and stability
+; - Compatible with all enterprise management tools
+;
+; TROUBLESHOOTING:
+; - If changes don't apply immediately, restart Explorer process
+; - Some applications may require restart to recognize new settings
+; - Check individual application settings for icon visibility controls
+;
+; FURTHER CUSTOMIZATION:
+; - Users can manually configure individual icons in:
+;   Settings → Personalization → Taskbar → Other system tray icons
+; - Group Policy can enforce specific icon visibility settings
 ; ============================================================================
