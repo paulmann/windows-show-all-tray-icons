@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 :: ============================================================================
-:: WINDOWS SYSTEM TRAY ICONS CONFIGURATION TOOL
+:: WINDOWS SYSTEM TRAY ICONS CONFIGURATION TOOL 4.0
 :: ============================================================================
 
 :: Enhanced Configuration
