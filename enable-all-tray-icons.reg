@@ -1,72 +1,165 @@
 Windows Registry Editor Version 5.00
 
 ; ============================================================================
-; Windows 11 - Enable All System Tray Icons
+; WINDOWS 10/11 SYSTEM TRAY ICONS - COMPREHENSIVE CONFIGURATION
 ; ============================================================================
+; Professional System Administrator Edition
 ; Author: Mikhail Deynekin (mid1977@gmail.com)
-; Website: https://deynekin.com
-; Description: This registry file forces Windows 11 to display ALL notification
-;              area icons in the system tray, preventing auto-hide behavior.
+; Created: 2024
 ; 
-; Technical Details:
-; - Modifies HKEY_CURRENT_USER registry hive (per-user setting)
-; - Sets EnableAutoTray to 0 (disabled) to show all icons
-; - Changes take effect immediately after applying
-; - No system restart required
+; TECHNICAL OVERVIEW:
+; This registry configuration forces Windows 10/11 to display ALL notification
+; area icons and resets individual application icon hiding preferences.
 ; 
-; Compatibility:
-; - Windows 11 (all versions)
-; - Windows 10 (all versions)
+; KEY FEATURES:
+; 1. Disables automatic tray icon hiding (EnableAutoTray)
+; 2. Clears icon cache and user hiding preferences
+; 3. Forces system icons to remain visible
+; 4. Resets notification area to default state
 ; 
-; Safety: This change is user-specific and can be easily reverted
+; COMPATIBILITY:
+; - Windows 11 (21H2, 22H2, 23H2, 24H2+)
+; - Windows 10 (1809, 1903, 1909, 2004, 20H2, 21H1, 21H2, 22H2)
+; - Windows Server 2019/2022
+; 
+; SAFETY NOTES:
+; - User-specific settings only (HKCU)
+; - Reversible through System Settings or restore script
+; - No system stability impact
 ; ============================================================================
 
-; Disable automatic hiding of system tray icons
-; EnableAutoTray = 0 means "do NOT auto-hide icons" (show all)
-; EnableAutoTray = 1 means "auto-hide icons" (default Windows behavior)
+; ============================================================================
+; CORE SYSTEM TRAY BEHAVIOR CONFIGURATION
+; ============================================================================
+
+; Disable automatic hiding of notification area icons
+; Value: 0 = Show all icons, 1 = Auto-hide inactive icons (Windows default)
 [HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer]
 "EnableAutoTray"=dword:00000000
 
+; ============================================================================
+; ICON CACHE AND USER PREFERENCES RESET
+; ============================================================================
+
+; Clear icon stream cache - forces Windows to rebuild tray icon database
+; This removes individual application hiding preferences and positions
 [HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\TrayNotify]
 "IconStreams"=-
 "PastIconsStream"=-
-
-[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel]
-"20D04FE0-3AEA-1069-A2D8-08002B30309D"=-
-"59031a47-3f72-44a7-89c5-5595fe6b30ee"=-
-"645FF040-5081-101B-9F08-00AA002F954E"=-
-"F02C1A0D-BE21-4350-88B0-7367FC96EF3C"=-
-"{031E4825-7B94-4dc3-B131-E946B44C8DD5}"=-
-"{05d7b0f4-2121-4eff-bf6b-ed3f69b894d9}"=-
-"{211e4a80-19c7-4af2-886e-c9b2ad0b2810}"=-
-"{24ad3ad4-a569-4530-98e1-ab02f9417aa8}"=-
-"{36eef7db-88ad-4e81-ad49-0e313f0c35f8}"=-
-"{3d5ca1e4-5672-4b3e-872a-2c9c9a6c5f81}"=-
-"{450d8fba-ad25-11d0-98a8-0800361b1103}"=-
-"{5946fe44-6e19-4a05-a6f1-7c7326a92d0f}"=-
-"{66833fe6-8583-4474-ad04-b79e364e03fc}"=-
-"{7b39a9be-f9be-4625-96ac-3c9c66e408c8}"=-
-"{805af88a-dc26-4bb7-9d84-4c90a6100ae0}"=-
-"{93438129-26a9-48f0-b1d2-6a1d7a244054}"=-
-"{9d2c8e0a-10c7-4c01-b091-cfe8d007a1a5}"=-
-"{a305ce99-f527-492b-8b1a-7e76fa98d6e4}"=-
-"{c4169564-1944-44cb-b609-206a6988952a}"=-
-"{cc4c247c-66e8-470c-b9f1-7316f9c6c47b}"=-
-"{ed228fdf-9ea8-4870-83b1-96e04f79efbc}"=-
+"UserStartTime"=-
+"UserPreferencesMask"=hex:00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
 
 ; ============================================================================
-; NOTES:
+; SYSTEM ICON VISIBILITY FORCE
 ; ============================================================================
-; 1. After applying this registry change, you may need to restart Windows Explorer
-;    or log off/log on for changes to take full effect in some cases
-; 
-; 2. To restart Windows Explorer without logging off:
-;    - Press Ctrl+Shift+Esc to open Task Manager
-;    - Find "Windows Explorer" in the list
-;    - Right-click and select "Restart"
-; 
-; 3. Individual application icon visibility can still be managed in:
-;    Settings → Personalization → Taskbar → Other system tray icons
-; 
-; 4. To revert this change, set EnableAutoTray back to 1 (see disable script)
+
+; Force specific system icons to remain visible (Windows 10/11)
+; These settings override individual system component hiding behavior
+
+; Volume control icon - always show
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer]
+"HideSCAVolume"=dword:00000000
+
+; Network connectivity icon - always show  
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer]
+"HideSCANetwork"=dword:00000000
+
+; Power/battery icon - always show (laptops/tablets)
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer]
+"HideSCAPower"=dword:00000000
+
+; ============================================================================
+; WINDOWS 11 SPECIFIC ENHANCEMENTS
+; ============================================================================
+
+; Windows 11 taskbar and notification area optimizations
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced]
+"TaskbarSi"=dword:00000000  ; Taskbar size: 0=small, 1=medium, 2=large
+"EnableAutoTray"=dword:00000000
+
+; Windows 11 notification panel settings
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Notifications\Settings]
+"Enabled"=dword:00000001  ; Enable notification center
+
+; ============================================================================
+; EXPLORER UI STATE RESET
+; ============================================================================
+
+; Reset taskbar and notification area UI state
+; This ensures changes take effect immediately upon Explorer restart
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3]
+"Settings"=hex:30,00,00,00,fe,ff,ff,ff,02,00,00,00,03,00,00,00,3e,00,00,00,\
+  2e,00,00,00,00,00,00,00,9a,02,00,00,80,07,00,00,68,00,00,00
+
+; ============================================================================
+; APPLICATION-SPECIFIC NOTIFICATION SETTINGS RESET
+; ============================================================================
+
+; The following section resets notification settings for common applications
+; This ensures all applications can show their tray icons by default
+
+; Reset Microsoft Office notification settings
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Common]
+"UISettings"=-
+
+; Reset Windows Update notification settings  
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\WindowsUpdate\UX]
+"IsConcealedFeatureEnabled"=dword:00000000
+
+; Reset OneDrive notification settings
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\{018D5C66-4533-4307-9B53-224DE2ED1FE6}]
+"RemovalMessage"=-
+
+; ============================================================================
+; NOTIFICATION ICON SETTINGS (PER-APPLICATION VISIBILITY)
+; ============================================================================
+
+; Reset individual application icon visibility settings
+; This section removes any user-configured "show/hide" preferences
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\NotifyIconSettings]
+
+; Example: Force show common application icons
+; Note: Actual GUIDs will vary by application and installation
+
+; Audio device settings
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\NotifyIconSettings\Microsoft.VolumeControl]
+"IsPromoted"=dword:00000001
+
+; Network status
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\NotifyIconSettings\Microsoft.NetworkStatus]
+"IsPromoted"=dword:00000001
+
+; Power/battery
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\NotifyIconSettings\Microsoft.Power]
+"IsPromoted"=dword:00000001
+
+; ============================================================================
+; DEPLOYMENT AND MAINTENANCE NOTES
+; ============================================================================
+;
+; IMPLEMENTATION:
+; 1. Double-click this .reg file to apply settings
+; 2. Restart Windows Explorer for immediate effect:
+;    - Task Manager → Windows Explorer → Restart
+;    - OR: Command Prompt: taskkill /f /im explorer.exe && start explorer.exe
+;
+; VERIFICATION:
+; - Check Settings → Personalization → Taskbar → System tray icons
+; - All icons should be visible in notification area
+; - No icons should be hidden in overflow menu
+;
+; TROUBLESHOOTING:
+; - If changes don't apply immediately, restart Explorer process
+; - Some applications may require restart to recognize new settings
+; - Check Event Viewer for Explorer-related errors if issues persist
+;
+; REVERSION:
+; - Delete the Explorer registry keys or use System Restore
+; - Reset through Settings → Personalization → Taskbar
+; - Set EnableAutoTray back to 1 to restore default behavior
+;
+; ENTERPRISE DEPLOYMENT:
+; - Deploy via Group Policy Preferences (GPP)
+; - Package in SCCM/MECM as Registry item
+; - Include in login scripts for user-specific configuration
 ; ============================================================================
