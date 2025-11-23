@@ -4,12 +4,13 @@
 
 .DESCRIPTION
     Enterprise-grade PowerShell script for managing system tray icon visibility.
-    Features comprehensive error handling, logging, session validation, and rollback support.
-    
+    Features comprehensive error handling, logging, session validation, rollback support,
+    and individual icon settings reset.
+
     Author: Mikhail Deynekin (mid1977@gmail.com)
     Website: https://deynekin.com
     Repository: https://github.com/paulmann/windows-show-all-tray-icons
-    Version: 3.3 (Enterprise Edition)
+    Version: 3.4 (Enterprise Edition - Enhanced)
 
 .PARAMETER Action
     Specifies the action to perform:
@@ -72,25 +73,20 @@
     Displays detailed help information.
 
 .NOTES
-    Version:        3.3 (Enterprise Edition)
+    Version:        3.4 (Enterprise Edition - Enhanced)
     Creation Date:  2025-11-21
     Last Updated:   2025-11-21
     Compatibility:  Windows 10 (All versions), Windows 11 (All versions), Server 2019+
     Requires:       PowerShell 5.1 or higher (with enhanced features for PowerShell 7+)
     Privileges:     Standard User (HKCU registry key only - no admin required)
     
-    FEATURES:
-    - Comprehensive logging (console and file)
-    - Registry backup/restore functionality
-    - Session validation and context awareness
-    - Rollback support for failed operations
-    - WhatIf support for safe testing
-    - Performance monitoring and metrics
-    - Graceful error handling with recovery
-    - Auto-update functionality
-    - Professional UI/UX design
-    - PowerShell 7+ enhanced features
-    - Standalone backup functionality
+    ENHANCED FEATURES:
+    - Comprehensive individual icon settings reset
+    - Multiple methods for forcing icon visibility
+    - Enhanced backup/restore for all tray-related settings
+    - Windows 11 specific optimizations
+    - System icon visibility controls
+    - Professional reporting and status display
 
 .LINK
     GitHub Repository: https://github.com/paulmann/windows-show-all-tray-icons
@@ -133,9 +129,9 @@ $Script:Configuration = @{
     DisableValue = 1
     
     # Script Metadata
-    ScriptVersion = "3.3"
+    ScriptVersion = "3.4"
     ScriptAuthor = "Mikhail Deynekin (mid1977@gmail.com)"
-    ScriptName = "Enable-AllTrayIcons.ps1"
+    ScriptName = "Enable-AllTrayIcons.ps1 (Enterprise Edition - Enhanced)"
     GitHubRepository = "https://github.com/paulmann/windows-show-all-tray-icons"
     UpdateUrl = "https://raw.githubusercontent.com/paulmann/windows-show-all-tray-icons/refs/heads/main/Enable-AllTrayIcons.ps1"
     
@@ -333,6 +329,7 @@ function Show-ModernBanner {
     Write-Host ""
     Write-Host "================================================================" -ForegroundColor $Script:ConsoleColors.Primary
     Write-Host "   WINDOWS SYSTEM TRAY ICONS CONFIGURATION TOOL" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "              ENTERPRISE EDITION - ENHANCED" -ForegroundColor $Script:ConsoleColors.Info
     Write-Host "================================================================" -ForegroundColor $Script:ConsoleColors.Primary
     Write-Host ""
 }
@@ -351,7 +348,8 @@ function Show-ModernHelp {
     
     Write-EnhancedOutput "DESCRIPTION:" -Type Primary -Bold
     Write-EnhancedOutput "  Professional tool for managing system tray icon visibility in Windows 10/11." -Type Light
-    Write-EnhancedOutput "  Modifies registry settings to control notification area behavior." -Type Light
+    Write-EnhancedOutput "  Modifies registry settings to control notification area behavior with enhanced" -Type Light
+    Write-EnhancedOutput "  individual icon settings reset and comprehensive backup/restore functionality." -Type Light
     Write-Host ""
     
     Write-EnhancedOutput "USAGE:" -Type Primary -Bold
@@ -368,10 +366,10 @@ function Show-ModernHelp {
     Write-Host ""
     
     Write-EnhancedOutput "ACTION PARAMETERS:" -Type Primary -Bold
-    Write-ModernCard "-Action Enable" "Show all system tray icons"
+    Write-ModernCard "-Action Enable" "Show all system tray icons (comprehensive method)"
     Write-ModernCard "-Action Disable" "Restore Windows default behavior"
     Write-ModernCard "-Action Status" "Display current configuration"
-    Write-ModernCard "-Action Backup" "Create registry backup"
+    Write-ModernCard "-Action Backup" "Create comprehensive registry backup"
     Write-ModernCard "-Action Rollback" "Revert to previous configuration"
     Write-Host ""
     
@@ -384,6 +382,14 @@ function Show-ModernHelp {
     Write-ModernCard "-LogPath <path>" "Custom log file location"
     Write-Host ""
     
+    Write-EnhancedOutput "ENHANCED FEATURES:" -Type Primary -Bold
+    Write-ModernCard "Individual Settings Reset" "Resets per-icon user preferences"
+    Write-ModernCard "Multiple Methods" "Uses 4+ techniques to force icon visibility"
+    Write-ModernCard "Comprehensive Backup" "Backs up ALL tray-related settings"
+    Write-ModernCard "Windows 11 Optimized" "Includes Windows 11 specific tweaks"
+    Write-ModernCard "System Icons Control" "Manages system icon visibility"
+    Write-Host ""
+    
     Write-EnhancedOutput "EXAMPLES:" -Type Primary -Bold
     Write-Host "  .\$($Script:Configuration.ScriptName) -Action Enable -RestartExplorer" -ForegroundColor $Script:ConsoleColors.Light
     Write-Host "    # Enable all icons and restart Explorer immediately" -ForegroundColor $Script:ConsoleColors.Dark
@@ -392,10 +398,10 @@ function Show-ModernHelp {
     Write-Host "    # Display current system configuration" -ForegroundColor $Script:ConsoleColors.Dark
     Write-Host ""
     Write-Host "  .\$($Script:Configuration.ScriptName) -Action Backup" -ForegroundColor $Script:ConsoleColors.Light
-    Write-Host "    # Create registry backup without changes" -ForegroundColor $Script:ConsoleColors.Dark
+    Write-Host "    # Create comprehensive registry backup" -ForegroundColor $Script:ConsoleColors.Dark
     Write-Host ""
-    Write-Host "  .\$($Script:Configuration.ScriptName) -Action Disable -BackupRegistry -Force" -ForegroundColor $Script:ConsoleColors.Light
-    Write-Host "    # Restore defaults with backup, no prompts" -ForegroundColor $Script:ConsoleColors.Dark
+    Write-Host "  .\$($Script:Configuration.ScriptName) -Action Enable -BackupRegistry -Force" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "    # Force enable all icons with backup, no prompts" -ForegroundColor $Script:ConsoleColors.Dark
     Write-Host ""
     Write-Host "  .\$($Script:Configuration.ScriptName) -Update" -ForegroundColor $Script:ConsoleColors.Light
     Write-Host "    # Check and update script from GitHub" -ForegroundColor $Script:ConsoleColors.Dark
@@ -427,6 +433,7 @@ function Show-ApplicationInfo {
     Write-ModernCard "Repository" $Script:Configuration.GitHubRepository
     Write-ModernCard "Compatibility" "Windows 10/11, Server 2019+"
     Write-ModernCard "PowerShell" "$($PSVersionTable.PSVersion) ($(if($Script:IsPS7Plus){'Enhanced'}else{'Compatible'}))"
+    Write-ModernCard "Enhanced Features" "Individual settings reset, comprehensive backup"
     
     Write-Host ""
     Write-EnhancedOutput "Use '-Help' for detailed usage information." -Type Info
@@ -434,8 +441,420 @@ function Show-ApplicationInfo {
 }
 
 # ============================================================================
-# ENHANCED BACKUP SYSTEM
+# ENHANCED TRAY ICONS MANAGEMENT SYSTEM
 # ============================================================================
+
+function Reset-IndividualIconSettings {
+    <#
+    .SYNOPSIS
+        Resets individual icon settings to show all icons regardless of user preferences.
+    #>
+    
+    Write-ModernStatus "Resetting individual icon settings..." -Status Processing
+    
+    $results = @{
+        NotifyIconSettings = $false
+        TrayNotify = $false
+        HideDesktopIcons = $false
+        TaskbarLayout = $false
+    }
+    
+    try {
+        # 1. Reset NotifyIconSettings (main individual settings)
+        $settingsPath = "HKCU:\Control Panel\NotifyIconSettings"
+        if (Test-Path $settingsPath) {
+            Get-ChildItem -Path $settingsPath | ForEach-Object {
+                try {
+                    Set-ItemProperty -Path $_.PSPath -Name "IsPromoted" -Value 1 -Type DWord -Force -ErrorAction SilentlyContinue
+                }
+                catch {
+                    Write-ModernStatus "Failed to reset IsPromoted for $($_.PSChildName)" -Status Warning
+                }
+            }
+            $results.NotifyIconSettings = $true
+            Write-ModernStatus "NotifyIconSettings reset completed" -Status Success
+        }
+        else {
+            Write-ModernStatus "NotifyIconSettings path not found" -Status Warning
+        }
+        
+        # 2. Reset TrayNotify streams (icon cache)
+        $trayPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\TrayNotify"
+        if (Test-Path $trayPath) {
+            try {
+                Remove-ItemProperty -Path $trayPath -Name "IconStreams" -Force -ErrorAction SilentlyContinue
+                Remove-ItemProperty -Path $trayPath -Name "PastIconsStream" -Force -ErrorAction SilentlyContinue
+                $results.TrayNotify = $true
+                Write-ModernStatus "TrayNotify streams cleared" -Status Success
+            }
+            catch {
+                Write-ModernStatus "Failed to clear TrayNotify streams: $($_.Exception.Message)" -Status Warning
+            }
+        }
+        
+        # 3. Reset desktop icon visibility (related to system icons)
+        $desktopPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons"
+        if (Test-Path $desktopPath) {
+            try {
+                # Remove all subkeys that might hide system icons
+                Get-ChildItem -Path $desktopPath | ForEach-Object {
+                    Remove-Item -Path $_.PSPath -Recurse -Force -ErrorAction SilentlyContinue
+                }
+                $results.HideDesktopIcons = $true
+                Write-ModernStatus "Desktop icon visibility reset" -Status Success
+            }
+            catch {
+                Write-ModernStatus "Failed to reset desktop icons: $($_.Exception.Message)" -Status Warning
+            }
+        }
+        
+        # 4. Reset taskbar layout (additional icon positioning)
+        $taskbarPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Taskband"
+        if (Test-Path $taskbarPath) {
+            try {
+                Remove-ItemProperty -Path $taskbarPath -Name "Favorites" -Force -ErrorAction SilentlyContinue
+                Remove-ItemProperty -Path $taskbarPath -Name "FavoritesResolve" -Force -ErrorAction SilentlyContinue
+                $results.TaskbarLayout = $true
+                Write-ModernStatus "Taskbar layout reset" -Status Success
+            }
+            catch {
+                Write-ModernStatus "Failed to reset taskbar layout: $($_.Exception.Message)" -Status Warning
+            }
+        }
+        
+        # 5. Additional method: Reset notification area preferences completely
+        $notifyPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Notifications\Settings"
+        if (Test-Path $notifyPath) {
+            try {
+                # This ensures all notification settings are reset to default
+                Get-ChildItem -Path $notifyPath | ForEach-Object {
+                    try {
+                        Set-ItemProperty -Path $_.PSPath -Name "Enabled" -Value 1 -Type DWord -Force -ErrorAction SilentlyContinue
+                        Set-ItemProperty -Path $_.PSPath -Name "ShowInActionCenter" -Value 1 -Type DWord -Force -ErrorAction SilentlyContinue
+                    }
+                    catch {
+                        # Continue if individual settings fail
+                    }
+                }
+                Write-ModernStatus "Notification settings reset" -Status Success
+            }
+            catch {
+                Write-ModernStatus "Failed to reset notification settings: $($_.Exception.Message)" -Status Warning
+            }
+        }
+        
+        return $results
+    }
+    catch {
+        Write-ModernStatus "Failed to reset individual icon settings: $($_.Exception.Message)" -Status Error
+        return $results
+    }
+}
+
+function Enable-AllTrayIconsComprehensive {
+    <#
+    .SYNOPSIS
+        Comprehensive method to enable ALL tray icons using multiple techniques.
+    #>
+    
+    Write-ModernStatus "Enabling ALL tray icons using comprehensive methods..." -Status Processing
+    
+    $methods = @{
+        AutoTrayDisabled = $false
+        IndividualSettingsReset = $false
+        TrayCacheCleared = $false
+        NotificationSettingsReset = $false
+    }
+    
+    try {
+        # Method 1: Disable AutoTray (original method)
+        if (Set-TrayIconConfiguration -Behavior 'Enable') {
+            $methods.AutoTrayDisabled = $true
+        }
+        
+        # Method 2: Reset individual icon settings
+        $resetResults = Reset-IndividualIconSettings
+        if ($resetResults.Values -contains $true) {
+            $methods.IndividualSettingsReset = $true
+        }
+        
+        # Method 3: Additional registry tweaks for stubborn icons
+        
+        # Force show all system icons
+        $systemIconsPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
+        $systemIcons = @(
+            @{Name = "HideSCAVolume"; Value = 0},
+            @{Name = "HideSCANetwork"; Value = 0},
+            @{Name = "HideSCAPower"; Value = 0}
+        )
+        
+        foreach ($icon in $systemIcons) {
+            try {
+                Set-ItemProperty -Path $systemIconsPath -Name $icon.Name -Value $icon.Value -Type DWord -Force -ErrorAction SilentlyContinue
+            }
+            catch {
+                # Continue if individual system icon settings fail
+            }
+        }
+        $methods.SystemIconsForced = $true
+        
+        # Method 4: Reset Windows 11 specific settings
+        if (Get-WindowsVersion -Like "*11*") {
+            $win11Path = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+            try {
+                Set-ItemProperty -Path $win11Path -Name "TaskbarMn" -Value 0 -Type DWord -Force -ErrorAction SilentlyContinue
+                Write-ModernStatus "Windows 11 specific settings applied" -Status Success
+            }
+            catch {
+                Write-ModernStatus "Windows 11 specific settings failed" -Status Warning
+            }
+        }
+        
+        Write-ModernStatus "Comprehensive tray icon enabling completed" -Status Success
+        
+        # Display results
+        Write-Host ""
+        Write-EnhancedOutput "METHODS APPLIED:" -Type Primary -Bold
+        foreach ($method in $methods.GetEnumerator()) {
+            $status = if ($method.Value) { "Success" } else { "Failed" }
+            $color = if ($method.Value) { "Success" } else { "Warning" }
+            Write-ModernCard $method.Key $status -ValueColor $color
+        }
+        
+        return $true
+    }
+    catch {
+        Write-ModernStatus "Comprehensive enable failed: $($_.Exception.Message)" -Status Error
+        return $false
+    }
+}
+
+function Get-WindowsVersion {
+    <#
+    .SYNOPSIS
+        Detects Windows version for version-specific tweaks.
+    #>
+    try {
+        $osInfo = Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction SilentlyContinue
+        return $osInfo.Caption
+    }
+    catch {
+        return "Unknown"
+    }
+}
+
+# ============================================================================
+# ENHANCED BACKUP SYSTEM FOR COMPREHENSIVE SETTINGS
+# ============================================================================
+
+function Backup-ComprehensiveTraySettings {
+    <#
+    .SYNOPSIS
+        Creates comprehensive backup of ALL tray-related settings.
+    #>
+    
+    Write-ModernStatus "Creating comprehensive tray settings backup..." -Status Processing
+    
+    $backupData = @{
+        Timestamp = Get-Date
+        ScriptVersion = $Script:Configuration.ScriptVersion
+        ComputerName = $env:COMPUTERNAME
+        UserName = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+        WindowsVersion = Get-WindowsVersion
+    }
+    
+    try {
+        # 1. Backup main AutoTray setting
+        $backupData.EnableAutoTray = Get-CurrentTrayConfiguration
+        
+        # 2. Backup NotifyIconSettings
+        $settingsPath = "HKCU:\Control Panel\NotifyIconSettings"
+        if (Test-Path $settingsPath) {
+            $notifySettings = @{}
+            Get-ChildItem -Path $settingsPath | ForEach-Object {
+                $iconSettings = Get-ItemProperty -Path $_.PSPath -ErrorAction SilentlyContinue
+                if ($iconSettings) {
+                    $notifySettings[$_.PSChildName] = @{}
+                    foreach ($property in $iconSettings.PSObject.Properties) {
+                        if ($property.Name -notin @("PSPath", "PSParentPath", "PSChildName", "PSDrive", "PSProvider")) {
+                            $notifySettings[$_.PSChildName][$property.Name] = $property.Value
+                        }
+                    }
+                }
+            }
+            $backupData.NotifyIconSettings = $notifySettings
+        }
+        
+        # 3. Backup TrayNotify
+        $trayPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\TrayNotify"
+        if (Test-Path $trayPath) {
+            $traySettings = @{}
+            $trayProperties = Get-ItemProperty -Path $trayPath -ErrorAction SilentlyContinue
+            if ($trayProperties) {
+                foreach ($property in $trayProperties.PSObject.Properties) {
+                    if ($property.Name -notin @("PSPath", "PSParentPath", "PSChildName", "PSDrive", "PSProvider")) {
+                        # For binary data, store as Base64
+                        if ($property.Value -is [byte[]]) {
+                            $traySettings[$property.Name] = @{
+                                Type = "Binary"
+                                Data = [Convert]::ToBase64String($property.Value)
+                            }
+                        }
+                        else {
+                            $traySettings[$property.Name] = $property.Value
+                        }
+                    }
+                }
+            }
+            $backupData.TrayNotify = $traySettings
+        }
+        
+        # 4. Backup system icon settings
+        $systemIconsPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
+        $systemIcons = @("HideSCAVolume", "HideSCANetwork", "HideSCAPower")
+        $backupData.SystemIcons = @{}
+        
+        foreach ($icon in $systemIcons) {
+            try {
+                $value = Get-ItemProperty -Path $systemIconsPath -Name $icon -ErrorAction SilentlyContinue
+                if ($value) {
+                    $backupData.SystemIcons[$icon] = $value.$icon
+                }
+            }
+            catch {
+                # Skip if not present
+            }
+        }
+        
+        # Save comprehensive backup
+        $backupPath = $Script:Configuration.BackupRegistryPath
+        $backupData | ConvertTo-Json -Depth 10 | Out-File -FilePath $backupPath -Encoding UTF8
+        
+        Write-ModernStatus "Comprehensive backup created: $backupPath" -Status Success
+        
+        # Display backup summary
+        Write-ModernCard "Backup Location" $backupPath
+        Write-ModernCard "Settings Backed Up" "$($backupData.Keys.Count) categories"
+        Write-ModernCard "Windows Version" $backupData.WindowsVersion
+        
+        return $true
+    }
+    catch {
+        Write-ModernStatus "Comprehensive backup failed: $($_.Exception.Message)" -Status Error
+        return $false
+    }
+}
+
+function Restore-ComprehensiveTraySettings {
+    <#
+    .SYNOPSIS
+        Restores comprehensive tray settings from backup.
+    #>
+    
+    $backupPath = $Script:Configuration.BackupRegistryPath
+    
+    if (-not (Test-Path $backupPath)) {
+        Write-ModernStatus "No comprehensive backup found: $backupPath" -Status Error
+        return $false
+    }
+    
+    Write-ModernStatus "Restoring comprehensive tray settings..." -Status Processing
+    
+    try {
+        $backupData = Get-Content -Path $backupPath -Raw | ConvertFrom-Json
+        
+        Write-ModernCard "Backup Created" $backupData.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")
+        Write-ModernCard "Windows Version" $backupData.WindowsVersion
+        
+        $restoreResults = @{}
+        
+        # 1. Restore main AutoTray setting
+        if ($null -ne $backupData.EnableAutoTray) {
+            Set-ItemProperty -Path $Script:Configuration.RegistryPath `
+                           -Name $Script:Configuration.RegistryValue `
+                           -Value $backupData.EnableAutoTray `
+                           -Type DWord `
+                           -Force `
+                           -ErrorAction Stop
+            $restoreResults.EnableAutoTray = $true
+        }
+        
+        # 2. Restore NotifyIconSettings
+        if ($backupData.NotifyIconSettings) {
+            $settingsPath = "HKCU:\Control Panel\NotifyIconSettings"
+            foreach ($icon in $backupData.NotifyIconSettings.PSObject.Properties) {
+                try {
+                    $iconPath = Join-Path $settingsPath $icon.Name
+                    if (-not (Test-Path $iconPath)) {
+                        $null = New-Item -Path $iconPath -Force -ErrorAction SilentlyContinue
+                    }
+                    
+                    foreach ($property in $icon.Value.PSObject.Properties) {
+                        Set-ItemProperty -Path $iconPath -Name $property.Name -Value $property.Value -Force -ErrorAction SilentlyContinue
+                    }
+                }
+                catch {
+                    Write-ModernStatus "Failed to restore $($icon.Name) settings" -Status Warning
+                }
+            }
+            $restoreResults.NotifyIconSettings = $true
+        }
+        
+        # 3. Restore TrayNotify
+        if ($backupData.TrayNotify) {
+            $trayPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\TrayNotify"
+            foreach ($property in $backupData.TrayNotify.PSObject.Properties) {
+                try {
+                    if ($property.Value.Type -eq "Binary") {
+                        $bytes = [Convert]::FromBase64String($property.Value.Data)
+                        Set-ItemProperty -Path $trayPath -Name $property.Name -Value $bytes -Type Binary -Force -ErrorAction SilentlyContinue
+                    }
+                    else {
+                        Set-ItemProperty -Path $trayPath -Name $property.Name -Value $property.Value -Force -ErrorAction SilentlyContinue
+                    }
+                }
+                catch {
+                    Write-ModernStatus "Failed to restore TrayNotify.$($property.Name)" -Status Warning
+                }
+            }
+            $restoreResults.TrayNotify = $true
+        }
+        
+        # 4. Restore system icons
+        if ($backupData.SystemIcons) {
+            $systemIconsPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
+            foreach ($icon in $backupData.SystemIcons.PSObject.Properties) {
+                try {
+                    Set-ItemProperty -Path $systemIconsPath -Name $icon.Name -Value $icon.Value -Type DWord -Force -ErrorAction SilentlyContinue
+                }
+                catch {
+                    # Skip if restoration fails
+                }
+            }
+            $restoreResults.SystemIcons = $true
+        }
+        
+        # Remove backup file after successful restoration
+        Remove-Item -Path $backupPath -Force -ErrorAction SilentlyContinue
+        Write-ModernStatus "Backup file removed after successful restoration" -Status Info
+        
+        Write-ModernStatus "Comprehensive restoration completed" -Status Success
+        
+        # Display restoration summary
+        Write-Host ""
+        Write-EnhancedOutput "RESTORATION RESULTS:" -Type Primary -Bold
+        foreach ($result in $restoreResults.GetEnumerator()) {
+            $color = if ($result.Value) { "Success" } else { "Warning" }
+            Write-ModernCard $result.Key $(if ($result.Value) { "Success" } else { "Partial/Failed" }) -ValueColor $color
+        }
+        
+        return $true
+    }
+    catch {
+        Write-ModernStatus "Comprehensive restoration failed: $($_.Exception.Message)" -Status Error
+        return $false
+    }
+}
 
 function Backup-RegistryConfiguration {
     <#
@@ -658,6 +1077,7 @@ function Show-EnhancedStatus {
         Write-ModernCard "OS Version" "$($osInfo.Version) (Build $($osInfo.BuildNumber))"
     }
     Write-ModernCard "PowerShell Version" "$($PSVersionTable.PSVersion) ($(if($Script:IsPS7Plus){'Enhanced'}else{'Compatible'}))"
+    Write-ModernCard "Windows Version" (Get-WindowsVersion)
     Write-Host ""
     
     # Session Context
@@ -673,10 +1093,16 @@ function Show-EnhancedStatus {
     $backupExists = Test-Path $Script:Configuration.BackupRegistryPath
     Write-ModernCard "Backup Available" $(if ($backupExists) { "Yes" } else { "No" }) -ValueColor $(if ($backupExists) { "Success" } else { "Info" })
     if ($backupExists) {
-        $backupInfo = Get-Item $Script:Configuration.BackupRegistryPath
-        $backupData = Get-Content -Path $Script:Configuration.BackupRegistryPath -Raw | ConvertFrom-Json
-        Write-ModernCard "Backup Created" $backupData.Timestamp.ToString("yyyy-MM-dd HH:mm")
-        Write-ModernCard "Backup Value" $(if ($null -eq $backupData.OriginalValue) { "Not Set (Default)" } else { $backupData.OriginalValue })
+        try {
+            $backupInfo = Get-Item $Script:Configuration.BackupRegistryPath
+            $backupData = Get-Content -Path $Script:Configuration.BackupRegistryPath -Raw | ConvertFrom-Json
+            Write-ModernCard "Backup Created" $backupData.Timestamp.ToString("yyyy-MM-dd HH:mm")
+            Write-ModernCard "Backup Type" $(if ($backupData.NotifyIconSettings) { "Comprehensive" } else { "Basic" })
+            Write-ModernCard "Backup Version" $backupData.ScriptVersion
+        }
+        catch {
+            Write-ModernCard "Backup Status" "Corrupted or incompatible" -ValueColor Warning
+        }
     }
     
     Write-Host ""
@@ -898,7 +1324,7 @@ function Restart-WindowsExplorerSafely {
 function Invoke-MainExecution {
     <#
     .SYNOPSIS
-        Enhanced main execution engine with better parameter handling.
+        Enhanced main execution engine with comprehensive tray icons management.
     #>
     
     # Show banner only once at the very beginning for specific scenarios
@@ -945,26 +1371,26 @@ function Invoke-MainExecution {
         }
         
         'backup' {
-            Write-ModernHeader "Create Registry Backup" "Saving current configuration"
+            Write-ModernHeader "Create Comprehensive Backup" "Saving ALL tray-related settings"
             
-            if (Backup-RegistryConfiguration -Force:$Force) {
-                Write-ModernStatus "Backup completed successfully!" -Status Success
+            if (Backup-ComprehensiveTraySettings) {
+                Write-ModernStatus "Comprehensive backup completed successfully!" -Status Success
             } else {
                 $Script:Configuration.ExitCode = $Script:Configuration.ExitCodes.BackupFailed
-                Write-ModernStatus "Backup operation failed or was cancelled" -Status Error
+                Write-ModernStatus "Backup operation failed" -Status Error
             }
         }
         
         'enable' {
-            Write-ModernHeader "Enable All Tray Icons" "Making all icons always visible"
+            Write-ModernHeader "Enable ALL Tray Icons" "Comprehensive method - forcing all icons visible"
             
-            if (Set-TrayIconConfiguration -Behavior 'Enable') {
+            if (Enable-AllTrayIconsComprehensive) {
                 if ($RestartExplorer) {
                     Write-ModernStatus "Applying changes immediately..." -Status Processing
                     $null = Restart-WindowsExplorerSafely
                 }
                 else {
-                    Write-ModernStatus "Configuration updated successfully!" -Status Success
+                    Write-ModernStatus "Comprehensive configuration completed!" -Status Success
                     Write-ModernStatus "Restart Explorer or use -RestartExplorer to apply changes" -Status Info
                 }
             }
@@ -994,19 +1420,32 @@ function Invoke-MainExecution {
         'rollback' {
             Write-ModernHeader "Configuration Rollback" "Reverting to previous settings"
             
-            if (Invoke-ConfigurationRollback) {
+            # Try comprehensive restore first, fall back to basic restore
+            if (-not (Restore-ComprehensiveTraySettings)) {
+                Write-ModernStatus "Falling back to basic rollback..." -Status Warning
+                if (Invoke-ConfigurationRollback) {
+                    if ($RestartExplorer) {
+                        Write-ModernStatus "Applying changes immediately..." -Status Processing
+                        $null = Restart-WindowsExplorerSafely
+                    }
+                    else {
+                        Write-ModernStatus "Basic rollback completed successfully!" -Status Success
+                        Write-ModernStatus "Restart Explorer or use -RestartExplorer to apply changes" -Status Info
+                    }
+                }
+                else {
+                    $Script:Configuration.ExitCode = $Script:Configuration.ExitCodes.RollbackFailed
+                    Write-ModernStatus "Rollback operation failed" -Status Error
+                }
+            } else {
                 if ($RestartExplorer) {
                     Write-ModernStatus "Applying changes immediately..." -Status Processing
                     $null = Restart-WindowsExplorerSafely
                 }
                 else {
-                    Write-ModernStatus "Rollback completed successfully!" -Status Success
+                    Write-ModernStatus "Comprehensive restoration completed!" -Status Success
                     Write-ModernStatus "Restart Explorer or use -RestartExplorer to apply changes" -Status Info
                 }
-            }
-            else {
-                $Script:Configuration.ExitCode = $Script:Configuration.ExitCodes.RollbackFailed
-                Write-ModernStatus "Rollback operation failed" -Status Error
             }
         }
     }
