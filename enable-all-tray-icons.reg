@@ -27,6 +27,33 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer]
 "EnableAutoTray"=dword:00000000
 
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\TrayNotify]
+"IconStreams"=-
+"PastIconsStream"=-
+
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel]
+"20D04FE0-3AEA-1069-A2D8-08002B30309D"=-
+"59031a47-3f72-44a7-89c5-5595fe6b30ee"=-
+"645FF040-5081-101B-9F08-00AA002F954E"=-
+"F02C1A0D-BE21-4350-88B0-7367FC96EF3C"=-
+"{031E4825-7B94-4dc3-B131-E946B44C8DD5}"=-
+"{05d7b0f4-2121-4eff-bf6b-ed3f69b894d9}"=-
+"{211e4a80-19c7-4af2-886e-c9b2ad0b2810}"=-
+"{24ad3ad4-a569-4530-98e1-ab02f9417aa8}"=-
+"{36eef7db-88ad-4e81-ad49-0e313f0c35f8}"=-
+"{3d5ca1e4-5672-4b3e-872a-2c9c9a6c5f81}"=-
+"{450d8fba-ad25-11d0-98a8-0800361b1103}"=-
+"{5946fe44-6e19-4a05-a6f1-7c7326a92d0f}"=-
+"{66833fe6-8583-4474-ad04-b79e364e03fc}"=-
+"{7b39a9be-f9be-4625-96ac-3c9c66e408c8}"=-
+"{805af88a-dc26-4bb7-9d84-4c90a6100ae0}"=-
+"{93438129-26a9-48f0-b1d2-6a1d7a244054}"=-
+"{9d2c8e0a-10c7-4c01-b091-cfe8d007a1a5}"=-
+"{a305ce99-f527-492b-8b1a-7e76fa98d6e4}"=-
+"{c4169564-1944-44cb-b609-206a6988952a}"=-
+"{cc4c247c-66e8-470c-b9f1-7316f9c6c47b}"=-
+"{ed228fdf-9ea8-4870-83b1-96e04f79efbc}"=-
+
 ; ============================================================================
 ; NOTES:
 ; ============================================================================
