@@ -710,10 +710,13 @@ function Invoke-HelpSystem {
     # Validate help level and provide clear error messages
     $validHelpLevels = @('Full', 'Quick', 'Admin', 'Security')
     
+    # Check if HelpLevel was explicitly provided as a parameter
+    $isHelpLevelSpecified = $PSBoundParameters.ContainsKey('HelpLevel')
+    
     if ($HelpLevel -and $HelpLevel -notin $validHelpLevels) {
         Write-ModernStatus "Invalid help type: '$HelpLevel'" -Status Error
         Write-Host ""
-        Write-EnhancedOutput "VALID HELP TYPES:" -Type Primary
+        Write-EnhancedOutput "VALID HELP TYPES:" -Type Primary -Bold
         Write-ModernCard "Full" "Comprehensive documentation with examples"
         Write-ModernCard "Quick" "Brief reference guide (default)"
         Write-ModernCard "Admin" "Administrator rights instructions"
@@ -721,15 +724,23 @@ function Invoke-HelpSystem {
         Write-Host ""
         Write-EnhancedOutput "Examples:" -Type Info
         Write-Host "  .\$($Script:Configuration.ScriptName) -Help" -ForegroundColor Yellow
-        Write-Host "  .\$($Script:Configuration.ScriptName) -Help Full" -ForegroundColor Yellow
-        Write-Host "  .\$($Script:Configuration.ScriptName) -Help Admin" -ForegroundColor Yellow
+        Write-Host "  .\$($Script:Configuration.ScriptName) -Help -HelpLevel Full" -ForegroundColor Yellow
+        Write-Host "  .\$($Script:Configuration.ScriptName) -Help -HelpLevel Admin" -ForegroundColor Yellow
         Write-Host ""
         exit $Script:Configuration.ExitCodes.GeneralError
     }
     
+    # Determine effective help level with intelligent fallback
+    $effectiveHelpLevel = if ($isHelpLevelSpecified) {
+        $HelpLevel
+    } else {
+        'Full'  # Default to Full help when HelpLevel is not explicitly specified
+    }
+    
     # Show appropriate help based on validated level
-    switch ($HelpLevel) {
+    switch ($effectiveHelpLevel) {
         'Full' {
+            Show-ModernBanner
             Show-ModernHelp
         }
         'Quick' {
@@ -742,11 +753,11 @@ function Invoke-HelpSystem {
             Show-SecurityContext
         }
         default {
-            Show-QuickHelp
+            Show-ModernBanner
+            Show-ModernHelp
         }
     }
 }
-
 
 function Show-ApplicationInfo {
     <#
@@ -2091,54 +2102,64 @@ function Restart-WindowsExplorerSafely {
 # ============================================================================
 # ENHANCED MAIN EXECUTION ENGINE
 # ============================================================================
-
 function Invoke-MainExecution {
     <#
     .SYNOPSIS
         Enhanced main execution engine with comprehensive tray icons management.
     #>
-    
     # Show banner only once at the very beginning for specific scenarios
     $showBanner = $true
-
+    
     # Handle Diagnostic first
     if ($Diagnostic) {
         Show-ModernBanner
         Invoke-BackupDiagnostic
         exit $Script:Configuration.ExitCodes.Success
     }
-
-    # Handle help types
-    if ($QuickHelp) {
-        Show-QuickHelp
+    
+    # NEW CORRECTED HELP HANDLING LOGIC
+    if ($Help -or $QuickHelp) {
+        # Determine help level with proper parameter checking
+        $effectiveHelpLevel = 'Full'  # Default for -Help
+        
+        # If -QuickHelp is specified, use Quick level
+        if ($QuickHelp) {
+            $effectiveHelpLevel = 'Quick'
+        }
+        # If -HelpLevel is explicitly specified with -Help, use that value
+        elseif ($PSBoundParameters.ContainsKey('HelpLevel')) {
+            $effectiveHelpLevel = $HelpLevel
+        }
+        
+        # Validate help level
+        $validHelpLevels = @('Full', 'Quick', 'Admin', 'Security')
+        if ($effectiveHelpLevel -notin $validHelpLevels) {
+            Write-ModernStatus "Invalid help level: '$effectiveHelpLevel'" -Status Error
+            Write-Host ""
+            Write-EnhancedOutput "VALID HELP LEVELS:" -Type Primary -Bold
+            Write-ModernCard "Full" "Comprehensive documentation with examples"
+            Write-ModernCard "Quick" "Brief reference guide"
+            Write-ModernCard "Admin" "Administrator rights instructions"
+            Write-ModernCard "Security" "Security context information"
+            Write-Host ""
+            exit $Script:Configuration.ExitCodes.GeneralError
+        }
+        
+        # Show banner only for full help (others have their own headers)
+        if ($effectiveHelpLevel -eq 'Full') {
+            Show-ModernBanner
+        }
+        
+        # Display appropriate help based on level
+        switch ($effectiveHelpLevel) {
+            'Full'     { Show-ModernHelp }
+            'Quick'    { Show-QuickHelp }
+            'Admin'    { Show-AdministratorInstructions }
+            'Security' { Show-SecurityContext }
+        }
+        
         exit $Script:Configuration.ExitCodes.Success
     }
-    
-# Handle help parameter - works with or without value
-if ($Help -or $QuickHelp) {
-    # Determine help level with intelligent fallback
-    $effectiveHelpLevel = if ($QuickHelp) {
-        'Quick'
-    } else {
-        if ($PSBoundParameters.ContainsKey('HelpLevel')) {
-            $HelpLevel
-        } else {
-            'Full'  # Show full help by default when -Help is specified without explicit -HelpLevel
-        }
-    }
-    # Show banner only for full help (others have their own headers)
-    if ($effectiveHelpLevel -eq 'Full') {
-        Show-ModernBanner
-    }
-    # Display appropriate help based on level
-    switch ($effectiveHelpLevel) {
-        'Full'     { Show-ModernHelp }
-        'Quick'    { Show-QuickHelp }
-        'Admin'    { Show-AdministratorInstructions }
-        'Security' { Show-SecurityContext }
-    }
-    exit $Script:Configuration.ExitCodes.Success
-}
     
     # Validate PowerShell version
     if (-not (Test-PowerShellVersion)) {
@@ -2151,7 +2172,7 @@ if ($Help -or $QuickHelp) {
         Write-ModernStatus "Execution policy blocks script execution" -Status Error
         exit $Script:Configuration.ExitCodes.GeneralError
     }
-
+    
     # Check administrator rights ONLY if -AllUsers and -Action specified together
     if ($AllUsers -and -not (Test-AdministratorRights)) {
         Write-ModernStatus "Administrator rights required for -AllUsers parameter" -Status Error
@@ -2165,7 +2186,7 @@ if ($Help -or $QuickHelp) {
         Write-Host ""
         exit $Script:Configuration.ExitCodes.AdminRightsRequired
     }
-       
+    
     # Handle update
     if ($Update) {
         if ($showBanner) {
@@ -2178,7 +2199,7 @@ if ($Help -or $QuickHelp) {
         }
     }
     
-    # Show quick help if no specific action (REPLACED THE ORIGINAL BLOCK)
+    # Show quick help if no specific action
     if (-not $Action -and -not $Update) {
         if ($showBanner) {
             Show-ModernBanner
@@ -2199,14 +2220,12 @@ if ($Help -or $QuickHelp) {
         'status' {
             Show-EnhancedStatus
         }
-        
         'backup' {
             if ($AllUsers) {
                 Write-ModernHeader "Create Comprehensive Backup" "Saving ALL tray-related settings for ALL users"
             } else {
                 Write-ModernHeader "Create Comprehensive Backup" "Saving ALL tray-related settings"
             }
-            
             if (Backup-ComprehensiveTraySettings) {
                 Write-ModernStatus "Comprehensive backup completed successfully!" -Status Success
             } else {
@@ -2214,14 +2233,12 @@ if ($Help -or $QuickHelp) {
                 Write-ModernStatus "Backup operation failed" -Status Error
             }
         }
-        
         'enable' {
             if ($AllUsers) {
                 Write-ModernHeader "Enable ALL Tray Icons" "Group Policy method - applying to ALL users"
             } else {
                 Write-ModernHeader "Enable ALL Tray Icons" "Comprehensive method - forcing all icons visible"
             }
-            
             if (Enable-AllTrayIconsComprehensive) {
                 if ($RestartExplorer) {
                     Write-ModernStatus "Applying changes immediately..." -Status Processing
@@ -2236,20 +2253,17 @@ if ($Help -or $QuickHelp) {
                 $Script:Configuration.ExitCode = $Script:Configuration.ExitCodes.GeneralError
             }
         }
-        
         'disable' {
             if ($AllUsers) {
                 Write-ModernHeader "Restore Default Behavior" "Group Policy method - enabling auto-hide for ALL users"
             } else {
                 Write-ModernHeader "Restore Default Behavior" "Enabling auto-hide for tray icons"
             }
-            
             if ($AllUsers) {
                 $success = Set-GroupPolicyConfiguration -Behavior 'Disable'
             } else {
                 $success = Set-TrayIconConfiguration -Behavior 'Disable'
             }
-            
             if ($success) {
                 if ($RestartExplorer) {
                     Write-ModernStatus "Applying changes immediately..." -Status Processing
@@ -2264,14 +2278,12 @@ if ($Help -or $QuickHelp) {
                 $Script:Configuration.ExitCode = $Script:Configuration.ExitCodes.GeneralError
             }
         }
-        
         'rollback' {
             if ($AllUsers) {
                 Write-ModernHeader "Configuration Rollback" "Reverting Group Policy settings for ALL users"
             } else {
                 Write-ModernHeader "Configuration Rollback" "Reverting to previous settings"
             }
-            
             # Try comprehensive restore first, fall back to basic restore
             if (-not (Restore-ComprehensiveTraySettings)) {
                 Write-ModernStatus "Falling back to basic rollback..." -Status Warning
