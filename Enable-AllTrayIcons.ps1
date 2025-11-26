@@ -1,29 +1,24 @@
 <#
 .SYNOPSIS
-    Enable or disable automatic hiding of system tray icons in Windows 11/10.
+    Enable or disable automatic hiding of system tray icons in Windows 11/10 with Group Policy support.
 
 .DESCRIPTION
     Enterprise-grade PowerShell script for managing system tray icon visibility.
     Features comprehensive error handling, logging, session validation, rollback support,
-    individual icon settings reset, and advanced diagnostic capabilities.
+    individual icon settings reset, Group Policy management, and advanced diagnostic capabilities.
     
-    NEW IN VERSION 4.0:
-    - Complete individual icon preferences reset
-    - Multi-method icon visibility enforcement  
-    - Advanced backup/restore with JSON serialization
-    - Windows 11 taskbar optimization
-    - System tray icon normalization
-    - Professional diagnostic reporting
-    - Dynamic registry path management
-    - Binary data handling for icon streams
-    - Notification system controls
-    - Backup integrity validation
-    - Enhanced error recovery mechanisms
+    NEW IN VERSION 5.7:
+    - Administrator rights validation and elevation support
+    - Group Policy configuration for all users
+    - Enhanced enterprise deployment features
+    - Multi-user registry management
+    - Advanced security context validation
+    - Enterprise backup/restore capabilities
 
     Author: Mikhail Deynekin (mid1977@gmail.com)
     Website: https://deynekin.com
     Repository: https://github.com/paulmann/windows-show-all-tray-icons
-    Version: 4.0 (Enterprise Edition - Enhanced)
+    Version: 5.7 (Enterprise Edition - Group Policy Enhanced)
 
 .PARAMETER Action
     Specifies the action to perform:
@@ -32,6 +27,9 @@
     - 'Status'  : Check current configuration without making changes
     - 'Rollback': Revert to previous configuration if backup exists
     - 'Backup'  : Create registry backup without making changes
+
+.PARAMETER AllUsers
+    Apply settings to all users via Group Policy (requires administrator rights).
 
 .PARAMETER RestartExplorer
     If specified, automatically restarts Windows Explorer to apply changes immediately.
@@ -65,20 +63,20 @@
     Shows all system tray icons with registry backup.
 
 .EXAMPLE
-    .\Enable-AllTrayIcons.ps1 -Action Enable -RestartExplorer -Force
-    Shows all icons, restarts Explorer, and bypasses prompts.
+    .\Enable-AllTrayIcons.ps1 -Action Enable -AllUsers -RestartExplorer -Force
+    Shows all icons for all users via Group Policy, restarts Explorer, and bypasses prompts.
 
 .EXAMPLE
     .\Enable-AllTrayIcons.ps1 -Action Status
     Displays comprehensive system status.
 
 .EXAMPLE
-    .\Enable-AllTrayIcons.ps1 -Action Backup
-    Creates registry backup without making changes.
+    .\Enable-AllTrayIcons.ps1 -Action Backup -AllUsers
+    Creates registry backup for all users configuration.
 
 .EXAMPLE
-    .\Enable-AllTrayIcons.ps1 -Action Rollback
-    Reverts to previous configuration if backup exists.
+    .\Enable-AllTrayIcons.ps1 -Action Rollback -AllUsers
+    Reverts to previous configuration for all users if backup exists.
 
 .EXAMPLE
     .\Enable-AllTrayIcons.ps1 -Update
@@ -93,45 +91,27 @@
     Runs backup file diagnostics and validation checks.
 
 .NOTES
-    Version:        4.0 (Enterprise Edition - Enhanced)
+    Version:        5.7 (Enterprise Edition - Group Policy Enhanced)
     Creation Date:  2025-11-21
     Last Updated:   2025-11-23
     Compatibility:  Windows 10 (All versions), Windows 11 (All versions), Server 2019+
     Requires:       PowerShell 5.1 or higher (with enhanced features for PowerShell 7+)
-    Privileges:     Standard User (HKCU registry key only - no admin required)
+    Privileges:     Standard User (HKCU) or Administrator (AllUsers/Group Policy)
     
     ENHANCED FEATURES:
-    - Comprehensive individual icon settings reset (NotifyIconSettings, TrayNotify, TaskbarLayout)
-    - Multiple methods for forcing icon visibility (4+ complementary techniques)
-    - Enhanced backup/restore for all tray-related settings (JSON-based with binary data support)
-    - Windows 11 specific optimizations (TaskbarMn, modern UI enhancements)
-    - System icon visibility controls (Volume, Network, Power indicators)
-    - Professional reporting and status display (modern UI with color coding)
-    - Advanced diagnostic capabilities (backup validation, registry path verification)
-    - Dynamic registry path management (auto-creation of missing registry keys)
+    - Administrator rights validation and elevation instructions
+    - Group Policy configuration for all users
+    - Multi-user registry management
+    - Enterprise deployment support
+    - Enhanced security context validation
+    - Comprehensive individual icon settings reset
+    - Multiple methods for forcing icon visibility
+    - Enhanced backup/restore for all tray-related settings
+    - Windows 11 specific optimizations
+    - Professional reporting and status display
+    - Advanced diagnostic capabilities
+    - Dynamic registry path management
     - Comprehensive error handling with rollback protection
-    - Multi-session environment support (RDP, local, service contexts)
-    - Real-time progress tracking with method-specific reporting
-    - PowerShell 7+ enhanced features (improved colors, performance optimizations)
-    - Automated Windows version detection and version-specific tweaks
-    - Binary data handling for registry streams (IconStreams, PastIconsStream)
-    - Notification system controls (app-specific notification settings reset)
-    - Desktop icon visibility synchronization
-    - Taskbar layout normalization and cleanup
-    - Backup integrity validation and corruption detection
-    - Unicode and special character handling in backup files
-    - Performance monitoring with execution time tracking
-    - Session context awareness (admin rights, interactive mode detection)
-    - Force mode for non-interactive and automated scenarios
-    - WhatIf support for safe testing and validation
-    - Comprehensive logging with both console and file output
-    - Auto-update functionality with version checking
-    - Cross-version compatibility (Windows 10/11, Server 2019+)
-    - Graceful explorer restart with process management
-    - Registry backup/restore with transaction safety
-    - Multi-language support with Unicode compliance
-    - Enterprise-grade error recovery and reporting
-    - Modular architecture for easy maintenance and extension
 
 .LINK
     GitHub Repository: https://github.com/paulmann/windows-show-all-tray-icons
@@ -140,8 +120,11 @@
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
 param (
     [Parameter(Mandatory = $false, Position = 0)]
-    [ValidateSet('Enable', 'Disable', 'Status', 'Rollback', 'Backup')]
+    [ValidateSet('Enable', 'Disable', 'Status', 'Rollback', 'Backup', IgnoreCase = $true)]
     [string]$Action,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$AllUsers,
 
     [Parameter(Mandatory = $false)]
     [switch]$RestartExplorer,
@@ -158,11 +141,20 @@ param (
     [Parameter(Mandatory = $false)]
     [switch]$Update,
 
-    [Parameter(Mandatory = $false)]
-    [switch]$Help,
+[Parameter(Mandatory = $false)]
+[switch]$Help,
+
+[Parameter(Mandatory = $false)]
+[ValidateSet('Full', 'Quick', 'Admin', 'Security', IgnoreCase = $true)]
+[string]$HelpLevel = 'Quick',
 
     [Parameter(Mandatory = $false)]
-    [switch]$Diagnostic
+    [switch]$Diagnostic,
+
+    # Hidden parameter for internal help functions
+    [Parameter(Mandatory = $false, DontShow = $true)]
+    [switch]$QuickHelp
+
 )
 
 # ============================================================================
@@ -176,20 +168,29 @@ $Script:Configuration = @{
     EnableValue = 0
     DisableValue = 1
     
+    # Group Policy Configuration
+    GroupPolicyUserPath = "HKCU:\Software\Policies\Microsoft\Windows\Explorer"
+    GroupPolicyMachinePath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer"
+    GroupPolicyValue = "EnableAutoTray"
+    
     # Script Metadata
-    ScriptVersion = "4.0"
+    ScriptVersion = "5.7"
     ScriptAuthor = "Mikhail Deynekin (mid1977@gmail.com)"
-    ScriptName = "Enable-AllTrayIcons.ps1 (Enterprise Edition - Enhanced)"
+    ScriptName = "Enable-AllTrayIcons.ps1"
     GitHubRepository = "https://github.com/paulmann/windows-show-all-tray-icons"
     UpdateUrl = "https://raw.githubusercontent.com/paulmann/windows-show-all-tray-icons/refs/heads/main/Enable-AllTrayIcons.ps1"
     
     # Path Configuration
     DefaultLogPath = "$env:TEMP\Enable-AllTrayIcons.log"
     BackupRegistryPath = "$env:TEMP\TrayIconsBackup.reg"
+    AllUsersBackupPath = "$env:TEMP\TrayIconsBackup-AllUsers.reg"
     
     # Performance Configuration
     ExplorerRestartTimeout = 10  # seconds
     ProcessWaitTimeout = 5       # seconds
+    
+    # Security Configuration
+    RequiredPSVersion = "5.1"
     
     # Exit Codes
     ExitCode = 0
@@ -202,6 +203,90 @@ $Script:Configuration = @{
         RollbackFailed = 5
         UpdateFailed = 6
         BackupFailed = 7
+        AdminRightsRequired = 8
+        GroupPolicyFailed = 9
+    }
+}
+
+# ============================================================================
+# SECURITY AND ADMINISTRATOR VALIDATION
+# ============================================================================
+
+function Test-AdministratorRights {
+    <#
+    .SYNOPSIS
+        Validates if the current user has administrator privileges.
+    #>
+    try {
+        $currentPrincipal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
+        return $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    }
+    catch {
+        Write-ModernStatus "Failed to check administrator rights: $($_.Exception.Message)" -Status Error
+        return $false
+    }
+}
+
+function Test-PowerShellVersion {
+    <#
+    .SYNOPSIS
+        Validates if the current PowerShell version meets requirements.
+    #>
+    $currentVersion = $PSVersionTable.PSVersion
+    if ($currentVersion -lt [version]$Script:Configuration.RequiredPSVersion) {
+        Write-ModernStatus "PowerShell version $currentVersion is below required $($Script:Configuration.RequiredPSVersion)" -Status Error
+        return $false
+    }
+    return $true
+}
+
+function Show-AdministratorInstructions {
+    <#
+    .SYNOPSIS
+        Displays instructions for running script as administrator.
+    #>
+    Write-ModernHeader "Administrator Rights Required" "Elevation Instructions"
+    
+    Write-EnhancedOutput "This operation requires administrator privileges to continue." -Type Warning
+    Write-Host ""
+    
+    Write-EnhancedOutput "HOW TO RUN AS ADMINISTRATOR:" -Type Primary
+    Write-ModernCard "Method 1" "Right-click PowerShell and select 'Run as Administrator'"
+    Write-ModernCard "Method 2" "Run from elevated command prompt: 'powershell -ExecutionPolicy Bypass -File Enable-AllTrayIcons.ps1'"
+    Write-ModernCard "Method 3" "Use Windows Terminal as Administrator"
+    Write-Host ""
+    
+    Write-EnhancedOutput "ALTERNATIVE OPTIONS:" -Type Primary
+    Write-ModernCard "Current User Only" "Remove -AllUsers parameter to apply to current user only"
+    Write-ModernCard "Standard Mode" "Run without administrator rights for current user configuration"
+    Write-Host ""
+    
+    Write-EnhancedOutput "NOTE:" -Type Primary
+    Write-EnhancedOutput "  - Group Policy modifications require administrator rights" -Type Info
+    Write-EnhancedOutput "  - Current user settings work without elevation" -Type Info
+    Write-EnhancedOutput "  - Some enterprise features may be limited without admin rights" -Type Info
+    Write-Host ""
+}
+
+function Test-ExecutionPolicy {
+    <#
+    .SYNOPSIS
+        Validates execution policy and provides instructions if blocked.
+    #>
+    try {
+        $executionPolicy = Get-ExecutionPolicy -Scope CurrentUser
+        if ($executionPolicy -eq "Restricted") {
+            Write-ModernStatus "Execution Policy is Restricted - script execution blocked" -Status Error
+            Write-EnhancedOutput "To fix this issue, run:" -Type Warning
+            Write-Host "  Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser" -ForegroundColor Yellow
+            Write-Host "  Or use: powershell -ExecutionPolicy Bypass -File Enable-AllTrayIcons.ps1" -ForegroundColor Yellow
+            return $false
+        }
+        return $true
+    }
+    catch {
+        Write-ModernStatus "Could not verify execution policy: $($_.Exception.Message)" -Status Warning
+        return $true
     }
 }
 
@@ -369,17 +454,71 @@ function Write-ModernStatus {
     Write-Host " $Message" -ForegroundColor $Script:ConsoleColors.Light
 }
 
+# ============================================================================
+# CORE SESSION CONTEXT FUNCTION (MOVED BEFORE USE)
+# ============================================================================
+
+function Get-SessionContext {
+    <#
+    .SYNOPSIS
+        Returns comprehensive session context information.
+    #>
+    
+    $context = @{
+        IsAdmin = $false
+        IsInteractive = [Environment]::UserInteractive
+        SessionType = "Unknown"
+        CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+        IsElevated = $false
+    }
+    
+    # Admin Check
+    try {
+        $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+        $principal = New-Object System.Security.Principal.WindowsPrincipal($identity)
+        $context.IsAdmin = $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+        $context.IsElevated = $context.IsAdmin
+    }
+    catch {
+        Write-Host "Failed to check admin privileges: $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+    
+    # Session Type Detection
+    if ($null -ne $env:WINRM_PROCESS) {
+        $context.SessionType = "WinRM Remote"
+    }
+    elseif ($env:SSH_CONNECTION) {
+        $context.SessionType = "SSH Remote"
+    }
+    elseif ($context.CurrentUser -eq "SYSTEM" -or $identity.User.Value -eq "S-1-5-18") {
+        $context.SessionType = "SYSTEM Service Account"
+    }
+    elseif (-not $context.IsInteractive) {
+        $context.SessionType = "Non-Interactive Session"
+    }
+    else {
+        $context.SessionType = "Interactive Desktop"
+    }
+    
+    return [PSCustomObject]$context
+}
+
 function Show-ModernBanner {
     <#
     .SYNOPSIS
         Displays a modern application banner.
     #>
-    Write-Host ""
-    Write-Host "================================================================" -ForegroundColor $Script:ConsoleColors.Primary
-    Write-Host "   WINDOWS SYSTEM TRAY ICONS CONFIGURATION TOOL" -ForegroundColor $Script:ConsoleColors.Light
-    Write-Host "              ENTERPRISE EDITION - ENHANCED" -ForegroundColor $Script:ConsoleColors.Info
-    Write-Host "================================================================" -ForegroundColor $Script:ConsoleColors.Primary
-    Write-Host ""
+    
+    # Используем script-scope переменную для отслеживания состояния баннера
+    if ($script:showBanner -eq $true) {
+        Write-Host ""
+        Write-Host "================================================================" -ForegroundColor $Script:ConsoleColors.Primary
+        Write-Host "   WINDOWS SYSTEM TRAY ICONS CONFIGURATION TOOL" -ForegroundColor $Script:ConsoleColors.Light
+        Write-Host "       ENTERPRISE EDITION - GROUP POLICY ENHANCED" -ForegroundColor $Script:ConsoleColors.Info
+        Write-Host "================================================================" -ForegroundColor $Script:ConsoleColors.Primary
+        Write-Host ""
+        $script:showBanner = $false
+    }
 }
 
 # ============================================================================
@@ -389,83 +528,225 @@ function Show-ModernBanner {
 function Show-ModernHelp {
     <#
     .SYNOPSIS
-        Displays modern, comprehensive help information.
+        Displays comprehensive help information with enhanced Group Policy features.
     #>
-    
     Write-ModernHeader "Windows System Tray Icons Configuration Tool" "v$($Script:Configuration.ScriptVersion)"
-    
-    Write-EnhancedOutput "DESCRIPTION:" -Type Primary -Bold
+    Write-EnhancedOutput "DESCRIPTION:" -Type Primary
     Write-EnhancedOutput "  Professional tool for managing system tray icon visibility in Windows 10/11." -Type Light
-    Write-EnhancedOutput "  Modifies registry settings to control notification area behavior with enhanced" -Type Light
-    Write-EnhancedOutput "  individual icon settings reset and comprehensive backup/restore functionality." -Type Light
+    Write-EnhancedOutput "  Modifies registry and Group Policy settings to control notification area behavior" -Type Light
+    Write-EnhancedOutput "  with comprehensive individual icon settings reset and enterprise deployment support." -Type Light
     Write-Host ""
-    
-    Write-EnhancedOutput "USAGE:" -Type Primary -Bold
-    Write-Host "  .\$($Script:Configuration.ScriptName) -Action <Command> [Options]" -ForegroundColor $Script:ConsoleColors.Light
+    Write-EnhancedOutput "QUICK EXAMPLES:" -Type Primary
+    Write-Host "  Show all icons (current user)    : .\$($Script:Configuration.ScriptName) -Action Enable" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "  Show all icons (all users)       : .\$($Script:Configuration.ScriptName) -Action Enable -AllUsers" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "  Show all + restart               : .\$($Script:Configuration.ScriptName) -Action Enable -RestartExplorer" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "  Restore default                  : .\$($Script:Configuration.ScriptName) -Action Disable" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "  Check status                     : .\$($Script:Configuration.ScriptName) -Action Status" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "  Create backup                    : .\$($Script:Configuration.ScriptName) -Action Backup" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "  Restore backup                   : .\$($Script:Configuration.ScriptName) -Action Rollback" -ForegroundColor $Script:ConsoleColors.Light
     Write-Host ""
-    
-    Write-EnhancedOutput "QUICK COMMANDS:" -Type Primary -Bold
-    Write-ModernCard "Show All Icons" ".\$($Script:Configuration.ScriptName) -Action Enable"
-    Write-ModernCard "Restore Default" ".\$($Script:Configuration.ScriptName) -Action Disable"
-    Write-ModernCard "Check Status" ".\$($Script:Configuration.ScriptName) -Action Status"
-    Write-ModernCard "Create Backup" ".\$($Script:Configuration.ScriptName) -Action Backup"
-    Write-ModernCard "Update Script" ".\$($Script:Configuration.ScriptName) -Update"
-    Write-ModernCard "Show Help" ".\$($Script:Configuration.ScriptName) -Help"
+    Write-EnhancedOutput "ACTIONS:" -Type Primary
+    Write-ModernCard "Enable" "Show all tray icons (disable auto-hide)"
+    Write-ModernCard "Disable" "Restore Windows default (enable auto-hide)"
+    Write-ModernCard "Status" "Show current configuration and Group Policy status"
+    Write-ModernCard "Backup" "Create comprehensive registry backup"
+    Write-ModernCard "Rollback" "Restore from previous backup"
     Write-Host ""
-    
-    Write-EnhancedOutput "ACTION PARAMETERS:" -Type Primary -Bold
-    Write-ModernCard "-Action Enable" "Show all system tray icons (comprehensive method)"
-    Write-ModernCard "-Action Disable" "Restore Windows default behavior"
-    Write-ModernCard "-Action Status" "Display current configuration"
-    Write-ModernCard "-Action Backup" "Create comprehensive registry backup"
-    Write-ModernCard "-Action Rollback" "Revert to previous configuration"
+    Write-EnhancedOutput "GROUP POLICY ACTIONS (REQUIRES ADMIN RIGHTS):" -Type Primary
+    Write-ModernCard "Enable -AllUsers" "Apply settings to ALL users via Group Policy"
+    Write-ModernCard "Disable -AllUsers" "Restore default for ALL users via Group Policy"
+    Write-ModernCard "Backup -AllUsers" "Backup Group Policy and all user settings"
+    Write-ModernCard "Rollback -AllUsers" "Restore Group Policy and all user settings"
     Write-Host ""
-    
-    Write-EnhancedOutput "OPTIONAL PARAMETERS:" -Type Primary -Bold
-    Write-ModernCard "-RestartExplorer" "Apply changes immediately"
-    Write-ModernCard "-BackupRegistry" "Create backup before changes"
-    Write-ModernCard "-Force" "Bypass confirmation prompts"
-    Write-ModernCard "-Update" "Update script from GitHub"
-    Write-ModernCard "-Help" "Display this help message"
-    Write-ModernCard "-LogPath <path>" "Custom log file location"
+    Write-EnhancedOutput "OPTIONS:" -Type Primary
+    Write-ModernCard "-AllUsers" "Apply to ALL users (requires administrator rights)"
+    Write-ModernCard "-RestartExplorer" "Apply changes immediately by restarting Windows Explorer"
+    Write-ModernCard "-BackupRegistry" "Create automatic backup before making changes"
+    Write-ModernCard "-Force" "Bypass all confirmation prompts and warnings"
+    Write-ModernCard "-LogPath <path>" "Specify custom log file location"
+    Write-ModernCard "-Update" "Check and update script from GitHub repository"
+    Write-ModernCard "-Diagnostic" "Run backup file diagnostics and validation"
+    Write-ModernCard "-HelpLevel <type>" "Specify help type: Full, Quick, Admin, or Security" -ValueColor Info
     Write-Host ""
-    
-    Write-EnhancedOutput "ENHANCED FEATURES:" -Type Primary -Bold
-    Write-ModernCard "Individual Settings Reset" "Resets per-icon user preferences"
-    Write-ModernCard "Multiple Methods" "Uses 4+ techniques to force icon visibility"
-    Write-ModernCard "Comprehensive Backup" "Backs up ALL tray-related settings"
-    Write-ModernCard "Windows 11 Optimized" "Includes Windows 11 specific tweaks"
-    Write-ModernCard "System Icons Control" "Manages system icon visibility"
+    Write-EnhancedOutput "HELP LEVELS:" -Type Primary
+    Write-ModernCard "Full" "Complete documentation with all parameters, examples and enterprise deployment details" -ValueColor Light
+    Write-ModernCard "Quick" "Brief overview of common commands (default when using -Help)" -ValueColor Light
+    Write-ModernCard "Admin" "Detailed administrator instructions including elevation requirements and Group Policy deployment" -ValueColor Light
+    Write-ModernCard "Security" "Security context information including privileges, execution policies and session details" -ValueColor Light
     Write-Host ""
-    
-    Write-EnhancedOutput "EXAMPLES:" -Type Primary -Bold
-    Write-Host "  .\$($Script:Configuration.ScriptName) -Action Enable -RestartExplorer" -ForegroundColor $Script:ConsoleColors.Light
-    Write-Host "    # Enable all icons and restart Explorer immediately" -ForegroundColor $Script:ConsoleColors.Dark
+    Write-EnhancedOutput "HELP LEVEL EXAMPLES:" -Type Primary
+    Write-Host "  Show full documentation           : .\$($Script:Configuration.ScriptName) -Help" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "  Show quick reference              : .\$($Script:Configuration.ScriptName) -Help -HelpLevel Quick" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "  Show admin instructions           : .\$($Script:Configuration.ScriptName) -Help -HelpLevel Admin" -ForegroundColor $Script:ConsoleColors.Light
+    Write-Host "  Show security context             : .\$($Script:Configuration.ScriptName) -Help -HelpLevel Security" -ForegroundColor $Script:ConsoleColors.Light
     Write-Host ""
-    Write-Host "  .\$($Script:Configuration.ScriptName) -Action Status" -ForegroundColor $Script:ConsoleColors.Light
-    Write-Host "    # Display current system configuration" -ForegroundColor $Script:ConsoleColors.Dark
+    Write-EnhancedOutput "ADVANCED FEATURES:" -Type Primary
+    Write-ModernCard "Administrator Rights Check" "Automatic validation for Group Policy operations"
+    Write-ModernCard "Group Policy Deployment" "Enterprise-wide settings via User/Machine policies"
+    Write-ModernCard "Multi-User Registry Management" "Apply settings to all user hives"
+    Write-ModernCard "Comprehensive Backup System" "Backup registry, Group Policy, and individual settings"
+    Write-ModernCard "Individual Icon Reset" "Reset per-application notification settings"
+    Write-ModernCard "Windows 11 Optimization" "Special optimizations for Windows 11 taskbar"
+    Write-ModernCard "System Icons Control" "Manage volume, network, power indicators"
     Write-Host ""
-    Write-Host "  .\$($Script:Configuration.ScriptName) -Action Backup" -ForegroundColor $Script:ConsoleColors.Light
-    Write-Host "    # Create comprehensive registry backup" -ForegroundColor $Script:ConsoleColors.Dark
+    Write-EnhancedOutput "NOTES:" -Type Primary
+    Write-EnhancedOutput "  - All parameters are case-insensitive" -Type Info
+    Write-EnhancedOutput "  - Admin rights required only for -AllUsers parameter" -Type Info
+    Write-EnhancedOutput "  - Works on Windows 10/11, Server 2019+" -Type Info
+    Write-EnhancedOutput "  - When -Help is specified without -HelpLevel, Full help is shown by default" -Type Info
     Write-Host ""
-    Write-Host "  .\$($Script:Configuration.ScriptName) -Action Enable -BackupRegistry -Force" -ForegroundColor $Script:ConsoleColors.Light
-    Write-Host "    # Force enable all icons with backup, no prompts" -ForegroundColor $Script:ConsoleColors.Dark
-    Write-Host ""
-    Write-Host "  .\$($Script:Configuration.ScriptName) -Update" -ForegroundColor $Script:ConsoleColors.Light
-    Write-Host "    # Check and update script from GitHub" -ForegroundColor $Script:ConsoleColors.Dark
-    Write-Host ""
-    
-    Write-EnhancedOutput "ADDITIONAL INFORMATION:" -Type Primary -Bold
+    Write-EnhancedOutput "ADDITIONAL INFORMATION:" -Type Primary
     Write-ModernCard "Version" $Script:Configuration.ScriptVersion
     Write-ModernCard "Author" $Script:Configuration.ScriptAuthor
     Write-ModernCard "Repository" $Script:Configuration.GitHubRepository
-    Write-ModernCard "PowerShell Version" "$($PSVersionTable.PSVersion) ($(if($Script:IsPS7Plus){'Enhanced'}else{'Standard'}))"
-    Write-ModernCard "Compatibility" "Windows 10/11, Server 2019+"
-    
+    Write-ModernCard "PowerShell Version" "$($PSVersionTable.PSVersion) ($(if($Script:IsPS7Plus){'Enhanced'}else{'Compatible'}))"
+    Write-ModernCard "Admin Rights" $(if (Test-AdministratorRights) { "Available" } else { "Not Available" }) -ValueColor $(if (Test-AdministratorRights) { "Success" } else { "Info" })
+    Write-ModernCard "Execution Policy" (Get-ExecutionPolicy -Scope CurrentUser)
     Write-Host ""
-    Write-EnhancedOutput "Note: All parameters are case-insensitive. Admin rights not required." -Type Dark
+    Write-EnhancedOutput "Note: -AllUsers parameter requires administrator rights. All other operations work without elevation." -Type Dark
+    Write-EnhancedOutput "Use -Force to bypass confirmation prompts in automated scripts." -Type Dark
     Write-Host ""
 }
+
+function Show-QuickHelp {
+    <#
+    .SYNOPSIS
+        Displays brief help information for quick reference.
+    #>
+    
+    Write-Host ""
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "   WINDOWS SYSTEM TRAY ICONS CONFIGURATION TOOL" -ForegroundColor White
+    Write-Host "       ENTERPRISE EDITION - GROUP POLICY ENHANCED" -ForegroundColor Cyan
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host ""
+    
+    Write-Host "QUICK EXAMPLES:" -ForegroundColor Yellow
+    Write-Host "  Show all icons (current user)    : .\$($Script:Configuration.ScriptName) -Action Enable" -ForegroundColor Gray
+    Write-Host "  Show all icons (all users)       : .\$($Script:Configuration.ScriptName) -Action Enable -AllUsers" -ForegroundColor Gray
+    Write-Host "  Show all + restart               : .\$($Script:Configuration.ScriptName) -Action Enable -RestartExplorer" -ForegroundColor Gray
+    Write-Host "  Restore default                  : .\$($Script:Configuration.ScriptName) -Action Disable" -ForegroundColor Gray
+    Write-Host "  Check status                     : .\$($Script:Configuration.ScriptName) -Action Status" -ForegroundColor Gray
+    Write-Host "  Create backup                    : .\$($Script:Configuration.ScriptName) -Action Backup" -ForegroundColor Gray
+    Write-Host "  Restore backup                   : .\$($Script:Configuration.ScriptName) -Action Rollback" -ForegroundColor Gray
+    Write-Host ""
+    
+    Write-Host "ACTIONS:" -ForegroundColor Yellow
+    Write-Host "  Enable    : Show all tray icons (disable auto-hide)" -ForegroundColor Gray
+    Write-Host "  Disable   : Restore Windows default (enable auto-hide)" -ForegroundColor Gray
+    Write-Host "  Status    : Show current configuration and Group Policy status" -ForegroundColor Gray
+    Write-Host "  Backup    : Create comprehensive registry backup" -ForegroundColor Gray
+    Write-Host "  Rollback  : Restore from previous backup" -ForegroundColor Gray
+    Write-Host ""
+    
+    Write-Host "GROUP POLICY ACTIONS (REQUIRES ADMIN RIGHTS):" -ForegroundColor Yellow
+    Write-Host "  Enable -AllUsers  : Apply settings to ALL users via Group Policy" -ForegroundColor Gray
+    Write-Host "  Disable -AllUsers : Restore default for ALL users via Group Policy" -ForegroundColor Gray
+    Write-Host "  Backup -AllUsers  : Backup Group Policy and all user settings" -ForegroundColor Gray
+    Write-Host "  Rollback -AllUsers: Restore Group Policy and all user settings" -ForegroundColor Gray
+    Write-Host ""
+    
+    Write-Host "OPTIONS:" -ForegroundColor Yellow
+    Write-Host "  -AllUsers        : Apply to ALL users (requires administrator rights)" -ForegroundColor Gray
+    Write-Host "  -RestartExplorer : Apply changes immediately" -ForegroundColor Gray
+    Write-Host "  -BackupRegistry  : Create backup before changes" -ForegroundColor Gray
+    Write-Host "  -Force           : Bypass confirmation prompts" -ForegroundColor Gray
+    Write-Host ""
+
+    Write-Host "HELP OPTIONS:" -ForegroundColor Yellow
+    Write-Host "  -Help                  : Show full comprehensive help" -ForegroundColor Gray
+    Write-Host "  -Help Quick            : Show brief quick reference" -ForegroundColor Gray
+    Write-Host "  -Help Admin            : Show administrator instructions" -ForegroundColor Gray
+    Write-Host "  -Help Security         : Show security context information" -ForegroundColor Gray
+    Write-Host "  -QuickHelp             : Alternative quick help (hidden)" -ForegroundColor Gray
+    Write-Host ""
+    
+    Write-Host "NOTES:" -ForegroundColor Yellow
+    Write-Host "  - All parameters are case-insensitive" -ForegroundColor DarkGray
+    Write-Host "  - Admin rights required only for -AllUsers parameter" -ForegroundColor DarkGray
+    Write-Host "  - Works on Windows 10/11, Server 2019+" -ForegroundColor DarkGray
+    Write-Host "  - Use -Help for detailed information and examples" -ForegroundColor DarkGray
+    Write-Host ""
+    
+    Write-Host "  [OK] Use -Help for complete documentation and enterprise deployment examples" -ForegroundColor Green
+    Write-Host ""
+}
+
+function Show-SecurityContext {
+    <#
+    .SYNOPSIS
+        Displays current security context and privileges.
+    #>
+    
+    $context = Get-SessionContext
+    
+    Write-Host ""
+    Write-Host "=== SECURITY CONTEXT ===" -ForegroundColor Cyan
+    Write-ModernCard "Current User" $context.CurrentUser
+    Write-ModernCard "Administrator Rights" $(if ($context.IsAdmin) { "Yes" } else { "No" }) -ValueColor $(if ($context.IsAdmin) { "Success" } else { "Warning" })
+    Write-ModernCard "Session Type" $context.SessionType
+    Write-ModernCard "Interactive" $(if ($context.IsInteractive) { "Yes" } else { "No" }) -ValueColor $(if ($context.IsInteractive) { "Success" } else { "Warning" })
+    Write-ModernCard "Execution Policy" (Get-ExecutionPolicy -Scope CurrentUser)
+    Write-Host ""
+}
+
+# ============================================================================
+# ENHANCED HELP SYSTEM
+# ============================================================================
+
+function Invoke-HelpSystem {
+    <#
+    .SYNOPSIS
+        Enhanced help system with intelligent parameter handling and validation.
+    
+    .DESCRIPTION
+        Handles help requests with comprehensive validation and fallback behavior.
+        Supports multiple help levels and provides clear error messages for invalid parameters.
+    #>
+    param(
+        [string]$HelpLevel = 'Quick'
+    )
+    
+    # Validate help level and provide clear error messages
+    $validHelpLevels = @('Full', 'Quick', 'Admin', 'Security')
+    
+    if ($HelpLevel -and $HelpLevel -notin $validHelpLevels) {
+        Write-ModernStatus "Invalid help type: '$HelpLevel'" -Status Error
+        Write-Host ""
+        Write-EnhancedOutput "VALID HELP TYPES:" -Type Primary
+        Write-ModernCard "Full" "Comprehensive documentation with examples"
+        Write-ModernCard "Quick" "Brief reference guide (default)"
+        Write-ModernCard "Admin" "Administrator rights instructions"
+        Write-ModernCard "Security" "Security context information"
+        Write-Host ""
+        Write-EnhancedOutput "Examples:" -Type Info
+        Write-Host "  .\$($Script:Configuration.ScriptName) -Help" -ForegroundColor Yellow
+        Write-Host "  .\$($Script:Configuration.ScriptName) -Help Full" -ForegroundColor Yellow
+        Write-Host "  .\$($Script:Configuration.ScriptName) -Help Admin" -ForegroundColor Yellow
+        Write-Host ""
+        exit $Script:Configuration.ExitCodes.GeneralError
+    }
+    
+    # Show appropriate help based on validated level
+    switch ($HelpLevel) {
+        'Full' {
+            Show-ModernHelp
+        }
+        'Quick' {
+            Show-QuickHelp
+        }
+        'Admin' {
+            Show-AdministratorInstructions
+        }
+        'Security' {
+            Show-SecurityContext
+        }
+        default {
+            Show-QuickHelp
+        }
+    }
+}
+
 
 function Show-ApplicationInfo {
     <#
@@ -481,11 +762,203 @@ function Show-ApplicationInfo {
     Write-ModernCard "Repository" $Script:Configuration.GitHubRepository
     Write-ModernCard "Compatibility" "Windows 10/11, Server 2019+"
     Write-ModernCard "PowerShell" "$($PSVersionTable.PSVersion) ($(if($Script:IsPS7Plus){'Enhanced'}else{'Compatible'}))"
-    Write-ModernCard "Enhanced Features" "Individual settings reset, comprehensive backup"
+    Write-ModernCard "Admin Rights" $(if (Test-AdministratorRights) { "Yes" } else { "No" }) -ValueColor $(if (Test-AdministratorRights) { "Success" } else { "Info" })
+    Write-ModernCard "Enhanced Features" "Group Policy support, individual settings reset"
     
     Write-Host ""
     Write-EnhancedOutput "Use '-Help' for detailed usage information." -Type Info
     Write-Host ""
+}
+
+# ============================================================================
+# GROUP POLICY AND ENTERPRISE MANAGEMENT
+# ============================================================================
+
+function Set-GroupPolicyConfiguration {
+    <#
+    .SYNOPSIS
+        Configures Group Policy settings for all users.
+    #>
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('Enable', 'Disable')]
+        [string]$Behavior
+    )
+    
+    if (-not (Test-AdministratorRights)) {
+        Write-ModernStatus "Administrator rights required for Group Policy configuration" -Status Error
+        Show-AdministratorInstructions
+        return $false
+    }
+    
+    $value = if ($Behavior -eq 'Enable') { 
+        $Script:Configuration.EnableValue 
+    } else { 
+        $Script:Configuration.DisableValue 
+    }
+    
+    $actionDescription = if ($Behavior -eq 'Enable') { 
+        "Show all tray icons for all users" 
+    } else { 
+        "Enable auto-hide (Windows default) for all users" 
+    }
+    
+    Write-ModernStatus "Configuring Group Policy: $actionDescription" -Status Processing
+    
+    if (-not $Force -and -not $PSCmdlet.ShouldProcess(
+        "Group Policy for all users", 
+        "Set value to $value ($actionDescription)"
+    )) {
+        Write-ModernStatus "Operation cancelled by ShouldProcess" -Status Info
+        return $false
+    }
+    
+    try {
+        # Method 1: Set User Group Policy (affects all users)
+        $userPolicyPath = $Script:Configuration.GroupPolicyUserPath
+        if (-not (Test-Path $userPolicyPath)) {
+            Write-ModernStatus "Creating Group Policy user path: $userPolicyPath" -Status Info
+            $null = New-Item -Path $userPolicyPath -Force -ErrorAction Stop
+        }
+        
+        Set-ItemProperty -Path $userPolicyPath `
+                         -Name $Script:Configuration.GroupPolicyValue `
+                         -Value $value `
+                         -Type DWord `
+                         -Force `
+                         -ErrorAction Stop
+        
+        Write-ModernStatus "Group Policy user configuration updated" -Status Success
+        
+        # Method 2: Also set machine policy for broader coverage
+        $machinePolicyPath = $Script:Configuration.GroupPolicyMachinePath
+        if (-not (Test-Path $machinePolicyPath)) {
+            Write-ModernStatus "Creating Group Policy machine path: $machinePolicyPath" -Status Info
+            $null = New-Item -Path $machinePolicyPath -Force -ErrorAction Stop
+        }
+        
+        Set-ItemProperty -Path $machinePolicyPath `
+                         -Name $Script:Configuration.GroupPolicyValue `
+                         -Value $value `
+                         -Type DWord `
+                         -Force `
+                         -ErrorAction Stop
+        
+        Write-ModernStatus "Group Policy machine configuration updated" -Status Success
+        
+        # Method 3: Set registry for all existing user hives
+        if (Set-RegistryForAllUsers -Value $value) {
+            Write-ModernStatus "Registry settings applied to all user hives" -Status Success
+        }
+        
+        Write-ModernStatus "Group Policy configuration completed: $actionDescription" -Status Success
+        return $true
+    }
+    catch {
+        Write-ModernStatus "Failed to configure Group Policy: $($_.Exception.Message)" -Status Error
+        return $false
+    }
+}
+
+function Set-RegistryForAllUsers {
+    <#
+    .SYNOPSIS
+        Applies registry settings to all user hives for enterprise deployment.
+    #>
+    param(
+        [Parameter(Mandatory = $true)]
+        [int]$Value
+    )
+    
+    Write-ModernStatus "Applying settings to all user hives..." -Status Processing
+    
+    try {
+        $userHives = Get-ChildItem -Path "HKU:\" -ErrorAction SilentlyContinue | Where-Object {
+            $_.PSChildName -notin @("S-1-5-18", "S-1-5-19", "S-1-5-20") -and
+            $_.PSChildName -notlike "*_Classes"
+        }
+        
+        $successCount = 0
+        $totalCount = $userHives.Count
+        
+        foreach ($hive in $userHives) {
+            try {
+                $userPath = "HKU:\$($hive.PSChildName)\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
+                
+                # Ensure the path exists
+                if (-not (Test-Path $userPath)) {
+                    $null = New-Item -Path $userPath -Force -ErrorAction SilentlyContinue
+                }
+                
+                # Set the registry value
+                Set-ItemProperty -Path $userPath `
+                                 -Name $Script:Configuration.RegistryValue `
+                                 -Value $Value `
+                                 -Type DWord `
+                                 -Force `
+                                 -ErrorAction Stop
+                
+                $successCount++
+                Write-ModernStatus "Applied to user hive: $($hive.PSChildName)" -Status Info
+            }
+            catch {
+                Write-ModernStatus "Failed for user hive: $($hive.PSChildName)" -Status Warning
+            }
+        }
+        
+        Write-ModernStatus "Registry settings applied to $successCount of $totalCount user hives" -Status Success
+        return $true
+    }
+    catch {
+        Write-ModernStatus "Failed to apply registry to all users: $($_.Exception.Message)" -Status Error
+        return $false
+    }
+}
+
+function Get-GroupPolicyConfiguration {
+    <#
+    .SYNOPSIS
+        Retrieves current Group Policy configuration.
+    #>
+    
+    $gpoConfig = @{
+        UserPolicy = $null
+        MachinePolicy = $null
+        EffectivePolicy = $null
+    }
+    
+    try {
+        # Check User Policy
+        $userPolicyPath = $Script:Configuration.GroupPolicyUserPath
+        if (Test-Path $userPolicyPath) {
+            $userValue = Get-ItemProperty -Path $userPolicyPath -Name $Script:Configuration.GroupPolicyValue -ErrorAction SilentlyContinue
+            if ($userValue) {
+                $gpoConfig.UserPolicy = $userValue.$($Script:Configuration.GroupPolicyValue)
+            }
+        }
+        
+        # Check Machine Policy
+        $machinePolicyPath = $Script:Configuration.GroupPolicyMachinePath
+        if (Test-Path $machinePolicyPath) {
+            $machineValue = Get-ItemProperty -Path $machinePolicyPath -Name $Script:Configuration.GroupPolicyValue -ErrorAction SilentlyContinue
+            if ($machineValue) {
+                $gpoConfig.MachinePolicy = $machineValue.$($Script:Configuration.GroupPolicyValue)
+            }
+        }
+        
+        # Determine effective policy (machine policy takes precedence)
+        if ($null -ne $gpoConfig.MachinePolicy) {
+            $gpoConfig.EffectivePolicy = $gpoConfig.MachinePolicy
+        } elseif ($null -ne $gpoConfig.UserPolicy) {
+            $gpoConfig.EffectivePolicy = $gpoConfig.UserPolicy
+        }
+        
+        return $gpoConfig
+    }
+    catch {
+        Write-ModernStatus "Failed to read Group Policy configuration: $($_.Exception.Message)" -Status Error
+        return $gpoConfig
+    }
 }
 
 # ============================================================================
@@ -533,7 +1006,7 @@ function Reset-IndividualIconSettings {
             Write-ModernStatus "NotifyIconSettings path not found" -Status Warning
         }
         
-        # 2. Reset TrayNotify streams (icon cache) - Создаем путь если не существует
+        # 2. Reset TrayNotify streams (icon cache) - Create path if doesn't exist
         $trayPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\TrayNotify"
         if (-not (Test-Path $trayPath)) {
             try {
@@ -549,7 +1022,7 @@ function Reset-IndividualIconSettings {
         if (Test-Path $trayPath) {
             try {
                 $clearedProperties = @()
-                # Убедимся, что значения установлены правильно
+                # Ensure values are properly set
                 Set-ItemProperty -Path $trayPath -Name "IconStreams" -Value @() -Type Binary -Force -ErrorAction SilentlyContinue
                 Set-ItemProperty -Path $trayPath -Name "PastIconsStream" -Value @() -Type Binary -Force -ErrorAction SilentlyContinue
                 
@@ -661,7 +1134,6 @@ function Reset-IndividualIconSettings {
     }
 }
 
-
 function Enable-AllTrayIconsComprehensive {
     <#
     .SYNOPSIS
@@ -681,8 +1153,14 @@ function Enable-AllTrayIconsComprehensive {
     
     try {
         # Method 1: Disable AutoTray (original method)
-        if (Set-TrayIconConfiguration -Behavior 'Enable') {
-            $methods.AutoTrayDisabled = $true
+        if ($AllUsers) {
+            if (Set-GroupPolicyConfiguration -Behavior 'Enable') {
+                $methods.AutoTrayDisabled = $true
+            }
+        } else {
+            if (Set-TrayIconConfiguration -Behavior 'Enable') {
+                $methods.AutoTrayDisabled = $true
+            }
         }
         
         # Method 2: Reset individual icon settings
@@ -754,7 +1232,7 @@ function Enable-AllTrayIconsComprehensive {
         
         # Display results
         Write-Host ""
-        Write-EnhancedOutput "METHODS APPLIED:" -Type Primary -Bold
+        Write-EnhancedOutput "METHODS APPLIED:" -Type Primary
         foreach ($method in $methods.GetEnumerator() | Sort-Object Key) {
             $status = if ($method.Value) { "Success" } else { "Failed" }
             $color = if ($method.Value) { "Success" } else { "Warning" }
@@ -801,13 +1279,20 @@ function Backup-ComprehensiveTraySettings {
         ComputerName = $env:COMPUTERNAME
         UserName = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
         WindowsVersion = Get-WindowsVersion
+        AllUsers = $AllUsers
     }
     
     try {
         # 1. Backup main AutoTray setting
         $backupData.EnableAutoTray = Get-CurrentTrayConfiguration
         
-        # 2. Backup NotifyIconSettings
+        # 2. Backup Group Policy settings if AllUsers
+        if ($AllUsers) {
+            $gpoConfig = Get-GroupPolicyConfiguration
+            $backupData.GroupPolicy = $gpoConfig
+        }
+        
+        # 3. Backup NotifyIconSettings
         $settingsPath = "HKCU:\Control Panel\NotifyIconSettings"
         if (Test-Path $settingsPath) {
             $notifySettings = @{}
@@ -825,7 +1310,7 @@ function Backup-ComprehensiveTraySettings {
             $backupData.NotifyIconSettings = $notifySettings
         }
         
-        # 3. Backup TrayNotify
+        # 4. Backup TrayNotify
         $trayPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\TrayNotify"
         if (Test-Path $trayPath) {
             $traySettings = @{}
@@ -850,7 +1335,7 @@ function Backup-ComprehensiveTraySettings {
             $backupData.TrayNotify = $traySettings
         }
         
-        # 4. Backup system icon settings
+        # 5. Backup system icon settings
         $systemIconsPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
         $systemIcons = @("HideSCAVolume", "HideSCANetwork", "HideSCAPower")
         $backupData.SystemIcons = @{}
@@ -867,8 +1352,12 @@ function Backup-ComprehensiveTraySettings {
             }
         }
         
-        # Save comprehensive backup with proper encoding
-        $backupPath = $Script:Configuration.BackupRegistryPath
+        # Determine backup path based on scope
+        $backupPath = if ($AllUsers) { 
+            $Script:Configuration.AllUsersBackupPath 
+        } else { 
+            $Script:Configuration.BackupRegistryPath 
+        }
         
         # Convert to JSON with proper formatting
         $json = $backupData | ConvertTo-Json -Depth 10 -Compress
@@ -881,6 +1370,7 @@ function Backup-ComprehensiveTraySettings {
         
         # Display backup summary
         Write-ModernCard "Backup Location" $backupPath
+        Write-ModernCard "Backup Scope" $(if ($AllUsers) { "All Users" } else { "Current User" })
         Write-ModernCard "Settings Backed Up" "$($backupData.Keys.Count) categories"
         Write-ModernCard "Windows Version" $backupData.WindowsVersion
         Write-ModernCard "Backup Size" "$([math]::Round((Get-Item $backupPath).Length/1KB, 2)) KB"
@@ -899,7 +1389,11 @@ function Restore-ComprehensiveTraySettings {
         Restores comprehensive tray settings from backup.
     #>
     
-    $backupPath = $Script:Configuration.BackupRegistryPath
+    $backupPath = if ($AllUsers) { 
+        $Script:Configuration.AllUsersBackupPath 
+    } else { 
+        $Script:Configuration.BackupRegistryPath 
+    }
     
     if (-not (Test-Path $backupPath)) {
         Write-ModernStatus "No comprehensive backup found: $backupPath" -Status Error
@@ -911,20 +1405,42 @@ function Restore-ComprehensiveTraySettings {
     try {
         $backupData = Get-Content -Path $backupPath -Raw | ConvertFrom-Json
         
-        Write-ModernCard "Backup Created" $backupData.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")
+        Write-ModernCard "Backup Created" $backupData.Timestamp
         Write-ModernCard "Windows Version" $backupData.WindowsVersion
+        Write-ModernCard "Backup Scope" $(if ($backupData.AllUsers) { "All Users" } else { "Current User" })
         
         $restoreResults = @{}
         
         # 1. Restore main AutoTray setting
         if ($null -ne $backupData.EnableAutoTray) {
-            Set-ItemProperty -Path $Script:Configuration.RegistryPath `
-                           -Name $Script:Configuration.RegistryValue `
-                           -Value $backupData.EnableAutoTray `
-                           -Type DWord `
-                           -Force `
-                           -ErrorAction Stop
-            $restoreResults.EnableAutoTray = $true
+            if ($AllUsers -or $backupData.AllUsers) {
+                # Restore Group Policy settings
+                if ($backupData.GroupPolicy) {
+                    $userPolicyPath = $Script:Configuration.GroupPolicyUserPath
+                    $machinePolicyPath = $Script:Configuration.GroupPolicyMachinePath
+                    
+                    if (-not (Test-Path $userPolicyPath)) {
+                        $null = New-Item -Path $userPolicyPath -Force
+                    }
+                    if (-not (Test-Path $machinePolicyPath)) {
+                        $null = New-Item -Path $machinePolicyPath -Force
+                    }
+                    
+                    Set-ItemProperty -Path $userPolicyPath -Name $Script:Configuration.GroupPolicyValue -Value $backupData.EnableAutoTray -Type DWord -Force
+                    Set-ItemProperty -Path $machinePolicyPath -Name $Script:Configuration.GroupPolicyValue -Value $backupData.EnableAutoTray -Type DWord -Force
+                    
+                    $restoreResults.GroupPolicy = $true
+                }
+            } else {
+                # Restore current user settings
+                Set-ItemProperty -Path $Script:Configuration.RegistryPath `
+                               -Name $Script:Configuration.RegistryValue `
+                               -Value $backupData.EnableAutoTray `
+                               -Type DWord `
+                               -Force `
+                               -ErrorAction Stop
+                $restoreResults.EnableAutoTray = $true
+            }
         }
         
         # 2. Restore NotifyIconSettings
@@ -990,7 +1506,7 @@ function Restore-ComprehensiveTraySettings {
         
         # Display restoration summary
         Write-Host ""
-        Write-EnhancedOutput "RESTORATION RESULTS:" -Type Primary -Bold
+        Write-EnhancedOutput "RESTORATION RESULTS:" -Type Primary
         foreach ($result in $restoreResults.GetEnumerator()) {
             $color = if ($result.Value) { "Success" } else { "Warning" }
             Write-ModernCard $result.Key $(if ($result.Value) { "Success" } else { "Partial/Failed" }) -ValueColor $color
@@ -1015,7 +1531,11 @@ function Backup-RegistryConfiguration {
     )
     
     try {
-        $backupPath = $Script:Configuration.BackupRegistryPath
+        $backupPath = if ($AllUsers) { 
+            $Script:Configuration.AllUsersBackupPath 
+        } else { 
+            $Script:Configuration.BackupRegistryPath 
+        }
         
         # Check if backup already exists
         if (Test-Path $backupPath) {
@@ -1038,6 +1558,12 @@ function Backup-RegistryConfiguration {
             ScriptVersion = $Script:Configuration.ScriptVersion
             ComputerName = $env:COMPUTERNAME
             UserName = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+            AllUsers = $AllUsers
+        }
+        
+        # Include Group Policy settings if AllUsers
+        if ($AllUsers) {
+            $backupData.GroupPolicy = Get-GroupPolicyConfiguration
         }
         
         $backupData | ConvertTo-Json | Out-File -FilePath $backupPath -Encoding UTF8
@@ -1046,6 +1572,7 @@ function Backup-RegistryConfiguration {
         # Display backup information
         Write-ModernCard "Backup Location" $backupPath
         Write-ModernCard "Backup Time" $backupData.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")
+        Write-ModernCard "Backup Scope" $(if ($AllUsers) { "All Users" } else { "Current User" })
         Write-ModernCard "Original Value" $(if ($null -eq $currentConfig) { "Not Set (Default)" } else { $currentConfig })
         
         return $true
@@ -1062,7 +1589,11 @@ function Invoke-ConfigurationRollback {
         Restores previous configuration from backup.
     #>
     
-    $backupPath = $Script:Configuration.BackupRegistryPath
+    $backupPath = if ($AllUsers) { 
+        $Script:Configuration.AllUsersBackupPath 
+    } else { 
+        $Script:Configuration.BackupRegistryPath 
+    }
     
     if (-not (Test-Path $backupPath)) {
         Write-ModernStatus "No backup found for rollback: $backupPath" -Status Error
@@ -1078,24 +1609,61 @@ function Invoke-ConfigurationRollback {
         # Display backup information
         Write-ModernCard "Backup Created" $backupData.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")
         Write-ModernCard "Original Value" $(if ($null -eq $originalValue) { "Not Set (Default)" } else { $originalValue })
+        Write-ModernCard "Backup Scope" $(if ($backupData.AllUsers) { "All Users" } else { "Current User" })
         
-        if ($null -eq $originalValue) {
-            # Original value was not set (Windows default), so remove the registry value
-            Remove-ItemProperty -Path $Script:Configuration.RegistryPath `
+        if ($AllUsers -or $backupData.AllUsers) {
+            # Rollback Group Policy settings
+            if ($null -eq $originalValue) {
+                # Remove Group Policy settings
+                $userPolicyPath = $Script:Configuration.GroupPolicyUserPath
+                $machinePolicyPath = $Script:Configuration.GroupPolicyMachinePath
+                
+                if (Test-Path $userPolicyPath) {
+                    Remove-ItemProperty -Path $userPolicyPath -Name $Script:Configuration.GroupPolicyValue -Force -ErrorAction SilentlyContinue
+                }
+                if (Test-Path $machinePolicyPath) {
+                    Remove-ItemProperty -Path $machinePolicyPath -Name $Script:Configuration.GroupPolicyValue -Force -ErrorAction SilentlyContinue
+                }
+                
+                Write-ModernStatus "Restored Windows default behavior (Group Policy settings removed)" -Status Success
+            }
+            else {
+                # Restore Group Policy settings
+                $userPolicyPath = $Script:Configuration.GroupPolicyUserPath
+                $machinePolicyPath = $Script:Configuration.GroupPolicyMachinePath
+                
+                if (-not (Test-Path $userPolicyPath)) {
+                    $null = New-Item -Path $userPolicyPath -Force
+                }
+                if (-not (Test-Path $machinePolicyPath)) {
+                    $null = New-Item -Path $machinePolicyPath -Force
+                }
+                
+                Set-ItemProperty -Path $userPolicyPath -Name $Script:Configuration.GroupPolicyValue -Value $originalValue -Type DWord -Force
+                Set-ItemProperty -Path $machinePolicyPath -Name $Script:Configuration.GroupPolicyValue -Value $originalValue -Type DWord -Force
+                
+                Write-ModernStatus "Restored Group Policy configuration: $originalValue" -Status Success
+            }
+        } else {
+            # Rollback current user settings
+            if ($null -eq $originalValue) {
+                # Original value was not set (Windows default), so remove the registry value
+                Remove-ItemProperty -Path $Script:Configuration.RegistryPath `
+                                   -Name $Script:Configuration.RegistryValue `
+                                   -Force `
+                                   -ErrorAction Stop
+                Write-ModernStatus "Restored Windows default behavior (registry value removed)" -Status Success
+            }
+            else {
+                # Restore original value
+                Set-ItemProperty -Path $Script:Configuration.RegistryPath `
                                -Name $Script:Configuration.RegistryValue `
+                               -Value $originalValue `
+                               -Type DWord `
                                -Force `
                                -ErrorAction Stop
-            Write-ModernStatus "Restored Windows default behavior (registry value removed)" -Status Success
-        }
-        else {
-            # Restore original value
-            Set-ItemProperty -Path $Script:Configuration.RegistryPath `
-                           -Name $Script:Configuration.RegistryValue `
-                           -Value $originalValue `
-                           -Type DWord `
-                           -Force `
-                           -ErrorAction Stop
-            Write-ModernStatus "Restored original configuration: $originalValue" -Status Success
+                Write-ModernStatus "Restored original configuration: $originalValue" -Status Success
+            }
         }
         
         # Remove backup file after successful rollback
@@ -1125,7 +1693,7 @@ function Invoke-ScriptUpdate {
     try {
         Write-ModernStatus "Checking GitHub repository for updates..." -Status Processing
         
-        # Use Invoke-RestMethod for PowerShell 7+, WebClient for 5.1
+        # Use Invoke-RestMethod for PowerShell 7+, WebClient for 5.0
         if ($Script:IsPS7Plus) {
             Write-ModernStatus "Using enhanced download method (PowerShell 7+)" -Status Info
             $latestScriptContent = Invoke-RestMethod -Uri $Script:Configuration.UpdateUrl -UserAgent "PowerShell Script Update Check"
@@ -1199,9 +1767,10 @@ function Show-EnhancedStatus {
     $currentConfig = Get-CurrentTrayConfiguration
     $sessionContext = Get-SessionContext
     $osInfo = Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction SilentlyContinue
+    $gpoConfig = Get-GroupPolicyConfiguration
     
     # Configuration Status
-    Write-EnhancedOutput "CONFIGURATION STATUS:" -Type Primary -Bold
+    Write-EnhancedOutput "CONFIGURATION STATUS:" -Type Primary
     if ($null -eq $currentConfig) {
         Write-ModernCard "Tray Icons Behavior" "Auto-hide inactive icons (Windows default)" -ValueColor Success
         Write-ModernCard "Registry Value" "Not configured - using system default" -ValueColor Info
@@ -1216,10 +1785,26 @@ function Show-EnhancedStatus {
         Write-ModernCard "Tray Icons Behavior" $behavior -ValueColor $color
         Write-ModernCard "Registry Value" $currentConfig -ValueColor Light
     }
+    
+    # Group Policy Status
+    Write-EnhancedOutput "GROUP POLICY STATUS:" -Type Primary
+    if ($null -ne $gpoConfig.EffectivePolicy) {
+        $gpoBehavior = if ($gpoConfig.EffectivePolicy -eq $Script:Configuration.EnableValue) {
+            "Show ALL tray icons (Group Policy enforced)"
+        } else {
+            "Auto-hide inactive icons (Group Policy enforced)"
+        }
+        $gpoColor = if ($gpoConfig.EffectivePolicy -eq $Script:Configuration.EnableValue) { "Success" } else { "Warning" }
+        Write-ModernCard "Effective Policy" $gpoBehavior -ValueColor $gpoColor
+        Write-ModernCard "User Policy" $(if ($null -ne $gpoConfig.UserPolicy) { $gpoConfig.UserPolicy } else { "Not Configured" })
+        Write-ModernCard "Machine Policy" $(if ($null -ne $gpoConfig.MachinePolicy) { $gpoConfig.MachinePolicy } else { "Not Configured" })
+    } else {
+        Write-ModernCard "Group Policy" "Not configured - using local settings" -ValueColor Info
+    }
     Write-Host ""
     
     # System Information
-    Write-EnhancedOutput "SYSTEM INFORMATION:" -Type Primary -Bold
+    Write-EnhancedOutput "SYSTEM INFORMATION:" -Type Primary
     if ($osInfo) {
         Write-ModernCard "Operating System" $osInfo.Caption
         Write-ModernCard "OS Version" "$($osInfo.Version) (Build $($osInfo.BuildNumber))"
@@ -1229,7 +1814,7 @@ function Show-EnhancedStatus {
     Write-Host ""
     
     # Session Context
-    Write-EnhancedOutput "SESSION CONTEXT:" -Type Primary -Bold
+    Write-EnhancedOutput "SESSION CONTEXT:" -Type Primary
     Write-ModernCard "Current User" $sessionContext.CurrentUser
     Write-ModernCard "Session Type" $sessionContext.SessionType
     Write-ModernCard "Admin Rights" $(if ($sessionContext.IsAdmin) { "Yes" } else { "No" }) -ValueColor $(if ($sessionContext.IsAdmin) { "Success" } else { "Info" })
@@ -1237,55 +1822,31 @@ function Show-EnhancedStatus {
     Write-Host ""
     
     # Backup Status
-    Write-EnhancedOutput "BACKUP STATUS:" -Type Primary -Bold
-    $backupExists = Test-Path $Script:Configuration.BackupRegistryPath
-    Write-ModernCard "Backup Available" $(if ($backupExists) { "Yes" } else { "No" }) -ValueColor $(if ($backupExists) { "Success" } else { "Info" })
-    if ($backupExists) {
+    Write-EnhancedOutput "BACKUP STATUS:" -Type Primary
+    $currentUserBackup = Test-Path $Script:Configuration.BackupRegistryPath
+    $allUsersBackup = Test-Path $Script:Configuration.AllUsersBackupPath
+    Write-ModernCard "Current User Backup" $(if ($currentUserBackup) { "Available" } else { "Not Available" }) -ValueColor $(if ($currentUserBackup) { "Success" } else { "Info" })
+    Write-ModernCard "All Users Backup" $(if ($allUsersBackup) { "Available" } else { "Not Available" }) -ValueColor $(if ($allUsersBackup) { "Success" } else { "Info" })
+    
+    if ($currentUserBackup -or $allUsersBackup) {
         try {
-            $backupInfo = Get-Item $Script:Configuration.BackupRegistryPath
-            $backupContent = Get-Content -Path $Script:Configuration.BackupRegistryPath -Raw -ErrorAction Stop
-            
-            # Попробуем разные подходы к парсингу JSON
-            $backupData = $null
-            $parseError = $null
-            
-            try {
-                $backupData = $backupContent | ConvertFrom-Json -ErrorAction Stop
+            if ($currentUserBackup) {
+                $backupInfo = Get-Item $Script:Configuration.BackupRegistryPath
+                Write-ModernCard "Current User Backup Size" "$([math]::Round($backupInfo.Length/1KB, 2)) KB" -ValueColor Info
             }
-            catch {
-                $parseError = $_.Exception.Message
-                # Попробуем очистить JSON от возможных проблемных символов
-                try {
-                    $cleanedContent = $backupContent.Trim() -replace '[^\x20-\x7E\t\r\n]', ''
-                    $backupData = $cleanedContent | ConvertFrom-Json -ErrorAction Stop
-                    $parseError = $null
-                }
-                catch {
-                    $parseError = "JSON parsing failed: $($_.Exception.Message)"
-                }
-            }
-            
-            if ($backupData -and $null -eq $parseError) {
-                # ИСПРАВЛЕНИЕ: Timestamp уже строка, не нужно вызывать ToString()
-                Write-ModernCard "Backup Created" $backupData.Timestamp -ValueColor Success
-                Write-ModernCard "Backup Type" $(if ($backupData.NotifyIconSettings) { "Comprehensive" } else { "Basic" }) -ValueColor Info
-                Write-ModernCard "Backup Version" $backupData.ScriptVersion -ValueColor Info
-                Write-ModernCard "Backup Size" "$([math]::Round($backupInfo.Length/1KB, 2)) KB" -ValueColor Info
-            }
-            else {
-                Write-ModernCard "Backup Status" "Corrupted or incompatible" -ValueColor Warning
-                if ($parseError) {
-                    Write-ModernCard "Error Details" $parseError -ValueColor Error
-                }
+            if ($allUsersBackup) {
+                $backupInfo = Get-Item $Script:Configuration.AllUsersBackupPath
+                Write-ModernCard "All Users Backup Size" "$([math]::Round($backupInfo.Length/1KB, 2)) KB" -ValueColor Info
             }
         }
         catch {
-            Write-ModernCard "Backup Status" "Error reading backup: $($_.Exception.Message)" -ValueColor Error
+            Write-ModernCard "Backup Status" "Error reading backup information" -ValueColor Warning
         }
     }
     
     Write-Host ""
     Write-EnhancedOutput "Use '-Action Enable' to show all icons or '-Action Disable' for default behavior." -Type Info
+    Write-EnhancedOutput "Use '-AllUsers' for Group Policy deployment (requires administrator rights)." -Type Info
     Write-Host ""
 }
 
@@ -1296,54 +1857,70 @@ function Show-EnhancedStatus {
 function Invoke-BackupDiagnostic {
     <#
     .SYNOPSIS
-        Выполняет диагностику файла бэкапа.
+        Performs comprehensive backup file diagnostics and validation.
     #>
     
-    $backupPath = $Script:Configuration.BackupRegistryPath
-    
-    if (-not (Test-Path $backupPath)) {
-        Write-Host "Backup file not found: $backupPath" -ForegroundColor Red
-        return
-    }
+    $currentUserBackup = $Script:Configuration.BackupRegistryPath
+    $allUsersBackup = $Script:Configuration.AllUsersBackupPath
     
     Write-Host "=== BACKUP FILE DIAGNOSTICS ===" -ForegroundColor Cyan
     
-    try {
-        # Проверка размера файла
-        $fileInfo = Get-Item $backupPath
-        Write-Host "File Size: $([math]::Round($fileInfo.Length/1KB, 2)) KB" -ForegroundColor Yellow
-        
-        # Чтение содержимого
-        $content = Get-Content -Path $backupPath -Raw -ErrorAction Stop
-        Write-Host "Content Length: $($content.Length) characters" -ForegroundColor Yellow
-        
-        # Проверка первых 500 символов
-        Write-Host "`nFirst 500 characters:" -ForegroundColor Green
-        Write-Host $content.Substring(0, [Math]::Min(500, $content.Length)) -ForegroundColor Gray
-        
-        # Попытка парсинга JSON
-        Write-Host "`nAttempting JSON parse..." -ForegroundColor Green
+    # Check current user backup
+    if (Test-Path $currentUserBackup) {
+        Write-Host "`nCURRENT USER BACKUP:" -ForegroundColor Green
         try {
-            $backupData = $content | ConvertFrom-Json -ErrorAction Stop
-            Write-Host "✅ JSON parsing successful!" -ForegroundColor Green
-            Write-Host "Backup Version: $($backupData.ScriptVersion)" -ForegroundColor Yellow
-            Write-Host "Timestamp: $($backupData.Timestamp)" -ForegroundColor Yellow
-            Write-Host "Data Categories: $($backupData.PSObject.Properties.Name -join ', ')" -ForegroundColor Yellow
-        }
-        catch {
-            Write-Host "❌ JSON parsing failed: $($_.Exception.Message)" -ForegroundColor Red
+            $fileInfo = Get-Item $currentUserBackup
+            Write-Host "File Size: $([math]::Round($fileInfo.Length/1KB, 2)) KB" -ForegroundColor Yellow
             
-            # Попробуем найти проблемные символы
-            Write-Host "`nChecking for problematic characters..." -ForegroundColor Green
-            $problemChars = [regex]::Matches($content, '[^\x20-\x7E\t\r\n]')
-            if ($problemChars.Count -gt 0) {
-                Write-Host "Found $($problemChars.Count) non-printable characters" -ForegroundColor Red
-                Write-Host "Positions: $(($problemChars | Select-Object -First 10 | ForEach-Object { $_.Index }) -join ', ')" -ForegroundColor Yellow
+            $content = Get-Content -Path $currentUserBackup -Raw -ErrorAction Stop
+            Write-Host "Content Length: $($content.Length) characters" -ForegroundColor Yellow
+            
+            try {
+                $backupData = $content | ConvertFrom-Json -ErrorAction Stop
+                Write-Host "✅ JSON parsing successful!" -ForegroundColor Green
+                Write-Host "Backup Version: $($backupData.ScriptVersion)" -ForegroundColor Yellow
+                Write-Host "Timestamp: $($backupData.Timestamp)" -ForegroundColor Yellow
+                Write-Host "Scope: $(if ($backupData.AllUsers) { 'All Users' } else { 'Current User' })" -ForegroundColor Yellow
+                Write-Host "Data Categories: $($backupData.PSObject.Properties.Name -join ', ')" -ForegroundColor Yellow
+            }
+            catch {
+                Write-Host "❌ JSON parsing failed: $($_.Exception.Message)" -ForegroundColor Red
             }
         }
+        catch {
+            Write-Host "❌ Error reading backup file: $($_.Exception.Message)" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "`nCURRENT USER BACKUP: Not Found" -ForegroundColor Red
     }
-    catch {
-        Write-Host "❌ Error reading backup file: $($_.Exception.Message)" -ForegroundColor Red
+    
+    # Check all users backup
+    if (Test-Path $allUsersBackup) {
+        Write-Host "`nALL USERS BACKUP:" -ForegroundColor Green
+        try {
+            $fileInfo = Get-Item $allUsersBackup
+            Write-Host "File Size: $([math]::Round($fileInfo.Length/1KB, 2)) KB" -ForegroundColor Yellow
+            
+            $content = Get-Content -Path $allUsersBackup -Raw -ErrorAction Stop
+            Write-Host "Content Length: $($content.Length) characters" -ForegroundColor Yellow
+            
+            try {
+                $backupData = $content | ConvertFrom-Json -ErrorAction Stop
+                Write-Host "✅ JSON parsing successful!" -ForegroundColor Green
+                Write-Host "Backup Version: $($backupData.ScriptVersion)" -ForegroundColor Yellow
+                Write-Host "Timestamp: $($backupData.Timestamp)" -ForegroundColor Yellow
+                Write-Host "Scope: $(if ($backupData.AllUsers) { 'All Users' } else { 'Current User' })" -ForegroundColor Yellow
+                Write-Host "Data Categories: $($backupData.PSObject.Properties.Name -join ', ')" -ForegroundColor Yellow
+            }
+            catch {
+                Write-Host "❌ JSON parsing failed: $($_.Exception.Message)" -ForegroundColor Red
+            }
+        }
+        catch {
+            Write-Host "❌ Error reading backup file: $($_.Exception.Message)" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "`nALL USERS BACKUP: Not Found" -ForegroundColor Red
     }
     
     Write-Host "`n=== END DIAGNOSTICS ===" -ForegroundColor Cyan
@@ -1450,51 +2027,6 @@ function Set-TrayIconConfiguration {
     }
 }
 
-function Get-SessionContext {
-    <#
-    .SYNOPSIS
-        Returns comprehensive session context information.
-    #>
-    
-    $context = @{
-        IsAdmin = $false
-        IsInteractive = [Environment]::UserInteractive
-        SessionType = "Unknown"
-        CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-        IsElevated = $false
-    }
-    
-    # Admin Check
-    try {
-        $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
-        $principal = New-Object System.Security.Principal.WindowsPrincipal($identity)
-        $context.IsAdmin = $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
-        $context.IsElevated = $context.IsAdmin
-    }
-    catch {
-        Write-ModernStatus "Failed to check admin privileges: $($_.Exception.Message)" -Status Warning
-    }
-    
-    # Session Type Detection
-    if ($null -ne $env:WINRM_PROCESS) {
-        $context.SessionType = "WinRM Remote"
-    }
-    elseif ($env:SSH_CONNECTION) {
-        $context.SessionType = "SSH Remote"
-    }
-    elseif ($context.CurrentUser -eq "SYSTEM" -or $identity.User.Value -eq "S-1-5-18") {
-        $context.SessionType = "SYSTEM Service Account"
-    }
-    elseif (-not $context.IsInteractive) {
-        $context.SessionType = "Non-Interactive Session"
-    }
-    else {
-        $context.SessionType = "Interactive Desktop"
-    }
-    
-    return [PSCustomObject]$context
-}
-
 function Restart-WindowsExplorerSafely {
     <#
     .SYNOPSIS
@@ -1575,13 +2107,65 @@ function Invoke-MainExecution {
         Invoke-BackupDiagnostic
         exit $Script:Configuration.ExitCodes.Success
     }
-    
-    # Handle help first (help doesn't need the main banner since it has its own header)
-    if ($Help) {
-        Show-ModernHelp
+
+    # Handle help types
+    if ($QuickHelp) {
+        Show-QuickHelp
         exit $Script:Configuration.ExitCodes.Success
     }
     
+# Handle help parameter - works with or without value
+if ($Help -or $QuickHelp) {
+    # Determine help level with intelligent fallback
+    $effectiveHelpLevel = if ($QuickHelp) {
+        'Quick'
+    } else {
+        if ($PSBoundParameters.ContainsKey('HelpLevel')) {
+            $HelpLevel
+        } else {
+            'Full'  # Show full help by default when -Help is specified without explicit -HelpLevel
+        }
+    }
+    # Show banner only for full help (others have their own headers)
+    if ($effectiveHelpLevel -eq 'Full') {
+        Show-ModernBanner
+    }
+    # Display appropriate help based on level
+    switch ($effectiveHelpLevel) {
+        'Full'     { Show-ModernHelp }
+        'Quick'    { Show-QuickHelp }
+        'Admin'    { Show-AdministratorInstructions }
+        'Security' { Show-SecurityContext }
+    }
+    exit $Script:Configuration.ExitCodes.Success
+}
+    
+    # Validate PowerShell version
+    if (-not (Test-PowerShellVersion)) {
+        Write-ModernStatus "PowerShell version requirement not met" -Status Error
+        exit $Script:Configuration.ExitCodes.PowerShellVersion
+    }
+    
+    # Validate execution policy
+    if (-not (Test-ExecutionPolicy)) {
+        Write-ModernStatus "Execution policy blocks script execution" -Status Error
+        exit $Script:Configuration.ExitCodes.GeneralError
+    }
+
+    # Check administrator rights ONLY if -AllUsers and -Action specified together
+    if ($AllUsers -and -not (Test-AdministratorRights)) {
+        Write-ModernStatus "Administrator rights required for -AllUsers parameter" -Status Error
+        Write-Host ""
+        Write-EnhancedOutput "To run with administrator rights, use one of these methods:" -Type Warning
+        Write-Host "  1. Right-click PowerShell and select 'Run as Administrator'" -ForegroundColor Yellow
+        Write-Host "  2. powershell -ExecutionPolicy Bypass -File Enable-AllTrayIcons.ps1 -Action Enable -AllUsers" -ForegroundColor Yellow
+        Write-Host ""
+        Write-EnhancedOutput "For current user only (no admin needed):" -Type Info
+        Write-Host "  .\Enable-AllTrayIcons.ps1 -Action Enable -RestartExplorer" -ForegroundColor Yellow
+        Write-Host ""
+        exit $Script:Configuration.ExitCodes.AdminRightsRequired
+    }
+       
     # Handle update
     if ($Update) {
         if ($showBanner) {
@@ -1594,13 +2178,13 @@ function Invoke-MainExecution {
         }
     }
     
-    # Show application info if no specific action
+    # Show quick help if no specific action (REPLACED THE ORIGINAL BLOCK)
     if (-not $Action -and -not $Update) {
         if ($showBanner) {
             Show-ModernBanner
             $showBanner = $false
         }
-        Show-ApplicationInfo
+        Show-QuickHelp
         exit $Script:Configuration.ExitCodes.Success
     }
     
@@ -1617,7 +2201,11 @@ function Invoke-MainExecution {
         }
         
         'backup' {
-            Write-ModernHeader "Create Comprehensive Backup" "Saving ALL tray-related settings"
+            if ($AllUsers) {
+                Write-ModernHeader "Create Comprehensive Backup" "Saving ALL tray-related settings for ALL users"
+            } else {
+                Write-ModernHeader "Create Comprehensive Backup" "Saving ALL tray-related settings"
+            }
             
             if (Backup-ComprehensiveTraySettings) {
                 Write-ModernStatus "Comprehensive backup completed successfully!" -Status Success
@@ -1628,7 +2216,11 @@ function Invoke-MainExecution {
         }
         
         'enable' {
-            Write-ModernHeader "Enable ALL Tray Icons" "Comprehensive method - forcing all icons visible"
+            if ($AllUsers) {
+                Write-ModernHeader "Enable ALL Tray Icons" "Group Policy method - applying to ALL users"
+            } else {
+                Write-ModernHeader "Enable ALL Tray Icons" "Comprehensive method - forcing all icons visible"
+            }
             
             if (Enable-AllTrayIconsComprehensive) {
                 if ($RestartExplorer) {
@@ -1646,9 +2238,19 @@ function Invoke-MainExecution {
         }
         
         'disable' {
-            Write-ModernHeader "Restore Default Behavior" "Enabling auto-hide for tray icons"
+            if ($AllUsers) {
+                Write-ModernHeader "Restore Default Behavior" "Group Policy method - enabling auto-hide for ALL users"
+            } else {
+                Write-ModernHeader "Restore Default Behavior" "Enabling auto-hide for tray icons"
+            }
             
-            if (Set-TrayIconConfiguration -Behavior 'Disable') {
+            if ($AllUsers) {
+                $success = Set-GroupPolicyConfiguration -Behavior 'Disable'
+            } else {
+                $success = Set-TrayIconConfiguration -Behavior 'Disable'
+            }
+            
+            if ($success) {
                 if ($RestartExplorer) {
                     Write-ModernStatus "Applying changes immediately..." -Status Processing
                     $null = Restart-WindowsExplorerSafely
@@ -1664,7 +2266,11 @@ function Invoke-MainExecution {
         }
         
         'rollback' {
-            Write-ModernHeader "Configuration Rollback" "Reverting to previous settings"
+            if ($AllUsers) {
+                Write-ModernHeader "Configuration Rollback" "Reverting Group Policy settings for ALL users"
+            } else {
+                Write-ModernHeader "Configuration Rollback" "Reverting to previous settings"
+            }
             
             # Try comprehensive restore first, fall back to basic restore
             if (-not (Restore-ComprehensiveTraySettings)) {
