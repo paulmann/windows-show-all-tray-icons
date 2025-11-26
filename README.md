@@ -54,7 +54,7 @@ Choose your preferred method and get started in seconds:
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/paulmann/windows-show-all-tray-icons/main/Enable-AllTrayIcons.ps1" -OutFile "Enable-AllTrayIcons.ps1"
 
 # Enable with comprehensive method (resets ALL icon settings)
-.\Enable-AllTrayIcons.ps1 -Action Enable -RestartExplorer
+.\Enable-AllTrayIcons.ps1 -Action Enable
 ```
 
 Done! All icons now permanently visible ✓
@@ -69,8 +69,8 @@ Done! All icons now permanently visible ✓
 :: Download streamlined batch script
 curl -O https://raw.githubusercontent.com/paulmann/windows-show-all-tray-icons/main/Enable-AllTrayIcons.bat
 
-:: Enable all icons with restart
-Enable-AllTrayIcons.bat Enable /Restart
+:: Enable all icons
+Enable-AllTrayIcons.bat Enable
 ```
 
 Done! All icons now visible ✓
