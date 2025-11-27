@@ -7,7 +7,7 @@
     Features comprehensive error handling, logging, session validation, rollback support,
     individual icon settings reset, Group Policy management, and advanced diagnostic capabilities.
     
-    NEW IN VERSION 6.1:
+    NEW IN VERSION 6.2:
     - Administrator rights validation and elevation support
     - Group Policy configuration for all users
     - Enhanced enterprise deployment features
@@ -18,7 +18,7 @@
     Author: Mikhail Deynekin (mid1977@gmail.com)
     Website: https://deynekin.com
     Repository: https://github.com/paulmann/windows-show-all-tray-icons
-    Version: 6.1 (Enterprise Edition - Group Policy Enhanced)
+    Version: 6.2 (Enterprise Edition - Group Policy Enhanced)
 
 .PARAMETER Action
     Specifies the action to perform:
@@ -91,7 +91,7 @@
     Runs backup file diagnostics and validation checks.
 
 .NOTES
-    Version:        6.1 (Enterprise Edition - Group Policy Enhanced)
+    Version:        6.2 (Enterprise Edition - Group Policy Enhanced)
     Creation Date:  2025-11-21
     Last Updated:   2025-11-23
     Compatibility:  Windows 10 (All versions), Windows 11 (All versions), Server 2019+
@@ -280,7 +280,7 @@ $Script:Configuration = @{
     GroupPolicyValue = "EnableAutoTray"
     
     # Script Metadata
-    ScriptVersion = "6.1"
+    ScriptVersion = "6.2"
     ScriptAuthor = "Mikhail Deynekin (mid1977@gmail.com)"
     ScriptName = "Enable-AllTrayIcons.ps1"
     GitHubRepository = "https://github.com/paulmann/windows-show-all-tray-icons"
@@ -1269,7 +1269,7 @@ function Set-GroupPolicyConfiguration {
     
     .NOTES
         Author: Mikhail Deynekin
-        Version: 6.1 (Enterprise Edition)
+        Version: 6.2 (Enterprise Edition)
         Security Context:
         - Requires administrator privileges for Group Policy modifications
         - Affects ALL users on the system
@@ -1907,7 +1907,7 @@ function Set-TrayIconConfiguration {
     
     .NOTES
         Author: Mikhail Deynekin
-        Version: 6.1 (Enterprise Edition)
+        Version: 6.2 (Enterprise Edition)
         Security Context:
         - Requires write access to HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer
         - No administrator privileges needed for current user configuration
@@ -2556,7 +2556,7 @@ function Enable-AllTrayIconsComprehensive {
     
     .NOTES
         Author: Mikhail Deynekin
-        Version: 6.1 (Enterprise Edition)
+        Version: 6.2 (Enterprise Edition)
         License: MIT
         Requirements:
         - Administrator privileges when using -AllUsers parameter
@@ -4694,7 +4694,7 @@ function Invoke-ConfigurationRollback {
 
     .NOTES
         Author: Mikhail Deynekin
-        Version: 6.1 (Enterprise Edition)
+        Version: 6.2 (Enterprise Edition)
         Security Context:
         - Requires administrator privileges for AllUsers/Group Policy rollback
         - Validates backup file integrity before restoration
@@ -5237,7 +5237,7 @@ function Invoke-ConfigurationRollback {
 
 function Invoke-ScriptUpdate {
     <#
-    .SYNOPSIS
+    .SYNONOPSIS
         Enhanced script update with PowerShell 7+ features when available.
     #>
     
@@ -5274,8 +5274,25 @@ function Invoke-ScriptUpdate {
         if ([version]$latestVersion -gt [version]$currentVersion) {
             Write-ModernStatus "New version available! Updating..." -Status Info
             
-            # Get current script path
-            $currentScriptPath = $MyInvocation.MyCommand.Path
+            # Get current script path - FIXED for PowerShell 7 compatibility
+            $currentScriptPath = if ($null -ne $MyInvocation.MyCommand.Path -and $MyInvocation.MyCommand.Path -ne "") {
+                $MyInvocation.MyCommand.Path
+            } elseif ($null -ne $PSCommandPath -and $PSCommandPath -ne "") {
+                $PSCommandPath
+            } else {
+                # Fallback: try to get the path from the script scope
+                $script:MyInvocation.MyCommand.Path
+            }
+            
+            # Additional fallback for PowerShell 7+
+            if ([string]::IsNullOrEmpty($currentScriptPath) -and $Script:IsPS7Plus) {
+                $currentScriptPath = Get-Item -Path ".\$($Script:Configuration.ScriptName)" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+            }
+            
+            if ([string]::IsNullOrEmpty($currentScriptPath)) {
+                throw "Cannot determine current script path. Please update manually from: $($Script:Configuration.GitHubRepository)"
+            }
+            
             $backupPath = "$currentScriptPath.backup"
             
             # Create backup of current script (don't overwrite if exists)
@@ -5286,21 +5303,50 @@ function Invoke-ScriptUpdate {
                 Write-ModernStatus "Script backup already exists, preserving: $backupPath" -Status Info
             }
             
-            # Write new version
-            $latestScriptContent | Out-File -FilePath $currentScriptPath -Encoding UTF8
-            
-            Write-ModernStatus "Update completed successfully!" -Status Success
-            Write-ModernStatus "Please restart the script to use the new version." -Status Info
-            
-            return $true
+            # Write new version with enhanced error handling
+            try {
+                $latestScriptContent | Out-File -FilePath $currentScriptPath -Encoding UTF8 -Force
+                Write-ModernStatus "Update completed successfully!" -Status Success
+                Write-ModernStatus "Please restart the script to use the new version." -Status Info
+                
+                # Verify the update was written
+                if (Test-Path $currentScriptPath) {
+                    $updatedSize = (Get-Item $currentScriptPath).Length
+                    Write-ModernCard "Updated File Size" "$([math]::Round($updatedSize/1KB, 2)) KB" -ValueColor Success
+                    return $true
+                } else {
+                    throw "Updated file was not created successfully"
+                }
+            }
+            catch {
+                # Restore from backup if update fails
+                if (Test-Path $backupPath) {
+                    Write-ModernStatus "Update failed, restoring from backup..." -Status Warning
+                    Copy-Item -Path $backupPath -Destination $currentScriptPath -Force
+                    Write-ModernStatus "Original script restored from backup" -Status Success
+                }
+                throw
+            }
         }
         else {
             Write-ModernStatus "You are running the latest version." -Status Success
             return $false
         }
     }
+    catch [System.Net.WebException] {
+        Write-ModernStatus "Network error during update: $($_.Exception.Message)" -Status Error
+        Write-ModernStatus "Check your internet connection and try again." -Status Warning
+        return $false
+    }
+    catch [System.Management.Automation.MethodInvocationException] {
+        Write-ModernStatus "Update method error: $($_.Exception.Message)" -Status Error
+        Write-ModernStatus "This may be a compatibility issue with your PowerShell version." -Status Warning
+        return $false
+    }
     catch {
         Write-ModernStatus "Update failed: $($_.Exception.Message)" -Status Error
+        Write-ModernCard "Manual Update" "Download from: $($Script:Configuration.GitHubRepository)" -ValueColor Warning
+        Write-ModernCard "Troubleshooting" "Check script permissions and disk space" -ValueColor Info
         return $false
     }
 }
@@ -5597,7 +5643,7 @@ function Invoke-MainExecution {
 
     .NOTES
         Author: Mikhail Deynekin
-        Version: 6.1 (Enterprise Edition)
+        Version: 6.2 (Enterprise Edition)
         Security Context:
         - Validates administrator privileges for Group Policy operations
         - Context-aware execution based on user privileges
