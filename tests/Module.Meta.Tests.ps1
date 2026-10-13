@@ -242,6 +242,33 @@ Describe 'Machine-readable WhatIf (audit R3-1 regression)' {
         $result.Executed  | Should -BeFalse
         $result.InfoCount | Should -Be 0
     }
+
+    # Regression guard for audit R4-1 (found by CI on a fresh runner, not by the
+    # local run): the module's own file I/O must not be WhatIf-aware. Add-Content,
+    # Set-Content, New-Item and Remove-Item implement SupportsShouldProcess, so
+    # under -WhatIf they print 'What if: ...' to the host -- in a redirected child
+    # process that lands on STDOUT and breaks the -AsJson contract. A fresh runner
+    # has %LOCALAPPDATA% AND no log directory yet, which is exactly when the
+    # logger first calls the cmdlet; a warm machine hides the defect.
+    It 'module file I/O never uses WhatIf-aware cmdlets (stdout purity under -WhatIf)' {
+        $moduleFiles = Get-ChildItem (Join-Path $ModulePath 'Private') -Filter '*.ps1' -File
+        $moduleFiles += Get-ChildItem (Join-Path $ModulePath 'Public') -Filter '*.ps1' -File
+        $forbidden = 'Add-Content', 'Set-Content', 'Out-File', 'New-Item', 'Remove-Item'
+        $offenders = @()
+        foreach ($file in $moduleFiles) {
+            $tokens = $null; $errors = $null
+            $ast = [System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref] $tokens, [ref] $errors)
+            $commands = $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.CommandAst] }, $true)
+            foreach ($cmd in $commands) {
+                $name = $cmd.GetCommandName()
+                if ($name -and $name -in $forbidden) {
+                    $offenders += ('{0}:{1} {2}' -f $file.Name, $cmd.Extent.StartLineNumber, $name)
+                }
+            }
+        }
+        $offenders | Should -BeNullOrEmpty -Because (
+            'these cmdlets announce themselves under -WhatIf and corrupt stdout; use .NET APIs (audit R4-1)')
+    }
 }
 
 Describe 'Native P/Invoke compilation (audit P0-1 regression)' {

@@ -7,18 +7,22 @@
 # ---------------------------------------------------------------------------
 
 function script:Get-DataDirectory {
-    $base = if ($IsWindows) { $env:LOCALAPPDATA } else { Join-Path $HOME '.local/share' }
-    $dir = Join-Path $base ([TrayPolicy]::AppFolderName)
-    if (-not (Test-Path -LiteralPath $dir)) {
-        New-Item -Path $dir -ItemType Directory -Force | Out-Null
+    # .NET instead of New-Item (audit R4-1): New-Item supports ShouldProcess, so
+    # under -WhatIf it prints "What if: ..." to the host, which lands on STDOUT in
+    # a redirected child process and corrupts -AsJson output. Directory creation
+    # is infrastructure, not a user-visible action: it must never be announced.
+    $base = if ($IsWindows) { $env:LOCALAPPDATA } else { Join-Path ([Environment]::GetFolderPath('UserProfile')) '.local/share' }
+    $dir = [System.IO.Path]::Combine($base, [TrayPolicy]::AppFolderName)
+    if (-not [System.IO.Directory]::Exists($dir)) {
+        $null = [System.IO.Directory]::CreateDirectory($dir)
     }
     $dir
 }
 
 function script:Get-BackupDirectory {
-    $dir = Join-Path (script:Get-DataDirectory) ([TrayPolicy]::BackupFolderName)
-    if (-not (Test-Path -LiteralPath $dir)) {
-        New-Item -Path $dir -ItemType Directory -Force | Out-Null
+    $dir = [System.IO.Path]::Combine((script:Get-DataDirectory), [TrayPolicy]::BackupFolderName)
+    if (-not [System.IO.Directory]::Exists($dir)) {
+        $null = [System.IO.Directory]::CreateDirectory($dir)
     }
     $dir
 }

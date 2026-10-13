@@ -37,8 +37,15 @@ function Backup-TrayIconState {
         $Path = Join-Path (script:Get-BackupDirectory) ('TrayIconState-{0:yyyyMMdd-HHmmss}.json' -f (Get-Date))
     }
     $parent = Split-Path -Path $Path -Parent
-    if ($parent -and -not (Test-Path -LiteralPath $parent)) {
-        New-Item -Path $parent -ItemType Directory -Force | Out-Null
+    # .NET instead of New-Item/Set-Content (audit R4-1): both implement
+    # SupportsShouldProcess, so under -WhatIf they print "What if: ..." to the
+    # host -- in a redirected child process that lands on STDOUT and breaks the
+    # documented -AsJson contract. A backup is a real file write, so it is done
+    # with .NET APIs and is deliberately NOT gated by -WhatIf: -WhatIf protects
+    # the REGISTRY (the user-visible tray state), while the backup is the safety
+    # net that makes the change reversible.
+    if ($parent -and -not [System.IO.Directory]::Exists($parent)) {
+        $null = [System.IO.Directory]::CreateDirectory($parent)
     }
 
     $root = script:Open-TraySettingsRoot
@@ -74,7 +81,9 @@ function Backup-TrayIconState {
     }
 
     $json = $data | ConvertTo-Json -Depth 6
-    Set-Content -LiteralPath $Path -Value $json -Encoding utf8NoBOM -Force
+    # .NET write with explicit UTF-8 without BOM (no Set-Content: it announces
+    # itself under -WhatIf; see the note above).
+    [System.IO.File]::WriteAllText($Path, $json, [System.Text.UTF8Encoding]::new($false))
     script:Write-TraceLog "Backup written: $Path ($($icons.Count) icons)"
 
     Get-Item -LiteralPath $Path
