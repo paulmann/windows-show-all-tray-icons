@@ -1,0 +1,70 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build TrayIconGuard",
+      "detail": "dotnet build app/TrayIconGuard.sln (Debug)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/app/TrayIconGuard.sln",
+        "-c",
+        "Debug",
+        "-p:EnableWindowsTargeting=true",
+        "--nologo"
+      ],
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": "$msCompile",
+      "presentation": { "reveal": "silent", "panel": "shared" }
+    },
+    {
+      "label": "Run TrayIconGuard (Windows only)",
+      "detail": "dotnet run --project app/src/TrayIconGuard",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/app/src/TrayIconGuard/TrayIconGuard.csproj",
+        "-c",
+        "Debug"
+      ],
+      "problemMatcher": "$msCompile",
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Publish TrayIconGuard (win-x64 single file)",
+      "detail": "pwsh build.ps1 -Task PublishExe",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}/build.ps1", "-Task", "PublishExe"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Analyze PowerShell",
+      "detail": "PSScriptAnalyzer + BAT hygiene",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}/build.ps1", "-Task", "Analyze"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Pester tests",
+      "detail": "build.ps1 -Task Test",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}/build.ps1", "-Task", "Test"],
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Full pipeline (All)",
+      "detail": "Analyze + Test + Verify + Build + Publish + Package",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}/build.ps1", "-Task", "All"],
+      "problemMatcher": []
+    }
+  ]
+}

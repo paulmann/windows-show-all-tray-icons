@@ -1,0 +1,24 @@
+<Project>
+  <!-- Shared build properties for TrayIconGuard (v7 "Phoenix"). -->
+  <PropertyGroup>
+    <Version>7.0.3</Version>
+    <AssemblyVersion>7.0.3.0</AssemblyVersion>
+    <FileVersion>7.0.3.0</FileVersion>
+    <InformationalVersion>7.0.3</InformationalVersion>
+    <Product>Show All Tray Icons - TrayIconGuard</Product>
+    <AssemblyTitle>TrayIconGuard</AssemblyTitle>
+    <Authors>Mikhail Deynekin; v7 Phoenix contributors</Authors>
+    <Company>windows-show-all-tray-icons</Company>
+    <Copyright>Copyright (c) 2025 Mikhail Deynekin; (c) 2026 Phoenix contributors. MIT License.</Copyright>
+    <Description>Keeps every Windows 10/11 notification-area icon visible: tray-resident GUI with an event-driven registry watcher that instantly re-promotes icons Explorer hides.</Description>
+    <NeutralLanguage>en</NeutralLanguage>
+
+    <!-- Allows building this Windows-targeted project on Linux/macOS CI. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
