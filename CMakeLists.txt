@@ -12,10 +12,15 @@ target_include_directories(TrayIconGuard PRIVATE src)
 target_compile_definitions(TrayIconGuard PRIVATE
     UNICODE _UNICODE WIN32_LEAN_AND_MEAN NOMINMAX
     WINVER=0x0A00 _WIN32_WINNT=0x0A00 NTDDI_VERSION=0x0A000006)
-target_compile_options(TrayIconGuard PRIVATE
-    -Wall -Wextra -Wno-unused-parameter -ffunction-sections -fdata-sections -O2)
-target_link_options(TrayIconGuard PRIVATE
-    -static -static-libgcc -static-libstdc++ -Wl,--gc-sections -s -municode)
+if(MSVC)
+    target_compile_options(TrayIconGuard PRIVATE /W4 /permissive- /O2 /Gy)
+    target_link_options(TrayIconGuard PRIVATE /OPT:REF /OPT:ICF)
+else()
+    target_compile_options(TrayIconGuard PRIVATE
+        -Wall -Wextra -Wno-unused-parameter -ffunction-sections -fdata-sections -O2)
+    target_link_options(TrayIconGuard PRIVATE
+        -static -static-libgcc -static-libstdc++ -Wl,--gc-sections -s -municode)
+endif()
 target_link_libraries(TrayIconGuard PRIVATE
     gdiplus comctl32 comdlg32 dwmapi uxtheme shlwapi version winhttp
     ole32 oleaut32 shell32 advapi32 gdi32 user32 kernel32 bcrypt)
