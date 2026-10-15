@@ -48,7 +48,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: TrayIconGuard-msvc-x64
-          path: build-msvc/Release/TrayIconGuard.exe
+          path: |
+            dist/Release/TrayIconGuard.exe
+            build-msvc/Release/TrayIconGuard.exe
 
   release:
     name: Release
