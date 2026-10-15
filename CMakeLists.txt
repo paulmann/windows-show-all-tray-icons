@@ -14,7 +14,10 @@ target_compile_definitions(TrayIconGuard PRIVATE
     WINVER=0x0A00 _WIN32_WINNT=0x0A00 NTDDI_VERSION=0x0A000006)
 if(MSVC)
     target_compile_options(TrayIconGuard PRIVATE /W4 /permissive- /O2 /Gy)
-    target_link_options(TrayIconGuard PRIVATE /OPT:REF /OPT:ICF)
+    # The application manifest is embedded by resources.rc (RT_MANIFEST); let the
+    # MSVC linker skip generating its own, otherwise CVTRES fails with
+    # "CVT1100: duplicate resource. type:MANIFEST".
+    target_link_options(TrayIconGuard PRIVATE /OPT:REF /OPT:ICF /MANIFEST:NO)
 else()
     target_compile_options(TrayIconGuard PRIVATE
         -Wall -Wextra -Wno-unused-parameter -ffunction-sections -fdata-sections -O2)
