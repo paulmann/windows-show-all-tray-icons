@@ -1,186 +1,147 @@
-# Show All Tray Icons for Windows 10/11 — v7 "Phoenix"
+# TrayIconGuard v8 “Aurora”
 
 ![Windows 11](https://img.shields.io/badge/Windows-11-0078D6?logo=windows&logoColor=white)
 ![Windows 10](https://img.shields.io/badge/Windows-10-0078D6?logo=windows&logoColor=white)
-![Windows Server](https://img.shields.io/badge/Server-2019%2B-0078D6?logo=windowsserver&logoColor=white)
-![PowerShell](https://img.shields.io/badge/PowerShell-7.6%2B%20LTS-5391FE?logo=powershell&logoColor=white)
-![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)
-![License MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Version](https://img.shields.io/badge/version-7.0.3-green.svg)
+![Native C++](https://img.shields.io/badge/Native-C%2B%2B17-00599C?logo=cplusplus&logoColor=white)
+![Zero dependencies](https://img.shields.io/badge/Dependencies-ZERO-brightgreen)
+![Size](https://img.shields.io/badge/EXE-~800%20KB-blue)
+![License](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-orange)
+![Version](https://img.shields.io/badge/version-8.3.0-green)
 
-**Keeps every notification-area (system tray) icon visible on Windows 10/11 — and keeps
-them that way.** Icons that Windows hides in the overflow flyout are promoted back to the
-taskbar, and a background watcher instantly re-promotes any icon that Explorer hides again
-when applications start, update, or re-register their tray icons.
+**Keeps every notification-area (system tray) icon visible on Windows 10/11 — and keeps them
+that way.** Icons that Windows hides in the overflow flyout are promoted back to the taskbar,
+and an event-driven watcher re-promotes any icon Explorer hides again the moment apps start,
+update or re-register their tray icons.
 
-This is the **v7 "Phoenix" rewrite** of [paulmann/windows-show-all-tray-icons](https://github.com/paulmann/windows-show-all-tray-icons):
-correct registry mechanics, a real watcher, three professional editions, tests, CI and docs.
-No backward compatibility with the old 4.x/6.x scripts.
+v8 “Aurora” is a **complete ground-up rewrite** of
+[paulmann/windows-show-all-tray-icons](https://github.com/paulmann/windows-show-all-tray-icons)
+(v7 “Phoenix”, C# WPF / .NET 10): same researched registry mechanics, but now a **single native
+Win32 C++ executable with zero install dependencies** — no .NET, no SDK, no runtimes, no
+redistributables. Copy the exe anywhere and run it.
 
-> **Why a watcher?** Windows resets an icon's `IsPromoted` flag to `0` whenever an app
-> (re)registers its tray icon (app updates, reboots, crashed apps restarting). One-shot
-> tweaks — including the original repo — silently decay within days. TrayIconGuard watches
-> `HKCU\Control Panel\NotifyIconSettings` with `RegNotifyChangeKeyValue` and fixes icons
-> within milliseconds. That is the whole point of v7.
+![Dashboard](resources/banner.png)
 
 ---
 
-## Three editions
+## Why v8 exists
 
-| Edition | What it is | Best for | Dependencies |
-|---|---|---|---|
-| **GUI — `TrayIconGuard.exe`** | WPF app (.NET 10), lives in the tray, event-driven auto-promotion, per-icon toggles, settings, activity log | Daily driving, "set and forget" | .NET 10 Desktop Runtime (or self-contained build) |
-| **PowerShell — `ShowAllTrayIcons` module** | 12 tested cmdlets: enable/disable, per-icon control, backup/restore, watcher (`-AsJob`), autostart | Power users, unattended deployment, Intune/SCCM/GPO logon scripts | PowerShell 7.6+ |
-| **BAT — `Show-AllTrayIcons.bat`** | Standalone batch tool with menu and a watch loop | Locked-down PCs, quick fixes, no PS7 available | Only `reg.exe`/`taskkill` |
+| v7 “Phoenix” | v8 “Aurora” |
+|---|---|
+| WPF GUI needs **.NET 10 Desktop Runtime** (or a ~150 MB self-contained publish) | **One 800 KB native exe**, static-linked, only stock Windows DLLs |
+| Three editions (GUI + PowerShell module + BAT) to maintain | **One exe**: GUI + `--watch` headless guard + full CLI |
+| Theme follows Windows only | **Light / Dark / System switcher**, persisted, auto-detected on first run |
+| English only | **English + Russian**, auto-detected, live switching |
+| Per-icon control via PowerShell | **Per-icon toggles, search, filters, exclusions, context menu in the GUI** |
+| — | JSON snapshots with auto-backup, activity log viewer, diagnostics copy, manual update check |
+
+## Features
+
+- **Correct mechanics** — writes `HKCU\Control Panel\NotifyIconSettings\{id}\IsPromoted`,
+  the exact store the Windows Settings toggle uses (see [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md)).
+- **Event-driven guard** — `RegNotifyChangeKeyValue` on the store subtree, 400 ms debounce,
+  optional polling fallback, optional auto-restart of Explorer with cooldown.
+- **Per-icon control** — promote/hide individual icons, exclusion wildcards (`onedrive.exe`,
+  `*teams*`), search, filters, extracted icons and friendly names.
+- **i18n: 30 locales** — English default with per-string fallback, OS auto-detect,
+  live switching and a native-name picker (see [docs/I18N.md](docs/I18N.md)).
+- **Modern Fluent UI (2026)** — custom-drawn Win32/GDI+ interface: nav rail, cards, animated
+  toggle switches, segmented controls, overlay scrollbars; **Light/Dark/System themes with a
+  quick switcher**, 8 accent presets or “follow Windows”, Per-Monitor-V2 DPI, Windows 11
+  rounded corners and dark title bar.
+- **Safety** — JSON snapshots (schema v8) with automatic backup before bulk changes,
+  restore/export/delete manager, 30-snapshot retention.
+- **Ops-ready CLI** — `--promote-all`, `--status --json`, `--watch`, stable exit codes
+  (`0/1/2/3`), rotating 14-day logs.
+- **Embedded installer (new in 8.1)** — on first run a built-in setup wizard asks: install
+  folder (default `%LOCALAPPDATA%\Programs\TrayIconGuard`), autostart, Desktop and Start Menu
+  shortcuts — or *just run once* in portable mode. Creates an Apps & Features uninstall entry;
+  `--uninstall` removes everything. Still zero dependencies, still one exe.
+- **Git-based self-updater** — opt-in check against `update/stable.json` in this repo,
+  SHA-256-pinned download, self-replace and relaunch (`Updater_SKILL.MD`).
+- **Visibility modes** — Full / Custom / Compact from the tray menu; drag-reorder icons.
+- **Respectful** — HKCU only (no admin, ever), no telemetry, opt-in update checks,
+  close-to-tray, single instance, autostart opt-in.
 
 ## Quick start
 
-### GUI edition (recommended)
+1. Download `TrayIconGuard-8.0.0-win-x64.zip` from
+   [Releases](https://github.com/paulmann/windows-show-all-tray-icons/releases) (or build it,
+   see [docs/BUILD.md](docs/BUILD.md)).
+2. Unblock & run `TrayIconGuard.exe`. That's the whole installation.
+3. First run: everything is promoted once, the guard arms itself, a balloon welcomes you.
+   Open **Appearance** to pick a theme/accent/language.
+
+Optional per-user install (Start Menu shortcut + uninstaller entry):
 
 ```powershell
-# Option A — build it yourself (VS Code: Ctrl+Shift+B, or:)
-pwsh -NoProfile -File build.ps1 -Task PublishExe
-.\bat\Launch-TrayIconGuard.bat
-
-# Option B — installer (Inno Setup, optional)
-# compile installer\TrayIconGuard.iss, run TrayIconGuard-7.0.3-setup.exe
+powershell -ExecutionPolicy Bypass -File installer\install.ps1
 ```
 
-`TrayIconGuard.exe` starts minimized to the notification area, promotes every hidden icon,
-and from then on guards the tray automatically. Right-click its tray icon for
-*Show all icons now / Pause guard / Restart Explorer / Exit*.
-
-Headless one-shots for deployment:
+### Headless / deployment
 
 ```powershell
-TrayIconGuard.exe --promote-all       # promote everything, exit 0 (3 = partial failure)
-TrayIconGuard.exe --restore-defaults  # give control back to Windows
-TrayIconGuard.exe --minimized         # start GUI hidden in tray
+TrayIconGuard.exe --promote-all        # one-shot, exit 0 (3 = partial failure)
+TrayIconGuard.exe --watch              # headless guard (replaces v7 BAT/PS editions)
+TrayIconGuard.exe --status --json      # monitoring-friendly snapshot
+TrayIconGuard.exe --install-autostart  # HKCU Run entry (--minimized)
 ```
 
-### PowerShell edition
-
-```powershell
-# One-shot: show all icons (with backup, apply immediately)
-.\powershell\Enable-AllTrayIcons.ps1 -Backup -RestartExplorer -Force
-
-# Interactive module session
-Import-Module .\powershell\modules\ShowAllTrayIcons
-Get-TrayIcon                              # list every registered icon
-Get-TrayIcon -Promoted $false             # only hidden ones
-Set-TrayIcon -ExecutablePath '*discord*' -Promoted $true
-Enable-AllTrayIcons -ExcludeExecutable onedrive.exe
-Start-TrayIconWatcher -AsJob              # background guard (thread job)
-Install-TrayIconAutostart -Target Gui -StartMinimized
-Get-TrayIconState                         # health snapshot (monitoring-friendly)
-```
-
-### BAT edition
-
-```bat
-bat\Show-AllTrayIcons.bat enable            :: promote all hidden icons
-bat\Show-AllTrayIcons.bat enable /restart   :: + restart Explorer
-bat\Show-AllTrayIcons.bat watch 3           :: guard loop, re-promote every 3 s
-bat\Show-AllTrayIcons.bat status            :: counts + legacy switches
-bat\Show-AllTrayIcons.bat                   :: interactive menu
-```
-
-## Features (v7)
-
-- **Correct mechanics** — uses `HKCU\Control Panel\NotifyIconSettings\{id}\IsPromoted`,
-  the exact store the Windows Settings toggle uses (the old repo wrote several keys to
-  invalid paths — see [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md)).
-- **Event-driven watcher** — `RegNotifyChangeKeyValue` notifications + 400 ms debounce,
-  polling fallback, new-icon discovery, optional auto-restart of Explorer (60 s cooldown).
-- **Per-icon control** — promote/hide individual apps by GUID or exe wildcard.
-- **Exclusions** — apps you *want* hidden stay hidden (`onedrive.exe`, `*teams*`, ...).
-- **Backup / restore** — JSON schema v7 snapshot of the full tray state, `-Latest` restore.
-- **Legacy cleanup done right** — `EnableAutoTray` belt-and-suspenders, `HideSCA*` policies
-  removed from their real location, optional `Reset-TrayIconCache` for phantom icons.
-- **Safe Explorer restart** — kill → wait for auto-restart → start manually if needed.
-- **Autostart** — GUI or headless watcher via HKCU Run (`-EncodedCommand`, no quoting bugs).
-- **Ops-ready** — `-WhatIf`/`-Confirm`, `-AsJson`, stable exit codes
-  (`0/1/2/3`), rotating file logs in every edition, `Get-TrayIconState` for monitoring.
-- **GUI polish** — dark/light theme follows Windows, PerMonitorV2 DPI, single instance,
-  balloon notifications on auto-promotion, activity log, global exception recovery.
-- **Production pipeline** — PSScriptAnalyzer gate, Pester 5 suite, GitHub Actions CI,
-  single-file publish, Inno Setup installer, code-signing instructions.
-
-## Repository layout
-
-```
-├── app/                 TrayIconGuard C# solution (WPF, net10.0-windows, zero NuGet deps)
-├── powershell/          Entry scripts + modules/ShowAllTrayIcons (the PS module)
-├── bat/                 Standalone BAT edition + launchers
-├── tests/               Pester 5 (cross-platform meta-tests + Windows functional tests)
-├── installer/           Inno Setup 6 script (optional)
-├── docs/                ARCHITECTURE / HOW-IT-WORKS / CLI-REFERENCE / BUILD / TROUBLESHOOTING
-├── .vscode/             tasks.json (Ctrl+Shift+B builds the EXE), launch.json
-├── .github/workflows/   CI: analyze → test → build → publish → package → release
-├── build.ps1            One-shot orchestrator (Analyze/Test/Verify/BuildExe/PublishExe/Package/All)
-└── Enable-AllTrayIcons.*, *.reg   DEPRECATED pre-7.0 files, retained verbatim (see LEGACY-NOTICE.md)
-```
+Full CLI reference: [docs/CLI.md](docs/CLI.md). User guide: [docs/USER-GUIDE.md](docs/USER-GUIDE.md).
 
 ## Requirements
 
 | Component | Requirement |
 |---|---|
-| OS | Windows 10 1703+ (build 15063+), Windows 11, Server 2019/2022/2025 |
-| GUI | **Release EXE is self-contained — nothing to install.** Framework-dependent builds (`build.ps1 -Task PublishExe -FrameworkDependent`) need the .NET 10 **Desktop Runtime** (NOT the SDK). If a runtime error appears although .NET 10 is installed, check `DOTNET_ROOT` — see docs/TROUBLESHOOTING.md |
-| PowerShell edition | PowerShell **7.6+** (LTS). Windows PowerShell 5.1 is not supported by design |
-| BAT edition | Nothing beyond stock Windows (`reg.exe`, `taskkill`, `timeout`) |
-| Rights | Standard user (everything is HKCU). No admin required, ever |
+| OS | Windows 10 1703+ (build 15063+), Windows 11, Server 2019/2022/2025 (x64) |
+| Runtimes | **None.** Uses only OS-provided DLLs (user32, gdiplus, comctl32, …) |
+| Rights | Standard user. Everything is HKCU; no UAC prompt, ever |
+| Disk | < 1 MB |
 
-## Build in VS Code (GUI edition)
+On builds without `NotifyIconSettings` (pre-1703) the app degrades gracefully and reports the
+limitation on the Dashboard.
 
-1. Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) and
-   [PowerShell 7.6+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows).
-2. Open this folder in VS Code and accept the recommended extensions
-   (C# Dev Kit, PowerShell, EditorConfig).
-3. `Ctrl+Shift+B` → **Build TrayIconGuard**, or `F5` → *.NET: Launch TrayIconGuard*.
-4. Release publish: `pwsh -File build.ps1 -Task PublishExe` (add `-SelfContained` for a
-   runtime-free EXE). Full pipeline: `pwsh -File build.ps1 -Task All`.
+## Repository layout
 
-Details, signing and release checklist: [docs/BUILD-AND-RELEASE.md](docs/BUILD-AND-RELEASE.md).
+```
+├── src/                  C++17 sources (core engine, UI kit, pages)
+│   ├── core/             registry store, guard thread, backups, CLI, logs, settings
+│   ├── ui/               theme manager, GDI+ kit, main window, 7 pages, tray icon
+│   └── app/              bootstrap, single instance, IPC
+├── resources/            icon.ico (10 sizes), manifest, version info, banner
+├── scripts/              build.sh (mingw cross), package.sh, make_icon.py, sync-backup.sh
+├── cmake/                mingw-w64 toolchain file
+├── installer/            install.ps1 / uninstall.ps1 / install.bat / TrayIconGuard.iss (Inno, optional)
+├── docs/                 ARCHITECTURE / HOW-IT-WORKS / CLI / BUILD / USER-GUIDE / TROUBLESHOOTING / DESIGN
+├── .vscode/              build tasks (Ctrl+Shift+B), debug config
+└── .github/workflows/    CI: cross-build on ubuntu + MSVC build on windows, artifacts
+```
 
-## Exit codes (all editions)
+## Build it yourself
 
-| Code | Meaning |
-|---|---|
-| `0` | Success |
-| `1` | Error (see log/output) |
-| `2` | Unsupported platform / PowerShell missing |
-| `3` | Partial failure (some icons could not be updated) |
+Cross-compile from Linux/macOS (what CI does):
 
-## Documentation
+```bash
+sudo apt install g++-mingw-w64-x86-64 cmake
+./scripts/build.sh          # -> dist/TrayIconGuard.exe (static, stripped)
+```
 
-- [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md) — the registry mechanics, why the old
-  approach decayed, what v7 changed (deep dive)
-- [docs/CLI-REFERENCE.md](docs/CLI-REFERENCE.md) — every cmdlet, script, BAT command
-  and EXE flag
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — component & data-flow diagrams
-- [docs/BUILD-AND-RELEASE.md](docs/BUILD-AND-RELEASE.md) — build, publish, sign, package, release
-- [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — FAQ & fixes
-- [CHANGELOG.md](CHANGELOG.md) — release history (what changed in each version)
+Or natively on Windows with MSVC/MinGW via CMake — see [docs/BUILD.md](docs/BUILD.md).
 
-## FAQ (short)
+## Verification & QA
 
-**Do I need admin rights?** No. Everything lives in HKCU.
+- Compiles with `-Wall -Wextra` at **zero warnings**.
+- Imported DLLs are exclusively Windows system libraries (verified with `objdump -p`).
+- Wine smoke matrix: CLI modes + all 7 pages rendered in light, dark and RU locale
+  (screenshots in `shots/`, self-captured by the app via `--ui-test`).
+- No telemetry; network access only via the manual “Check for updates” button.
 
-**Why did my icons hide again after an app update?** Explorer resets `IsPromoted` when an
-icon re-registers. Run the GUI or `Start-TrayIconWatcher` — that is exactly what they guard against.
+## Author & license
 
-**Changes don't show until I restart Explorer?** Usually `IsPromoted` applies live; when it
-doesn't (fast-user-switching, some 24H2 builds), use `-RestartExplorer` / the toolbar button.
+**Author: Mikhail Deynekin** — icons@Deynekin.com · https://Deynekin.com ·
+[paulmann/windows-show-all-tray-icons](https://github.com/paulmann/windows-show-all-tray-icons)
 
-**Can I hide one specific icon again?** Yes: `Set-TrayIcon -ExecutablePath 'app.exe' -Promoted $false`
-or untick it in the GUI, and add it to exclusions so the watcher respects it.
-
-**Windows 7/8?** Out of scope: the `NotifyIconSettings` store does not exist there.
-
-## Credits & License
-
-Original concept and repository: **Mikhail Deynekin** ([deynekin.com](https://deynekin.com)).
-v7 "Phoenix" rewrite: architecture, watcher, GUI, tests and docs.
-
-MIT License — see [LICENSE](LICENSE).
+PolyForm Noncommercial 1.0.0 © 2026 Mikhail Deynekin.
+Registry mechanics researched and documented by Mikhail Deynekin
+([paulmann/windows-show-all-tray-icons](https://github.com/paulmann/windows-show-all-tray-icons),
+v7 “Phoenix”); v8 is an independent clean-room C++ implementation of those mechanics with a
+new UI, icon and codebase.

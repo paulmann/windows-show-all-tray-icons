@@ -2,69 +2,33 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Build TrayIconGuard",
-      "detail": "dotnet build app/TrayIconGuard.sln (Debug)",
-      "type": "process",
-      "command": "dotnet",
-      "args": [
-        "build",
-        "${workspaceFolder}/app/TrayIconGuard.sln",
-        "-c",
-        "Debug",
-        "-p:EnableWindowsTargeting=true",
-        "--nologo"
-      ],
+      "label": "build (mingw cross / linux)",
+      "type": "shell",
+      "command": "./scripts/build.sh",
       "group": { "kind": "build", "isDefault": true },
-      "problemMatcher": "$msCompile",
+      "linux": { "group": { "kind": "build", "isDefault": true } },
+      "windows": { "group": "build" },
+      "problemMatcher": ["$gcc"],
       "presentation": { "reveal": "silent", "panel": "shared" }
     },
     {
-      "label": "Run TrayIconGuard (Windows only)",
-      "detail": "dotnet run --project app/src/TrayIconGuard",
-      "type": "process",
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "${workspaceFolder}/app/src/TrayIconGuard/TrayIconGuard.csproj",
-        "-c",
-        "Debug"
-      ],
-      "problemMatcher": "$msCompile",
-      "presentation": { "reveal": "always", "panel": "dedicated" }
+      "label": "build (windows mingw)",
+      "type": "shell",
+      "command": "cmake -S . -B build-win -G \"MinGW Makefiles\" -DCMAKE_BUILD_TYPE=Release && cmake --build build-win -j8 && copy /Y build-win\\TrayIconGuard.exe dist\\",
+      "group": "build",
+      "windows": { "group": { "kind": "build", "isDefault": true } },
+      "problemMatcher": ["$gcc"]
     },
     {
-      "label": "Publish TrayIconGuard (win-x64 single file)",
-      "detail": "pwsh build.ps1 -Task PublishExe",
-      "type": "process",
-      "command": "pwsh",
-      "args": ["-NoProfile", "-File", "${workspaceFolder}/build.ps1", "-Task", "PublishExe"],
-      "problemMatcher": []
+      "label": "package (zip + sha256)",
+      "type": "shell",
+      "command": "./scripts/package.sh",
+      "dependsOn": "build (mingw cross / linux)"
     },
     {
-      "label": "Analyze PowerShell",
-      "detail": "PSScriptAnalyzer + BAT hygiene",
-      "type": "process",
-      "command": "pwsh",
-      "args": ["-NoProfile", "-File", "${workspaceFolder}/build.ps1", "-Task", "Analyze"],
-      "problemMatcher": []
-    },
-    {
-      "label": "Run Pester tests",
-      "detail": "build.ps1 -Task Test",
-      "type": "process",
-      "command": "pwsh",
-      "args": ["-NoProfile", "-File", "${workspaceFolder}/build.ps1", "-Task", "Test"],
-      "group": { "kind": "test", "isDefault": true },
-      "problemMatcher": []
-    },
-    {
-      "label": "Full pipeline (All)",
-      "detail": "Analyze + Test + Verify + Build + Publish + Package",
-      "type": "process",
-      "command": "pwsh",
-      "args": ["-NoProfile", "-File", "${workspaceFolder}/build.ps1", "-Task", "All"],
-      "problemMatcher": []
+      "label": "ui-test screenshots (wine)",
+      "type": "shell",
+      "command": "for p in dashboard icons guard appearance backups activity about; do xvfb-run -a wine dist/TrayIconGuard.exe --ui-test $p; done"
     }
   ]
 }

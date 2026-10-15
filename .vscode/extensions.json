@@ -1,9 +1,7 @@
 {
   "recommendations": [
-    "ms-dotnettools.csharp",
-    "ms-dotnettools.csdevkit",
-    "ms-vscode.powershell",
-    "editorconfig.editorconfig",
-    "github.vscode-github-actions"
+    "ms-vscode.cpptools",
+    "ms-vscode.cmake-tools",
+    "ms-vscode.powershell"
   ]
 }

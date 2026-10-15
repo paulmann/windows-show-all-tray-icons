@@ -1,12 +1,12 @@
 # --- Build artifacts ---
-bin/
-obj/
-publish/
-artifacts/
+build/
+build-msvc/
 dist/
+*.o
+*.obj
 *.binlog
 
-# --- .NET / VS / VS Code ---
+# --- Editor / .NET / VS ---
 .vs/
 *.user
 *.suo
@@ -14,7 +14,6 @@ TestResults/
 
 # --- PowerShell ---
 *.log
-PSScriptAnalyzerSettings.psd1.cache
 
 # --- Tool / OS noise ---
 Thumbs.db
@@ -23,10 +22,8 @@ Desktop.ini
 *.tmp
 *.bak
 
-# --- Agent coordination files: kept on disk for LLM handoff, NOT published (audit P2-3) ---
+# --- Agent coordination files: kept on disk for LLM handoff, NOT published ---
 .agent/
 
-# --- RAGRAF local index (machine-derived data, can exceed 1 GB; audit N2) ---
+# --- RAGRAF local index (machine-derived data, can exceed 1 GB) ---
 .ragraf/
-
-.full/

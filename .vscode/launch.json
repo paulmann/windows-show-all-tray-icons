@@ -2,44 +2,24 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": ".NET: Launch TrayIconGuard (Windows)",
-      "type": "coreclr",
+      "name": "Debug TrayIconGuard (Windows)",
+      "type": "cppvsdbg",
       "request": "launch",
-      "preLaunchTask": "Build TrayIconGuard",
-      "program": "${workspaceFolder}/app/src/TrayIconGuard/bin/Debug/net10.0-windows/TrayIconGuard.exe",
+      "program": "${workspaceFolder}/dist/TrayIconGuard.exe",
       "args": [],
-      "cwd": "${workspaceFolder}/app/src/TrayIconGuard",
       "stopAtEntry": false,
-      "console": "internalConsole"
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "console": "externalTerminal"
     },
     {
-      "name": ".NET: Attach to TrayIconGuard",
-      "type": "coreclr",
-      "request": "attach",
-      "processId": "${command:pickProcess}"
-    },
-    {
-      "name": "PowerShell: Enable-AllTrayIcons.ps1",
-      "type": "PowerShell",
+      "name": "Debug CLI --status (Windows)",
+      "type": "cppvsdbg",
       "request": "launch",
-      "script": "${workspaceFolder}/powershell/Enable-AllTrayIcons.ps1",
-      "args": ["-Force"],
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "PowerShell: Watch-TrayIcons.ps1",
-      "type": "PowerShell",
-      "request": "launch",
-      "script": "${workspaceFolder}/powershell/Watch-TrayIcons.ps1",
-      "args": [],
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "PowerShell: Module REPL (import ShowAllTrayIcons)",
-      "type": "PowerShell",
-      "request": "launch",
-      "command": "Import-Module '${workspaceFolder}/powershell/modules/ShowAllTrayIcons/ShowAllTrayIcons.psd1' -Force; Get-Command -Module ShowAllTrayIcons",
-      "cwd": "${workspaceFolder}"
+      "program": "${workspaceFolder}/dist/TrayIconGuard.exe",
+      "args": ["--status"],
+      "cwd": "${workspaceFolder}",
+      "console": "externalTerminal"
     }
   ]
 }

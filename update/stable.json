@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "channel": "stable",
+  "version": "8.3.0",
+  "released": "2026-10-16",
+  "minBuild": 15063,
+  "url": "https://github.com/paulmann/windows-show-all-tray-icons/releases/download/v8.3.0/TrayIconGuard.exe",
+  "sha256": "3c1a082a4b8475fadf8670bed6a0ead1e4fe832a3eb4da02b18af1320f800122",
+  "zipUrl": "https://github.com/paulmann/windows-show-all-tray-icons/releases/download/v8.3.0/TrayIconGuard-8.3.0-win-x64.zip",
+  "zipSha256": "d1631265334a8d09193fcd0e6b2b7d1ff55bfb010d1ba2ea37d55ce61ead0d2c",
+  "notes": "Embedded installer wizard, 30-language i18n, tray visibility modes (Full/Custom/Compact), drag-reorder of tray icons, git-based self-update, PolyForm Noncommercial license, Win11 SxS manifest fix."
+}

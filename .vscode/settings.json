@@ -1,17 +1,12 @@
 {
-  "dotnet.defaultSolution": "app/TrayIconGuard.sln",
-  "files.associations": {
-    "*.psm1": "powershell",
-    "*.psd1": "powershell",
-    "*.iss": "ini"
+  "files.exclude": {
+    "**/build": true,
+    "**/build-win": true,
+    "**/__pycache__": true
   },
-  "files.eol": "\n",
-  "[bat]": { "files.eol": "\r\n" },
-  "powershell.codeFormatting.preset": "OTBS",
-  "editor.rulers": [120],
-  "search.exclude": {
-    "**/bin": true,
-    "**/obj": true,
-    "**/artifacts": true
-  }
+  "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+  "cmake.configureOnOpen": false,
+  "editor.formatOnSave": false,
+  "files.encoding": "utf8",
+  "files.eol": "\n"
 }
