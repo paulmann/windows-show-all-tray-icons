@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "channel": "stable",
-  "version": "8.6.2",
+  "version": "8.6.3",
   "released": "2026-10-16",
   "minBuild": 15063,
-  "url": "https://github.com/paulmann/windows-show-all-tray-icons/releases/download/v8.6.2/TrayIconGuard.exe",
-  "sha256": "b3a9afc2710a72b956e560122c9a335191300306076d2d6f6fdd35946df6998d",
-  "zipUrl": "https://github.com/paulmann/windows-show-all-tray-icons/releases/download/v8.6.2/TrayIconGuard-8.6.2-win-x64.zip",
-  "zipSha256": "d85f03b99724c2e956f34792a68b03ee36f7ac1e6e38b91be80ca930a4bb487f",
-  "notes": "**Redirected CLI output now works in the shipped GUI build.** The 8.6.1 attempt was Version 8.6.2; store manifest 8.6.2.0."
+  "url": "https://github.com/paulmann/windows-show-all-tray-icons/releases/download/v8.6.3/TrayIconGuard.exe",
+  "sha256": "10ea493785629761be0430baff3288f474b47d3720201c2197a1b6fa5bc5fc03",
+  "zipUrl": "https://github.com/paulmann/windows-show-all-tray-icons/releases/download/v8.6.3/TrayIconGuard-8.6.3-win-x64.zip",
+  "zipSha256": "4fadcc253d259974728583202b5e0c5fd3b220375cc3e077b6734713e9028436",
+  "notes": "**The guard watcher never woke up in event-driven mode** (the default `pollMs: 0`). The thread **`Stop()` closed handles a still-running thread was waiting on** (use-after-close): after a **`Resume()` now takes effect immediately** \u2014 pause/resume signals the new wake event, so the Version 8.6.3; sto"
 }
