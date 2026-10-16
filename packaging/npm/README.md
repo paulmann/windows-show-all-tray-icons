@@ -73,6 +73,48 @@ $ npm uninstall -g trayiconguard     # if installed globally
 $ rmdir /s "%LOCALAPPDATA%\TrayIconGuard\npm"
 ```
 
+## Publication status — 2026-10-16
+
+The package is finished and packed (`pnpm pack` → `trayiconguard-8.6.0.tgz`, 7 798 bytes, containing
+`bin/trayiconguard.js`, `LICENSE`, `package.json`, `README.md`). End-to-end behaviour on Windows 11:
+
+| Check | Result |
+|---|---|
+| `trayiconguard download` | downloads the release asset, SHA-256 matches `update/stable.json` ✅ |
+| `trayiconguard status` / `status --json` | forwards to the real binary, exit code 0 ✅ (output is console-only — see the limitation above) |
+| negative test (`--url` pointing at the zip while the feed pins the exe) | `SHA-256 mismatch`, exit 1, corrupted file deleted ✅ |
+| `pnpm pack` | valid tarball, 7 798 B ✅ |
+
+**Publishing is blocked by credentials.** `pnpm publish` (and `pnpm whoami`) fail with
+`401 Unauthorized` / `404 Not Found`, i.e. the granular token in `%USERPROFILE%\.npmrc` is no
+longer valid (expired or revoked). The registry name `trayiconguard` was free at the time of
+writing.
+
+To publish, refresh the credential and run:
+
+```powershell
+# 1. log in (creates a fresh token in %USERPROFILE%\.npmrc), or paste a new granular token with
+#    read+write access to packages:
+#    //registry.npmjs.org/:_authToken=npm_...
+npm login
+
+# 2. verify the identity first — a 401 here means the token is still bad
+pnpm whoami          # or: npm whoami
+
+# 3. publish from this directory
+cd packaging\npm
+pnpm publish --no-git-checks --access public
+
+# 4. verify what the registry actually serves
+npm view trayiconguard version dist.tarball dist.integrity
+```
+
+After the package is live, add a row to the READMEs:
+
+```text
+npx trayiconguard install
+```
+
 ## License
 
 [PolyForm Noncommercial License 1.0.0](LICENSE) — free for noncommercial use; commercial
