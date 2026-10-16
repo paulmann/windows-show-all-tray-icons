@@ -1,6 +1,6 @@
 {
   "name": "trayiconguard",
-  "version": "8.6.1",
+  "version": "8.6.2",
   "description": "Keep every Windows 10/11 notification-area (system tray) icon visible — downloaded, SHA-256-verified TrayIconGuard binary plus a thin wrapper CLI.",
   "keywords": [
     "tray",

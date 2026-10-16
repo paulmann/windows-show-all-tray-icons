@@ -37,7 +37,7 @@ Notes:
   (single-instance mutex).
 - `--json` guarantees stdout purity: nothing else is printed in JSON mode.
 - Redirecting or piping stdout is safe: the JSON document goes to the inherited pipe/file handle
-  (fixed in 8.6.1), so both `--status --json > state.json` and
+  (fixed in 8.6.2), so both `--status --json > state.json` and
   `TrayIconGuard.exe --status --json | ConvertFrom-Json` work on real Windows.
 
 Examples:

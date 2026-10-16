@@ -1,5 +1,24 @@
 # Changelog
 
+## 8.6.2 — 2026-10-16
+
+### Fixed
+- **Redirected CLI output now works in the shipped GUI build.** The 8.6.1 attempt was
+  incomplete: it stopped rebinding `stdout` to `CONOUT$`, but it still queried
+  `GetStdHandle` *after* `AttachConsole` — and attaching a console **replaces** the process's
+  standard handles, so a GUI-subsystem executable (the shipped one: 8.6.0/8.6.1 are
+  `WINDOWS_GUI`) kept writing to the console while `> state.json`, pipes and RMM/CI capture
+  received nothing. The CLI now remembers the inherited `stdout`/`stderr` **before** attaching
+  and restores them with `SetStdHandle`; `CONOUT$` is bound only when nothing was inherited.
+  Verified on the released 8.6.2 executable: `--status --json > state.json` = 20 587 bytes of
+  valid JSON (8.6.0 and 8.6.1: 0 bytes), `--version > file` = 52 bytes, `--help > file` =
+  1 321 bytes, `--check-update` readable, `… | findstr` receives the full 432-line document.
+  Lesson recorded in the wiki: redirection must be tested on a `WINDOWS_GUI` build — a console
+  build (forgot `-mwindows`) hides the defect.
+
+### Changed
+- Version 8.6.2; store manifest 8.6.2.0.
+
 ## 8.6.1 — 2026-10-16
 
 ### Fixed
@@ -213,3 +232,8 @@ Complete ground-up rewrite of v7 “Phoenix” (C# WPF / .NET 10) in native C++1
 ### Removed
 - .NET/WPF stack, Pester/BAT/PS editions (functionality merged into the exe),
   Inno-only installer (now optional; PS/BAT installers added).
+
+> **Correction (see 8.6.2):** the fix described above turned out to work only for
+> console-subsystem builds. The released 8.6.1 executable is `WINDOWS_GUI`, where
+> `AttachConsole` replaced the redirected handles, so redirected output stayed empty. Fixed
+> properly in 8.6.2.

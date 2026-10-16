@@ -5,7 +5,7 @@
 ```bash
 sudo apt install g++-mingw-w64-x86-64 cmake make      # Debian/Ubuntu
 ./scripts/build.sh                                     # -> dist/TrayIconGuard.exe
-./scripts/package.sh                                   # -> dist/TrayIconGuard-8.6.1-win-x64.zip + SHA256SUMS
+./scripts/package.sh                                   # -> dist/TrayIconGuard-8.6.2-win-x64.zip + SHA256SUMS
 ```
 
 `scripts/build.sh` runs CMake with `cmake/mingw-w64-x86_64.cmake` and links

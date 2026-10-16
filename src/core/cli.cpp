@@ -55,18 +55,21 @@ void Print(const std::wstring& s) {
 
 void AttachConsoleIfPossible() {
     if (GetConsoleWindow()) return;
+
+    // A GUI-subsystem process has no console of its own, so the CLI attaches to the parent's in
+    // order to print into an interactive terminal. Attaching REPLACES the process's standard
+    // handles — which silently throws away a redirected stdout/stderr (`> state.json`, `| more`,
+    // RMM or CI capture) even when the parent passed those handles down. Remember the inherited
+    // handles first and put them back after attaching; bind CONOUT$ only when there was nothing
+    // to inherit (the plain interactive case).
+    HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE err = GetStdHandle(STD_ERROR_HANDLE);
     if (!AttachConsole(ATTACH_PARENT_PROCESS)) return;
-    // Bind the console streams only for handles that were not inherited. A redirected
-    // stdout/stderr (a pipe or a file: `> state.json`, RMM capture, CI logs) MUST stay
-    // redirected — rebinding it to CONOUT$ silently throws the CLI output away, which is how
-    // the documented `--status --json` automation broke on real Windows.
-    auto bindIfUnbound = [](DWORD which, FILE* stream) {
-        HANDLE h = GetStdHandle(which);
-        if (h && h != INVALID_HANDLE_VALUE) return;
-        (void)freopen("CONOUT$", "w", stream);
-    };
-    bindIfUnbound(STD_OUTPUT_HANDLE, stdout);
-    bindIfUnbound(STD_ERROR_HANDLE, stderr);
+
+    if (out && out != INVALID_HANDLE_VALUE) SetStdHandle(STD_OUTPUT_HANDLE, out);
+    else (void)freopen("CONOUT$", "w", stdout);
+    if (err && err != INVALID_HANDLE_VALUE) SetStdHandle(STD_ERROR_HANDLE, err);
+    else (void)freopen("CONOUT$", "w", stderr);
 }
 
 int PrintStatus(bool asJson) {

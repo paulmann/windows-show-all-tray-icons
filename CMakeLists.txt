@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(TrayIconGuard VERSION 8.6.1 LANGUAGES CXX)
+project(TrayIconGuard VERSION 8.6.2 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

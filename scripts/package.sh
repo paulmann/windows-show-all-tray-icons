@@ -2,7 +2,7 @@
 # Package dist/TrayIconGuard.exe into a release zip + SHA256SUMS.
 set -e
 cd "$(dirname "$0")/.."
-VER=8.6.1
+VER=8.6.2
 ZIP="dist/TrayIconGuard-${VER}-win-x64.zip"
 STAGE=$(mktemp -d)
 mkdir -p "$STAGE/TrayIconGuard"
