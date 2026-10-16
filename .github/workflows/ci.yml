@@ -28,7 +28,7 @@ jobs:
           ! grep -viE "ADVAPI32|BCRYPT|COMCTL32|COMDLG32|DWMAPI|GDI32|GDIPLUS|KERNEL32|MSVCRT|OLE32|OLEAUT32|SHELL32|SHLWAPI|USER32|VERSION|WINHTTP" dlls.txt
       - name: Package
         run: ./scripts/package.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: TrayIconGuard-win-x64
           path: |
@@ -45,7 +45,7 @@ jobs:
         run: cmake -S . -B build-msvc -G "Visual Studio 17 2022" -A x64
       - name: Build
         run: cmake --build build-msvc --config Release
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: TrayIconGuard-msvc-x64
           path: |
