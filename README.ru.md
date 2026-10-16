@@ -301,7 +301,7 @@ CI гоняет оба варианта на каждый push (ubuntu cross + w
 
 Issues и PR приветствуются. Пожалуйста, сохраняйте: ноль рантайм-зависимостей, модель
 безопасности «только HKCU», гейт сборки без предупреждений (`-Wall -Wextra`) и контракт фида
-из `Updater_SKILL.MD`. См. [CONTRIBUTING](https://github.com/paulmann/windows-show-all-tray-icons/wiki) в wiki.
+из `Updater_SKILL.MD`. Правила участия — [`CONTRIBUTING.md`](CONTRIBUTING.md) и [кодекс поведения](CODE_OF_CONDUCT.md); об уязвимостях — через [`SECURITY.md`](SECURITY.md).
 
 ## 📄 Лицензия
 

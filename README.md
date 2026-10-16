@@ -298,7 +298,7 @@ Details: [docs/BUILD.md](docs/BUILD.md).
 
 Issues and PRs are welcome. Please keep: zero runtime dependencies, HKCU-only safety model,
 the warning-free build gate (`-Wall -Wextra`) and the feed contract of `Updater_SKILL.MD`.
-See [CONTRIBUTING](https://github.com/paulmann/windows-show-all-tray-icons/wiki) in the wiki.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the ground rules and the [Code of Conduct](CODE_OF_CONDUCT.md); report security problems through [`SECURITY.md`](SECURITY.md).
 
 ## 📄 License
 

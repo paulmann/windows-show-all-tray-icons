@@ -305,7 +305,7 @@ etiquetas `v*`. Detalles: [docs/BUILD.md](docs/BUILD.md).
 
 Se agradecen issues y PRs. Por favor mantenga: cero dependencias de runtime, el modelo de
 seguridad solo-HKCU, la puerta de compilación sin avisos (`-Wall -Wextra`) y el contrato de
-feed de `Updater_SKILL.MD`. Ver [CONTRIBUTING](https://github.com/paulmann/windows-show-all-tray-icons/wiki) en el wiki.
+feed de `Updater_SKILL.MD`. Consulta [`CONTRIBUTING.md`](CONTRIBUTING.md) y el [Código de Conducta](CODE_OF_CONDUCT.md); los problemas de seguridad se reportan vía [`SECURITY.md`](SECURITY.md).
 
 ## 📄 Licencia
 

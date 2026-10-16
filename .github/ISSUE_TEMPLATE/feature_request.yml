@@ -1,0 +1,73 @@
+name: Feature request
+description: Suggest an improvement or a new capability
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, please skim the [wiki roadmap](https://github.com/paulmann/windows-show-all-tray-icons/wiki/Roadmap-and-Ideas)
+        and the Roadmap section of the README — the idea may already be tracked.
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      options:
+        - label: I searched existing issues and the roadmap for this idea.
+          required: true
+        - label: This request is about TrayIconGuard itself, not about a third-party tray application.
+          required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the situation, not the solution — it helps us find the right fix.
+      placeholder: Every reboot my laptop's VPN icon hides itself and I have to re-promote it manually.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like TrayIconGuard to do? CLI flag, GUI control, setting, …?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: input
+    id: os
+    attributes:
+      label: Windows version and build
+      placeholder: Windows 11 24H2 (26100.2033)
+    validations:
+      required: false
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Which area does this touch?
+      options:
+        - Tray icon promotion / hiding
+        - Guard watcher
+        - GUI / appearance / themes
+        - Installer / deployment (incl. winget, npm, MSIX)
+        - CLI / automation
+        - Localization
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Project constraints
+      description: These are hard requirements of the project (see CONTRIBUTING.md).
+      options:
+        - label: This can be implemented without new runtime dependencies (single native exe).
+          required: true
+        - label: This does not require writing outside HKCU for a standard user.
+          required: true

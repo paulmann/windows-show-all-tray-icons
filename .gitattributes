@@ -1,0 +1,32 @@
+# Line-ending and diff policy.
+# The project is authored cross-platform (Linux cross-build + Windows MSVC): text files are
+# stored as LF in the repository, converted on checkout where a platform demands it.
+
+* text=auto eol=lf
+
+# cmd.exe cannot execute a LF-only batch file — these formats must stay CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.reg text eol=crlf
+
+# Scripts and sources: always LF, so the shell scripts stay byte-stable for CI.
+*.sh  text eol=lf
+*.py  text eol=lf
+*.ps1 text eol=lf
+
+# Binary artifacts — never normalise or diff them.
+*.exe  binary
+*.dll  binary
+*.ico  binary
+*.png  binary
+*.jpg  binary
+*.zip  binary
+*.gz   binary
+*.msix binary
+*.bin  binary
+
+# Keep the repository language bar about the product, not about docs and screenshots.
+*.md         linguist-documentation
+docs/**      linguist-documentation
+shots/**     linguist-documentation
+.github/**   linguist-documentation

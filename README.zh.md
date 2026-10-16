@@ -291,7 +291,7 @@ CI 在每次 push 上跑两条链路（ubuntu 交叉 + windows MSVC），并在 
 
 欢迎 Issue 与 PR。请保持：零运行时依赖、仅 HKCU 的安全模型、无警告构建门禁
 （`-Wall -Wextra`）以及 `Updater_SKILL.MD` 的 feed 契约。
-见 wiki 中的 [CONTRIBUTING](https://github.com/paulmann/windows-show-all-tray-icons/wiki)。
+贡献规则见 [`CONTRIBUTING.md`](CONTRIBUTING.md) 与[行为准则](CODE_OF_CONDUCT.md)；安全问题请通过 [`SECURITY.md`](SECURITY.md) 报告。
 
 ## 📄 许可证
 

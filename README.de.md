@@ -300,7 +300,7 @@ Details: [docs/BUILD.md](docs/BUILD.md).
 
 Issues und PRs sind willkommen. Bitte bewahren Sie: null Runtime-Abhängigkeiten,
 HKCU-only-Sicherheitsmodell, den Warning-freien Build-Gate (`-Wall -Wextra`) und den
-Feed-Vertrag aus `Updater_SKILL.MD`. Siehe [CONTRIBUTING](https://github.com/paulmann/windows-show-all-tray-icons/wiki) im Wiki.
+Feed-Vertrag aus `Updater_SKILL.MD`. Siehe [`CONTRIBUTING.md`](CONTRIBUTING.md) und den [Verhaltenskodex](CODE_OF_CONDUCT.md); Sicherheitslücken bitte über [`SECURITY.md`](SECURITY.md) melden.
 
 ## 📄 Lizenz
 

@@ -299,7 +299,7 @@ CI हर push पर दोनों चलाता है (ubuntu cross + win
 
 Issues और PR सादर आमंत्रित हैं। कृपया बनाए रखें: शून्य रनटाइम निर्भरता, केवल-HKCU सुरक्षा मॉडल,
 चेतावनी-मुक्त बिल्ड गेट (`-Wall -Wextra`) और `Updater_SKILL.MD` का फ़ीड अनुबंध।
-wiki में [CONTRIBUTING](https://github.com/paulmann/windows-show-all-tray-icons/wiki) देखें।
+योगदान नियमों के लिए [`CONTRIBUTING.md`](CONTRIBUTING.md) और [आचार संहिता](CODE_OF_CONDUCT.md) देखें; सुरक्षा समस्याओं के लिए [`SECURITY.md`](SECURITY.md) देखें।
 
 ## 📄 लाइसेंस
 

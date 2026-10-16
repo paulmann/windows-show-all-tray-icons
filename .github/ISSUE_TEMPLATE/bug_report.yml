@@ -1,0 +1,109 @@
+name: Bug report
+description: Something does not work as documented
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report! Tray-visibility problems are almost always
+        environment-specific, so please fill in everything below.
+
+        Looking for usage help instead? The [wiki](https://github.com/paulmann/windows-show-all-tray-icons/wiki)
+        (FAQ, Troubleshooting, CLI) answers most questions.
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      options:
+        - label: I searched the existing issues and the wiki (FAQ / Troubleshooting) before reporting.
+          required: true
+        - label: I am running the latest release (8.6.0 or newer) and can still reproduce the problem.
+          required: true
+  - type: input
+    id: version
+    attributes:
+      label: TrayIconGuard version
+      description: About page → version, or `TrayIconGuard.exe --version`
+      placeholder: "8.6.0"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Windows version and build
+      description: Output of `winver`, or the `os` field of `TrayIconGuard.exe --status --json`
+      placeholder: Windows 11 24H2 (26100.2033)
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How is TrayIconGuard installed?
+      options:
+        - Portable (just run the exe)
+        - Per-user ("Only for me")
+        - All users (machine scope, UAC)
+        - Not installed yet (fresh copy)
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part is affected?
+      options:
+        - Tray icon promotion / hiding (icons page)
+        - Guard watcher (icons re-hide later)
+        - Tray menu / tray icon behaviour
+        - GUI (a page or a control)
+        - Embedded installer / uninstall
+        - Self-updater / update feed
+        - CLI / headless mode
+        - Localization or theme
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps, starting from a fresh launch.
+      placeholder: |
+        1. Launch TrayIconGuard.exe as a standard user
+        2. Promote the Slack icon
+        3. Restart Slack
+        4. The icon disappears from the taskbar
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What happens instead? Screenshots are welcome — drag them into this box.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics and logs
+      description: |
+        About → “Copy diagnostics”, or attach the newest file from
+        `%LOCALAPPDATA%\TrayIconGuard\logs\`. This text is inserted as-is, so
+        review it before pasting.
+      render: text
+    validations:
+      required: false
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      options:
+        - label: I have removed personal information (user names, paths) from the pasted logs.
+          required: false

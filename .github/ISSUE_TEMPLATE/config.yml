@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation, FAQ and troubleshooting (wiki)
+    url: https://github.com/paulmann/windows-show-all-tray-icons/wiki
+    about: Installation, CLI reference, how tray visibility works, common fixes
+  - name: Report a security vulnerability (private)
+    url: https://github.com/paulmann/windows-show-all-tray-icons/security/advisories/new
+    about: Please do not open a public issue for security problems — see SECURITY.md
+  - name: Download the latest release
+    url: https://github.com/paulmann/windows-show-all-tray-icons/releases/latest
+    about: Get the current TrayIconGuard build (exe or zip) and its checksums
