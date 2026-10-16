@@ -22,6 +22,9 @@ int WINAPI wWinMain(HINSTANCE hinst, HINSTANCE, LPWSTR cmdLine, int) {
     tig::cli::ParsedArgs parsed;
     std::wstring err;
     if (!tig::cli::Parse(args, parsed, err)) {
+        // Report the reason: a silent exit 1 made typos indistinguishable from real failures.
+        if (!err.empty()) tig::cli::PrintLine(L"error: " + err);
+        tig::cli::PrintLine(L"run `TrayIconGuard.exe --help` for the list of arguments");
         tig::cli::SendToRunningInstance(L"show");
         return 1;
     }

@@ -15,7 +15,7 @@
   IgnorableNamespaces="uap rescap desktop">
   <Identity Name="MikhailDeynekin.TrayIconGuard"
             Publisher="CN=REPLACE-WITH-PARTNER-CENTER-PUBLISHER-CN"
-            Version="8.6.0.0" />
+            Version="8.6.1.0" />
   <Properties>
     <DisplayName>TrayIconGuard</DisplayName>
     <PublisherDisplayName>Mikhail Deynekin</PublisherDisplayName>

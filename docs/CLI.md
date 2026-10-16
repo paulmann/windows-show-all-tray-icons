@@ -1,7 +1,11 @@
 # CLI reference — TrayIconGuard.exe
 
 Exit codes: `0` ok · `1` invalid arguments · `2` unsupported OS/store · `3` partial failure.
-Headless modes attach to the parent console when present (UTF-8 output).
+
+Headless modes print to the attached console, and to the inherited handle as UTF-8 when the
+process is started with a redirect (`> state.json`, `| more`, RMM/CI capture) — so automation
+gets the same bytes as a human does. Invalid arguments print `error: <reason>` followed by a
+`--help` hint and exit with code 1.
 
 | Command | Effect |
 |---|---|
@@ -32,6 +36,9 @@ Notes:
 - When a GUI instance already runs, a second GUI launch forwards `--show` to it and exits 0
   (single-instance mutex).
 - `--json` guarantees stdout purity: nothing else is printed in JSON mode.
+- Redirecting or piping stdout is safe: the JSON document goes to the inherited pipe/file handle
+  (fixed in 8.6.1), so both `--status --json > state.json` and
+  `TrayIconGuard.exe --status --json | ConvertFrom-Json` work on real Windows.
 
 Examples:
 

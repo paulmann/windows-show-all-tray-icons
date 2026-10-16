@@ -34,22 +34,39 @@ constexpr DWORD kIpcMagic = 0x54494738;  // 'TIG8'
 
 void Print(const std::wstring& s) {
     HANDLE con = GetStdHandle(STD_OUTPUT_HANDLE);
-    DWORD written = 0;
+    const DWORD type = (con && con != INVALID_HANDLE_VALUE) ? GetFileType(con) : FILE_TYPE_UNKNOWN;
     std::wstring out = s + L"\n";
-    if (!WriteConsoleW(con, out.c_str(), static_cast<DWORD>(out.size()), &written, nullptr)) {
-        // redirected to pipe/file: emit UTF-8
-        const std::string u8 = str::ToUtf8(out);
-        fwrite(u8.data(), 1, u8.size(), stdout);
-        fflush(stdout);
+    if (type == FILE_TYPE_CHAR) {
+        DWORD written = 0;
+        if (WriteConsoleW(con, out.c_str(), static_cast<DWORD>(out.size()), &written, nullptr)) return;
     }
+    // Not a console (pipe, file, or nothing inherited): emit UTF-8 straight through the OS
+    // handle. WriteFile is used instead of fwrite(stdout) because a GUI-subsystem process does
+    // not necessarily have the CRT stdout bound to the handle it inherited — which is exactly
+    // why `TrayIconGuard.exe --status --json > state.json` used to produce an empty file.
+    const std::string u8 = str::ToUtf8(out);
+    if (con && con != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        if (WriteFile(con, u8.data(), static_cast<DWORD>(u8.size()), &written, nullptr)) return;
+    }
+    fwrite(u8.data(), 1, u8.size(), stdout);
+    fflush(stdout);
 }
 
 void AttachConsoleIfPossible() {
     if (GetConsoleWindow()) return;
-    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
-        (void)freopen("CONOUT$", "w", stdout);
-        (void)freopen("CONOUT$", "w", stderr);
-    }
+    if (!AttachConsole(ATTACH_PARENT_PROCESS)) return;
+    // Bind the console streams only for handles that were not inherited. A redirected
+    // stdout/stderr (a pipe or a file: `> state.json`, RMM capture, CI logs) MUST stay
+    // redirected — rebinding it to CONOUT$ silently throws the CLI output away, which is how
+    // the documented `--status --json` automation broke on real Windows.
+    auto bindIfUnbound = [](DWORD which, FILE* stream) {
+        HANDLE h = GetStdHandle(which);
+        if (h && h != INVALID_HANDLE_VALUE) return;
+        (void)freopen("CONOUT$", "w", stream);
+    };
+    bindIfUnbound(STD_OUTPUT_HANDLE, stdout);
+    bindIfUnbound(STD_ERROR_HANDLE, stderr);
 }
 
 int PrintStatus(bool asJson) {
@@ -105,6 +122,8 @@ int PrintStatus(bool asJson) {
 }
 
 }  // namespace
+
+void PrintLine(const std::wstring& text) { Print(text); }
 
 std::wstring HelpText() {
     return

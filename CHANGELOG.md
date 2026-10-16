@@ -1,5 +1,27 @@
 # Changelog
 
+## 8.6.1 — 2026-10-16
+
+### Fixed
+- **CLI output was silently discarded when stdout/stderr were redirected on real Windows**
+  (`TrayIconGuard.exe --status --json > state.json`, `| more`, RMM or CI capture: exit code 0,
+  empty stream). Two causes in `src/core/cli.cpp`: `Print()` went through `WriteConsoleW`, and
+  `AttachConsoleIfPossible()` unconditionally rebound `stdout`/`stderr` to `CONOUT$`, throwing
+  away the inherited pipe/file handle — and a GUI-subsystem process has no CRT stream bound to
+  that handle, so the old `fwrite(stdout)` fallback wrote nowhere.
+  Output now goes to the console when one is attached, and otherwise straight to the inherited
+  handle as UTF-8 through `WriteFile`; the console streams are only bound when nothing was
+  inherited. Measured on Windows 11 (build 26300): the 8.6.0 binary produced **0 bytes** for
+  `--status --json > file` while this build produces the full JSON document, and pipe capture
+  returns every line. `--check-update`, `--help` and every other CLI verb benefit equally.
+- **Invalid arguments exited 1 in complete silence** — the parser's error string was computed in
+  `wWinMain` and dropped. The CLI now prints `error: <reason>` plus a `--help` hint, e.g.
+  `error: unknown argument: --bogus`.
+- `CMakeLists.txt` still declared the 8.0.0 project version.
+
+### Changed
+- Version 8.6.1; store manifest 8.6.1.0.
+
 ## 8.6.0 — 2026-10-16
 
 ### Fixed

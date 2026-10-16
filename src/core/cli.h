@@ -50,4 +50,8 @@ bool SendExitToRunningInstance();
 
 std::wstring HelpText();
 
+// Prints one line to the CLI output channel: the console when one is attached, otherwise the
+// inherited pipe/file handle, so redirection (`> state.json`) and RMM capture work.
+void PrintLine(const std::wstring& text);
+
 }  // namespace tig::cli
