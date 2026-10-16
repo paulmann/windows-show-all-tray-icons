@@ -102,6 +102,17 @@ After the package is live, add a row to the READMEs:
 ```text
 npx trayiconguard install
 ```
+
+**GitHub Packages was tried as a fallback and is blocked as well:** publishing
+`@paulmann/trayiconguard` to `npm.pkg.github.com` returns
+`403 Permission permission_denied: The token provided does not match expected scopes` — the
+GitHub token carries no `packages: write`. Either credential unblocks publication:
+
+| Target | Credential needed | Command |
+|---|---|---|
+| npmjs.com (`trayiconguard`) | valid granular token with *read and write* for packages, or `npm login` | `pnpm publish --no-git-checks --access public` |
+| GitHub Packages (`@paulmann/trayiconguard`) | classic PAT with `write:packages` (or fine-grained *Packages: Read and write*) | publish from a copy renamed to the scoped name with `publishConfig.registry = https://npm.pkg.github.com` |
+
 ## License
 
 [PolyForm Noncommercial License 1.0.0](LICENSE) — free for noncommercial use; commercial
