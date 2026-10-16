@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.12.0.schema.json
+
+PackageIdentifier: MikhailDeynekin.TrayIconGuard
+PackageVersion: 8.6.0
+PackageLocale: en-US
+Publisher: Mikhail Deynekin
+PublisherUrl: https://github.com/paulmann
+PublisherSupportUrl: https://github.com/paulmann/windows-show-all-tray-icons/issues
+Author: Mikhail Deynekin
+PackageName: TrayIconGuard
+PackageUrl: https://github.com/paulmann/windows-show-all-tray-icons
+License: PolyForm Noncommercial License 1.0.0
+LicenseUrl: https://github.com/paulmann/windows-show-all-tray-icons/blob/v8.6.0/LICENSE
+Copyright: Copyright (c) 2026 Mikhail Deynekin
+ShortDescription: Keeps every notification-area (system tray) icon visible on Windows 10 and 11, and re-promotes icons that Explorer hides again. Single native C++ exe, portable, zero dependencies.
+Description: |
+  TrayIconGuard keeps every notification-area (system tray) icon visible on Windows 10 and
+  Windows 11, and keeps them that way. Icons that Windows hides in the overflow flyout are
+  promoted back to the taskbar, and an event-driven watcher re-promotes any icon that
+  Explorer hides again as soon as apps start, update or re-register their tray icons.
+
+  It writes the same HKCU\Control Panel\NotifyIconSettings values that the Windows Settings
+  toggle uses, so no driver, service or elevation is involved: everything stays in the
+  current user's registry hive and no UAC prompt is ever shown.
+
+  The application is a single native Win32 C++ executable with zero dependencies. There is
+  no .NET, no Visual Studio runtime and no redistributable to install; copy the exe anywhere
+  and run it. An optional first-run wizard can install it per user to
+  %LOCALAPPDATA%\Programs\TrayIconGuard with autostart and shortcuts, or the exe can simply
+  be run in portable mode.
+
+  Other features: per-icon promote and hide toggles with search, filters and wildcard
+  exclusions, extracted icons with friendly names, Light/Dark/System themes with accent
+  presets, 30 UI locales with live switching, JSON snapshots with automatic backup, a
+  rotating activity log, a headless guard mode (--watch) and a CLI (--promote-all,
+  --status --json) with stable exit codes. No telemetry; network access happens only when
+  the manual update check is used.
+Moniker: trayiconguard
+Tags:
+- tray-icons
+- system-tray
+- notification-area
+- taskbar
+- windows-10
+- windows-11
+- portable
+- no-install
+- zero-dependencies
+- native
+ReleaseNotesUrl: https://github.com/paulmann/windows-show-all-tray-icons/releases/tag/v8.6.0
+ManifestType: defaultLocale
+ManifestVersion: 1.12.0

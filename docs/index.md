@@ -59,30 +59,30 @@ TrayIconGuard.exe --check-update      # ask the feed whether a newer version exi
 TrayIconGuard.exe --uninstall         # remove shortcuts, autostart and the installed copy
 ```
 
-Full list: [Command-Line Interface](Command-Line-Interface) · exit codes · `--install-machine` for
+Full list: [Command-Line Interface](https://github.com/paulmann/windows-show-all-tray-icons/wiki/Command-Line-Interface) · exit codes · `--install-machine` for
 elevated fleet installs.
 
 ## Documentation
 
 | Guide | What's inside |
 |---|---|
-| [Getting Started](Getting-Started) | first run, the wizard, portable vs installed |
-| [How Tray Visibility Works](How-Tray-Visibility-Works) | the registry mechanics, the decay problem, the do-not-touch list |
-| [The Guard Watcher](The-Guard-Watcher) | event-driven re-promotion, debounce, polling fallback |
-| [GUI Pages Guide](GUI-Pages-Guide) | every page of the app |
-| [Command-Line Interface](Command-Line-Interface) | all flags, exit codes, automation recipes |
-| [Configuration Reference](Configuration-Reference) | `settings.json` and registry values, in full |
-| [Self-Updater Guide](Self-Updater-Guide) | the feed contract, SHA-256 pinning, verification |
-| [Security and Privacy](Security-and-Privacy) | what the program touches, threat model |
-| [Installation and Deployment](Installation-and-Deployment) | per-user and machine scope, Task Scheduler, RMM |
-| [Troubleshooting](Troubleshooting) | the failures we have actually seen and their fixes |
-| [Comparison with Alternatives](Comparison-with-Alternatives) | TrayIconGuard vs registry scripts, StartAllBack, ExplorerPatcher, Windhawk |
-| [Building from Source](Building-from-Source) | mingw-w64 cross-build and native MSVC |
-| [Localization and Themes](Localization-and-Themes) | 30 locales, adding a language, theming |
-| [Architecture](Architecture) | module map, threading model, IPC |
-| [Changelog and Versioning](Changelog-and-Versioning) | release history and the publication contract |
-| [Roadmap and Ideas](Roadmap-and-Ideas) | what is planned next |
-| [FAQ](FAQ) · [Glossary](Glossary) | quick answers and vocabulary |
+| [Getting Started](https://github.com/paulmann/windows-show-all-tray-icons/wiki/Getting-Started) | first run, the wizard, portable vs installed |
+| [How Tray Visibility Works](https://github.com/paulmann/windows-show-all-tray-icons/wiki/How-Tray-Visibility-Works) | the registry mechanics, the decay problem, the do-not-touch list |
+| [The Guard Watcher](https://github.com/paulmann/windows-show-all-tray-icons/wiki/The-Guard-Watcher) | event-driven re-promotion, debounce, polling fallback |
+| [GUI Pages Guide](https://github.com/paulmann/windows-show-all-tray-icons/wiki/GUI-Pages-Guide) | every page of the app |
+| [Command-Line Interface](https://github.com/paulmann/windows-show-all-tray-icons/wiki/Command-Line-Interface) | all flags, exit codes, automation recipes |
+| [Configuration Reference](https://github.com/paulmann/windows-show-all-tray-icons/wiki/Configuration-Reference) | `settings.json` and registry values, in full |
+| [Self-Updater Guide](https://github.com/paulmann/windows-show-all-tray-icons/wiki/Self-Updater-Guide) | the feed contract, SHA-256 pinning, verification |
+| [Security and Privacy](https://github.com/paulmann/windows-show-all-tray-icons/wiki/Security-and-Privacy) | what the program touches, threat model |
+| [Installation and Deployment](https://github.com/paulmann/windows-show-all-tray-icons/wiki/Installation-and-Deployment) | per-user and machine scope, Task Scheduler, RMM |
+| [Troubleshooting](https://github.com/paulmann/windows-show-all-tray-icons/wiki/Troubleshooting) | the failures we have actually seen and their fixes |
+| [Comparison with Alternatives](https://github.com/paulmann/windows-show-all-tray-icons/wiki/Comparison-with-Alternatives) | TrayIconGuard vs registry scripts, StartAllBack, ExplorerPatcher, Windhawk |
+| [Building from Source](https://github.com/paulmann/windows-show-all-tray-icons/wiki/Building-from-Source) | mingw-w64 cross-build and native MSVC |
+| [Localization and Themes](https://github.com/paulmann/windows-show-all-tray-icons/wiki/Localization-and-Themes) | 30 locales, adding a language, theming |
+| [Architecture](https://github.com/paulmann/windows-show-all-tray-icons/wiki/Architecture) | module map, threading model, IPC |
+| [Changelog and Versioning](https://github.com/paulmann/windows-show-all-tray-icons/wiki/Changelog-and-Versioning) | release history and the publication contract |
+| [Roadmap and Ideas](https://github.com/paulmann/windows-show-all-tray-icons/wiki/Roadmap-and-Ideas) | what is planned next |
+| [FAQ](https://github.com/paulmann/windows-show-all-tray-icons/wiki/FAQ) · [Glossary](https://github.com/paulmann/windows-show-all-tray-icons/wiki/Glossary) | quick answers and vocabulary |
 
 ## Security & privacy
 
