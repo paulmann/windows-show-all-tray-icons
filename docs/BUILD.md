@@ -12,12 +12,52 @@ sudo apt install g++-mingw-w64-x86-64 cmake make      # Debian/Ubuntu
 `-static -static-libgcc -static-libstdc++ -Wl,--gc-sections -s -municode`.
 The result imports **only** Windows system DLLs.
 
-## Option B — native Windows, MinGW-w64
+## Option B — native Windows, MinGW-w64 (verified with winlibs GCC 16.2 + CMake 4.4.4)
 
 ```powershell
-cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j8
-copy build\TrayIconGuard.exe dist\
+winget install BrechtSanders.WinLibs.POSIX.MSVCRT        # UCRT variant works too
+winget install Kitware.CMake                              # or a portable CMake zip
+
+$mingw = (Get-ChildItem "$env:LOCALAPPDATA\Microsoft\WinGet\Packages" -Directory |
+          Where-Object Name -like 'BrechtSanders.WinLibs.POSIX.MSVCRT*' | Select-Object -First 1).FullName +
+         '\mingw64\bin'
+$env:PATH = "$mingw;$env:PATH"      # windres needs `gcc` on PATH: it preprocesses resources.rc
+cmake -S . -B build-win -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release `
+      -DCMAKE_MAKE_PROGRAM="$mingw\mingw32-make.exe" `
+      -DCMAKE_CXX_COMPILER="$mingw\g++.exe" -DCMAKE_RC_COMPILER="$mingw\windres.exe"
+cmake --build build-win -j8                              # -> dist/TrayIconGuard.exe
+```
+
+**Pitfall (winlibs):** that toolchain ships
+`mingw64/x86_64-w64-mingw32/lib/default-manifest.o`, which GCC's link spec picks up
+automatically. It embeds a *second* `RT_MANIFEST` resource and makes `ld` print
+`.rsrc merge failure: multiple non-default manifests`. Rename it to
+`default-manifest.o.disabled` so only the project's canonical manifest is embedded (the
+Debian/CI toolchain has no such file). Check the result: `objdump -p dist\TrayIconGuard.exe`
+must list system DLLs only, `--version` must report the version from `src/core/version.h`, and
+`g++ -Wall -Wextra` must stay at zero warnings.
+
+Without CMake, this is the exact flag set `CMakeLists.txt` applies to GNU toolchains:
+
+```powershell
+$src = Get-ChildItem -Recurse src -Filter *.cpp | ForEach-Object FullName
+& "$mingw\g++.exe" -std=c++17 -O2 -municode -DUNICODE -D_UNICODE -DWIN32_LEAN_AND_MEAN `
+  -DNOMINMAX -DWINVER=0x0A00 -D_WIN32_WINNT=0x0A00 -DNTDDI_VERSION=0x0A000006 `
+  -Wall -Wextra -Wno-unused-parameter -ffunction-sections -fdata-sections -Isrc `
+  $src resources/resources.rc -o dist/TrayIconGuard.exe `
+  -static -static-libgcc -static-libstdc++ -Wl,--gc-sections -s `
+  -lgdiplus -lcomctl32 -lcomdlg32 -ldwmapi -luxtheme -lshlwapi -lversion -lwinhttp `
+  -lole32 -loleaut32 -lshell32 -ladvapi32 -lgdi32 -luser32 -lkernel32 -lbcrypt
+```
+
+Always smoke-test the **redirected** CLI as well — the 8.6.0 regression (output discarded when
+stdout was a pipe or file) is invisible in an interactive console, and wine does not reproduce it:
+
+```powershell
+.\dist\TrayIconGuard.exe --status --json > $env:TEMP\status.json
+(Get-Content $env:TEMP\status.json -Raw | ConvertFrom-Json).total   # must not be empty
+.\dist\TrayIconGuard.exe --help > $env:TEMP\help.txt                 # must not be empty
+.\dist\TrayIconGuard.exe --bogus; $LASTEXITCODE                      # 1 + "error: unknown argument"
 ```
 
 ## Option C — native Windows, MSVC (VS 2022)
