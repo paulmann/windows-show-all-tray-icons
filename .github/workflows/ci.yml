@@ -12,7 +12,7 @@ jobs:
     name: Cross-build (ubuntu, mingw-w64, static)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Toolchain
         run: sudo apt-get update && sudo apt-get install -y g++-mingw-w64-x86-64 cmake make
       - name: Build
@@ -40,7 +40,7 @@ jobs:
     name: Native build (windows, MSVC)
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Configure
         run: cmake -S . -B build-msvc -G "Visual Studio 17 2022" -A x64
       - name: Build
@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-24.04
     permissions: { contents: write }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
