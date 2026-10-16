@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "channel": "stable",
-  "version": "8.6.1",
+  "version": "8.6.2",
   "released": "2026-10-16",
   "minBuild": 15063,
-  "url": "https://github.com/paulmann/windows-show-all-tray-icons/releases/download/v8.6.1/TrayIconGuard.exe",
-  "sha256": "9d4e9ebf4f196b91d8d36d9ca2ed7f60c216c6fae52058c23831f00a642a12dc",
-  "zipUrl": "https://github.com/paulmann/windows-show-all-tray-icons/releases/download/v8.6.1/TrayIconGuard-8.6.1-win-x64.zip",
-  "zipSha256": "1e80d0f824e03e47d7256cd163f8437ede08e0b1e5ca3872df0e7a1db64c4236",
-  "notes": "**CLI output was silently discarded when stdout/stderr were redirected on real Windows** **Invalid arguments exited 1 in complete silence** \u2014 the parser's error string was computed in `CMakeLists.txt` still declared the 8.0.0 project version. Version 8.6.1; store manifest 8.6.1.0."
+  "url": "https://github.com/paulmann/windows-show-all-tray-icons/releases/download/v8.6.2/TrayIconGuard.exe",
+  "sha256": "b3a9afc2710a72b956e560122c9a335191300306076d2d6f6fdd35946df6998d",
+  "zipUrl": "https://github.com/paulmann/windows-show-all-tray-icons/releases/download/v8.6.2/TrayIconGuard-8.6.2-win-x64.zip",
+  "zipSha256": "d85f03b99724c2e956f34792a68b03ee36f7ac1e6e38b91be80ca930a4bb487f",
+  "notes": "**Redirected CLI output now works in the shipped GUI build.** The 8.6.1 attempt was Version 8.6.2; store manifest 8.6.2.0."
 }
