@@ -207,5 +207,28 @@ Parallelization: independent bash jobs (compile loops, icon gen, doc drafting) r
   store manifest 8.4.1.0, docs (USER-GUIDE scope, CLI.md, README badges), dist/git-upload-v8.4.1.zip
   prepared for the user's git push. SESSION STATE: all user requirements green; awaiting user's
   git upload of the release assets to verify auto-update from live feed.
+- 2026-10-16 J18 (publication v8.6.0, executing agent on Windows): the bundle could NOT
+  fast-forward origin/main — the remote main had advanced past 124e849 with the 8.4.1
+  publication commit 166ad01, whose tree is byte-identical to the bundle's d969b54
+  (`git diff 166ad01 d969b54` empty). Therefore the tree of 82747e9 was transplanted as
+  b07c3f1 (parent 166ad01; `git diff 82747e9 b07c3f1` empty; original author/committer
+  metadata preserved) and tag v8.6.0 was re-created on it (annotated, same message/tagger),
+  which is the emergency route of §3. DEVIATION from 1.1/2.1: tag = b07c3f1, not 82747e9
+  (content byte-identical). Pushed main first, then the tag.
+- 2026-10-16 J18a (post-conditions): CI tag run 38890511676 — Cross-build + MSVC + Release all
+  success; the Release job created the release and committed the feed itself, so
+  main = ba6071d "Update feed: stable 8.6.0 (sha256-pinned from released bytes)".
+  2.1: tag b07c3f1 is an ancestor of main ✓. 2.2: feed = 8.6.0; the served exe
+  sha256 20c53316f0661583e52ec94a10df7a861f576d3e623ce2e14aed8e09823a5c47 (1,104,384 B) and zip
+  sha256 3986f0c61b1313027eeef44fb4945f70d765a9fd4fbcdfeb7378584ae7e2a9a3 (495,870 B) were
+  downloaded from the release URLs and matched the feed fields ✓. 2.3: release v8.6.0 = Latest,
+  three assets, digests match the feed ✓. 2.4 (wine chain 8.4.1 → 8.6.0: --check-update /
+  --update-now) was NOT executed by this agent — handed to the verification agent. Release
+  title/body curated by hand afterwards; assets and feed untouched.
+- 2026-10-16 J18b (cosmetic defect, published as-is): the feed's `notes` field is truncated at
+  exactly 300 characters mid-word ("…**About: install-mode chip** no lo") by
+  scripts/make_feed.py — line 62 joins the first 6 body lines (stripping 2 chars each) and
+  line 64 cuts `flat[:300]`. Left published because the no-rewrite rule forbids editing a
+  published feed version; fix the extractor before the next release.
 
 
