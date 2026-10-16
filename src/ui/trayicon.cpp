@@ -97,14 +97,19 @@ LRESULT CALLBACK MsgWndProc(HWND h, UINT m, WPARAM w, LPARAM l) {
                 SetForegroundWindow(h);
                 POINT p{};
                 GetCursorPos(&p);
+                // MS discipline: foreground first, WM_NULL after — otherwise the menu
+                // sticks or vanishes and swallows the next clicks (8.6 fix)
+                SetForegroundWindow(h);
                 TrackPopupMenu(menu, TPM_RIGHTBUTTON, p.x, p.y, 0, h, nullptr);
+                PostMessageW(h, WM_NULL, 0, 0);
                 DestroyMenu(menu);
                 return 0;
             }
-            if (l == WM_LBUTTONDBLCLK || l == NIN_BALLOONTIMEOUT) {
-                if (l == WM_LBUTTONDBLCLK) HandleCommand(kCmdShow);
+            if (l == WM_LBUTTONDBLCLK || l == NIN_SELECT) {
+                HandleCommand(kCmdShow);  // double-click (or shell select) opens the app (8.6)
                 return 0;
             }
+            if (l == NIN_BALLOONTIMEOUT) return 0;
             return 0;
         case WM_COMMAND:
             if (HandleCommand(LOWORD(w))) return 0;

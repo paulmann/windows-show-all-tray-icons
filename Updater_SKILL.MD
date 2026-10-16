@@ -49,22 +49,36 @@ Rules:
   `feedUrl` override (default = stable).
 - Keep old feeds: never rewrite history of a published version; publish a new version.
 
-## 3. Release publication checklist (agent procedure)
+## 3. Release publication checklist (8.6+ contract: CI publishes, feed follows served bytes)
+
+**Golden rule (8.6):** sha256 pins are computed ONLY from the bytes the GitHub release
+actually serves — by `scripts/make_feed.py` — never from a locally built binary. This kills
+the failure class where CI (tag job) or a re-upload replaces release bytes after a local pin.
 
 1. `./scripts/build.sh` → `dist/TrayIconGuard.exe` (gate: 0 warnings + manifest gate).
 2. Bump version in ONE place: `src/core/version.h` (`kVersion`, quad, `TIG_VERSION_A`),
    then mirror: `resources/resources.rc`, `resources/app.manifest`,
-   `src/core/installer.cpp` (DisplayVersion), `scripts/package.sh` (VER).
+   `scripts/package.sh` (VER), `store/AppxManifest.xml` (Version).
 3. `./scripts/package.sh` → `dist/TrayIconGuard-<ver>-win-x64.zip` + `dist/SHA256SUMS`.
-4. Write `update/stable.json` with the NEW sha256 values and release notes.
-5. Git: commit everything, tag `v<ver>`, push. Create the GitHub release `v<ver>` with
-   assets: `TrayIconGuard.exe`, `TrayIconGuard-<ver>-win-x64.zip`, `SHA256SUMS`
-   (asset names must match the URLs in the feed).
-6. Verify: `TrayIconGuard.exe --check-update` prints `latest=<ver> newer=no` after the
-   update; before the update it prints `newer=yes`.
-7. Optional E2E on any machine: serve a folder containing `stable.json` (with a loopback
+4. Update `CHANGELOG.md` (make_feed.py extracts release notes from the `## <ver>` section).
+5. Git: commit everything, tag `v<ver>`, push **commit and tag together**.
+6. CI tag pipeline does the rest:
+   cross-build (gates) → `release` job uploads `TrayIconGuard.exe`,
+   `TrayIconGuard-<ver>-win-x64.zip`, `SHA256SUMS` to release `v<ver>` →
+   `make_feed.py --repo … --tag v<ver> --out update/stable.json --notes-from CHANGELOG.md`
+   downloads the just-uploaded assets, hashes them, commits+pushes `update/stable.json`
+   to `main`. Feed and assets are consistent by construction.
+7. Verify: `TrayIconGuard.exe --check-update` prints `latest=<ver> newer=yes` on the old
+   build and `newer=no` after updating; feed sha256 == `sha256sum` of the served exe
+   (`make_feed.py` already guarantees this; spot-check once per release).
+8. Optional E2E on any machine: serve a folder containing `stable.json` (with a loopback
    `url`) + the exe via `python3 -m http.server`, set
    `settings.updates.feedUrl = "http://127.0.0.1:8000/stable.json"`, run `--update-now`.
+
+### Emergency re-pin (assets replaced after the feed was written)
+`gh release upload v<ver> <files> --clobber`, then
+`python3 scripts/make_feed.py --repo <owner>/<repo> --tag v<ver> --out update/stable.json`
+(remote mode re-hashes the served bytes) and commit+push the feed.
 
 ## 4. Failure matrix
 

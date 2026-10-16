@@ -1,5 +1,34 @@
 # Changelog
 
+## 8.6.0 — 2026-10-16
+
+### Fixed
+- **Appearance: theme segments were mis-mapped** (`Light` applied System, `Dark` applied
+  Light, `System` applied Dark) — item index was cast straight onto `ThemeMode`
+  (System=0/Light=1/Dark=2); explicit Light/Dark/System mapping now.
+- **Tray icons page: per-row toggles and drag-reorder changed state but not the pixels** —
+  the list kept stale entry copies until re-filter; `onData` callback resyncs the view
+  immediately after promote/hide and after a drag commit. Sorting by drag now visibly works.
+- **Tray menu discipline**: `SetForegroundWindow` before `TrackPopupMenu` + `WM_NULL` after
+  (MS-recommended) — fixes menus that vanish/stick and swallow the next clicks;
+  double-click (and `NIN_SELECT`) on the tray icon now always opens the window.
+- **About: install-mode chip** no longer measures text via a second `Gdiplus::Graphics` on a
+  borrowed HDC (GDI+ lock hazard); uses layout-time `gfx::TextWidth`.
+- **LegalCopyright** in the PE version info said “MIT” while the project is
+  PolyForm Noncommercial 1.0.0 — corrected (Mikhail Deynekin).
+
+### Changed
+- **Publication contract 8.6**: `scripts/make_feed.py` generates `update/stable.json` from
+  the bytes the GitHub release actually serves; the CI tag pipeline uploads assets and then
+  pins+commits the feed itself. Local-byte pinning is gone (no more CI/local hash fights).
+- Version 8.6.0; store manifest 8.6.0.0.
+
+### Verified (beta cycle)
+- Wine matrix 7 pages x light/dark + wizard light/dark-RU re-shot after fixes;
+  click-audit of every button/toggle/segment for visible state change;
+  loopback updater E2E re-run; live feed 8.4.1 asset parity re-checked;
+  0 warnings, cppcheck clean, manifest gate OK.
+
 ## 8.4.1 — 2026-10-16
 
 ### Restored

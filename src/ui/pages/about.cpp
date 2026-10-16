@@ -413,12 +413,8 @@ public:
             const bool inst = settings::Get().installMode == L"installed";
             const std::wstring modeTxt =
                 inst ? l10n::t(l10n::S::ModeInstalled) : l10n::t(l10n::S::ModePortable);
-            Gdiplus::Graphics mg(pc.g.GetHDC());
-            const Gdiplus::RectF meas(0.f, 0.f, 4000.f, 1000.f);
-            Gdiplus::RectF bb;
-            mg.MeasureString(modeTxt.c_str(), -1, gfx::Font(hwnd, 11.f), meas, &bb);
-            mg.ReleaseHDC(nullptr);
-            const int chipW = static_cast<int>(bb.Width) + 24;
+            const int chipW =
+                static_cast<int>(gfx::TextWidth(hwnd, modeTxt, 11.f, FontStyle::Medium)) + 24;
             RECT chip{geoLinks.right - 16 - chipW, geoLinks.top + 8, geoLinks.right - 16,
                       geoLinks.top + 32};
             DrawStatusChip(pc, chip, modeTxt, inst ? P.accent : P.textSecondary,

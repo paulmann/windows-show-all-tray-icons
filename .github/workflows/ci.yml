@@ -59,12 +59,36 @@ jobs:
     runs-on: ubuntu-24.04
     permissions: { contents: write }
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/download-artifact@v4
         with: { name: TrayIconGuard-win-x64, path: dist }
+      - name: Normalize asset layout
+        run: |
+          if [ -f dist/dist/TrayIconGuard.exe ]; then mv dist/dist/* dist/; fi
+          mkdir -p dist/out
+          cp dist/TrayIconGuard.exe dist/out/
+          cp dist/TrayIconGuard-*-win-x64.zip dist/out/
+          cp dist/SHA256SUMS dist/out/
       - uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/TrayIconGuard.exe
-            dist/*.zip
-            dist/SHA256SUMS
+            dist/out/TrayIconGuard.exe
+            dist/out/TrayIconGuard-*-win-x64.zip
+            dist/out/SHA256SUMS
           generate_release_notes: true
+      # 8.6 publication contract: the feed is ALWAYS pinned from the bytes the release
+      # actually serves (Updater_SKILL.MD §3). No local-byte pinning, ever.
+      - name: Publish update feed from released bytes
+        run: |
+          python3 scripts/make_feed.py --repo "$GITHUB_REPOSITORY" --tag "$GITHUB_REF_NAME"             --out update/stable.json --notes-from CHANGELOG.md
+          cat update/stable.json
+          git config user.name "TrayIconGuard CI"
+          git config user.email "ci@trayiconguard.local"
+          git add update/stable.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update feed: stable ${GITHUB_REF_NAME#v} (sha256-pinned from released bytes)"
+            git push origin HEAD:main || echo "::warning::feed commit not pushed (non-FF?); pin manually"
+          fi

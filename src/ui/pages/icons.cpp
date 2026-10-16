@@ -44,7 +44,8 @@ public:
     int dragOverIdx = -1;    // insertion index while dragging
     bool suppressClick = false;
     ScrollBar sbar;
-    std::function<void()> onChanged;
+    std::function<void()> onChanged;   // repaint only (hover/scroll)
+    std::function<void()> onData;      // store/order changed: resync view + repaint
 
     int RowH(HWND h) const {
         const int base = settings::Get().compactRows ? 40 : 56;
@@ -254,9 +255,15 @@ public:
             case ME::Up:
                 if (sbar.Needed()) sbar.OnMouse(e, p);
                 if (dragIdx >= 0) {
+                    const bool moved = dragOverIdx != dragIdx;
                     CommitDrag();
-                    if (onChanged) onChanged();
                     dragIdx = -1;
+                    if (moved) {
+                        if (onData) onData();  // reorder must be visible immediately (8.6)
+                        else if (onChanged) onChanged();
+                    } else if (onChanged) {
+                        onChanged();
+                    }
                 }
                 return true;
             case ME::Click: {
@@ -280,7 +287,8 @@ public:
                 store::Rescan();
                 log::Event(str::Format(L"user %s: %s", nowOn ? L"promoted" : L"hid",
                                        en.friendly.c_str()));
-                if (onChanged) onChanged();
+                if (onData) onData();  // view must pick up the new promoted state (8.6)
+                else if (onChanged) onChanged();
                 return true;
             }
             default:
@@ -364,6 +372,7 @@ public:
             list->SyncScroll(hwndRef);
             InvalidateRect(hwndRef, nullptr, FALSE);
         };
+        lv->onData = [this] { Refilter(); };
         list = lv.get();
         widgets.push_back(std::move(lv));
 

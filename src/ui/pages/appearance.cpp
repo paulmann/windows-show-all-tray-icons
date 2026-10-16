@@ -180,6 +180,14 @@ public:
     class LangList* langList = nullptr;
     Toggle* tgAnim = nullptr;
     Toggle* tgCompact = nullptr;
+    // segmented index <-> ThemeMode (items: Light, Dark, System)
+    static int ModeToIdx(ThemeMode m) {
+        return m == ThemeMode::Light ? 0 : m == ThemeMode::Dark ? 1 : 2;
+    }
+    static ThemeMode IdxToMode(int i) {
+        return i == 0 ? ThemeMode::Light : i == 1 ? ThemeMode::Dark : ThemeMode::System;
+    }
+
     Button* btnReset = nullptr;
 
     void Build(HWND) override {
@@ -187,10 +195,11 @@ public:
         st->items = {{l10n::t(l10n::S::ThemeLight), 0xE706},
                      {l10n::t(l10n::S::ThemeDark), 0xE708},
                      {l10n::t(l10n::S::ThemeSystem), 0xE7F4}};
-        st->selected = static_cast<int>(theme::Mode());
+        // item order is Light, Dark, System; ThemeMode is System=0, Light=1, Dark=2 (8.6 fix)
+        st->selected = ModeToIdx(theme::Mode());
         st->selAnim = static_cast<float>(st->selected);
         st->onChange = [](int i) {
-            theme::SetMode(static_cast<ThemeMode>(i));
+            theme::SetMode(IdxToMode(i));
             MainWindow::Instance().RefreshEverything();
         };
         segTheme = st.get();
@@ -267,7 +276,7 @@ public:
             segTheme->items[0].label = l10n::t(l10n::S::ThemeLight);
             segTheme->items[1].label = l10n::t(l10n::S::ThemeDark);
             segTheme->items[2].label = l10n::t(l10n::S::ThemeSystem);
-            segTheme->selected = static_cast<int>(theme::Mode());
+            segTheme->selected = ModeToIdx(theme::Mode());
         }
         if (langList) InvalidateRect(hwndRef, nullptr, FALSE);
         if (tgSystemAccent) tgSystemAccent->on = settings::Get().accent == L"system";

@@ -127,6 +127,7 @@ xvfb-run -a wine64 dist/TrayIconGuard.exe --ui-test  # GUI: create window, rende
 | M8 | Docs EN/RU (README×2, 7 docs), .vscode, CI (cross+MSVC+release), installer ps1/bat/iss, package.sh → zip+SHA256 | ✅ DONE |
 | M9 | Final QA: 0 warnings, cppcheck no errors, wine CLI+GUI matrix, zip+SHA256, tag v8.0.0 | ✅ DONE |
 | M10 | v8.4.1: restored lost 8.4.0 sources (scope engine, wizard picker, About buttons, polish), About z-order fix, beta cycle clean, feed+package 8.4.1 | ✅ DONE |
+| M11 | v8.6.0: real-Windows beta findings fixed (theme seg mapping, icons toggle/reorder repaint, tray menu discipline + dblclk), LegalCopyright, CI feed contract (make_feed.py) | ✅ DONE |
 
 ## 9. Agent swarm roster (details in AGENTS.md + agents/*.md)
 
@@ -190,6 +191,18 @@ Parallelization: independent bash jobs (compile loops, icon gen, doc drafting) r
   cppcheck sbar shadowing, settings latch bug. Wine matrix 14 pages + 2 wizards re-shot
   (shots/), loopback updater E2E re-verified (rename-chain + relaunch exit 0), live-feed
   `--check-update` OK. 0 warnings, cppcheck clean.
+- 2026-10-16 J17 (v8.6.0): user real-Windows beta round: (a) Appearance segmented cast index
+  onto ThemeMode{System,Light,Dark} while items are {Light,Dark,System} → swapped themes;
+  fixed with explicit ModeToIdx/IdxToMode. (b) IconList kept stale entry copies after
+  SetPromoted/CommitDrag → toggles & drag-reorder looked dead; added onData→Refilter.
+  (c) Tray: TrackPopupMenu lacked SetForegroundWindow/WM_NULL (vanishing/sticky menu that
+  swallows clicks); dblclk open hardened (+NIN_SELECT). (d) About chip dropped the
+  GetHDC/second-Graphics measure (GDI+ lock hazard) → gfx::TextWidth. (e) LegalCopyright
+  MIT→PolyForm in resources.rc. (f) Publication contract 8.6: scripts/make_feed.py pins the
+  feed from SERVED release bytes (self-test vs live 8.4.1 feed = MATCH); ci.yml release job
+  now: normalize layout → upload → make_feed → commit+push feed; Updater_SKILL.MD §3 rewritten.
+  Version 8.6.0 (user asked to skip 8.5); store manifest 8.6.0.0; E2E loopback re-run OK;
+  wine matrix + wizards re-shot; 0 warnings; cppcheck clean.
 - 2026-10-16 J16: packaged 8.4.1 (exe sha 9f7d6f39…, zip 657abf7f…), update/stable.json → 8.4.1,
   store manifest 8.4.1.0, docs (USER-GUIDE scope, CLI.md, README badges), dist/git-upload-v8.4.1.zip
   prepared for the user's git push. SESSION STATE: all user requirements green; awaiting user's
