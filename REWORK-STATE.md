@@ -207,6 +207,12 @@ Parallelization: independent bash jobs (compile loops, icon gen, doc drafting) r
   store manifest 8.4.1.0, docs (USER-GUIDE scope, CLI.md, README badges), dist/git-upload-v8.4.1.zip
   prepared for the user's git push. SESSION STATE: all user requirements green; awaiting user's
   git upload of the release assets to verify auto-update from live feed.
+- 2026-10-16 J19 (README sextet): workspace re-based onto origin/main (upload agent had
+  recreated commits: 166ad01/b07c3f1 + CI feed ba6071d + report bf81d59; local pre-push
+  history kept on branch `archive-local-main`). New senior-grade README.md for v8.6.0 in the
+  house style of paulmann/Windows-11-25H2-Update-Script (badge row, tagline quote, emoji TOC,
+  feature groups, tables, code blocks, roadmap) + full translations README.ru/de/zh/es/hi.md
+  with cross-language switcher; all relative links verified (script), anchors to docs fixed.
 - 2026-10-16 J18 (publication v8.6.0, executing agent on Windows): the bundle could NOT
   fast-forward origin/main — the remote main had advanced past 124e849 with the 8.4.1
   publication commit 166ad01, whose tree is byte-identical to the bundle's d969b54
