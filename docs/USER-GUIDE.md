@@ -5,10 +5,16 @@
 Launch `TrayIconGuard.exe` on a new machine and the **built-in setup wizard** opens
 (no external installer needed):
 
-1. **Install folder** — default `%LOCALAPPDATA%\Programs\TrayIconGuard`; change with *Browse…*.
-2. **Start with Windows** — autostart entry (HKCU Run, minimized).
-3. **Desktop shortcut** and **Start Menu shortcut** (Programs group + uninstall link).
-4. Press **Install** — the exe is copied, shortcuts/uninstall entry are created and the app
+1. **Scope** — *Only for me (recommended)* or *For all users (needs admin once)*. Per-user
+   installs need no admin rights; the machine scope asks UAC once and installs to
+   `%ProgramFiles%\TrayIconGuard` with common Desktop/Start-Menu shortcuts, an HKLM Run
+   autostart entry and a machine-wide Apps & Features uninstall entry. Declining UAC falls
+   back to a per-user install.
+2. **Install folder** — default `%LOCALAPPDATA%\Programs\TrayIconGuard` (per-user) or
+   `%ProgramFiles%\TrayIconGuard` (all users); change with *Browse…*.
+3. **Start with Windows** — autostart entry (HKCU Run / HKLM Run, minimized).
+4. **Desktop shortcut** and **Start Menu shortcut** (Programs group + uninstall link).
+5. Press **Install** — the exe is copied, shortcuts/uninstall entry are created and the app
    relaunches from the install location. Or press **Just run once, no install** for portable mode.
 
 The wizard appears only while the install mode is unknown; portable users can install later

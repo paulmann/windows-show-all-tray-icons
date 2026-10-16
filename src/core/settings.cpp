@@ -18,6 +18,11 @@ Settings& Get() { return g_settings; }
 bool IsFirstRun() { return g_firstRun; }
 std::wstring FilePath() { return fs::AppDataDir() + L"\\settings.json"; }
 
+void Reload() {
+    g_loaded = false;
+    Load();
+}
+
 void Load() {
     if (g_loaded) return;
     g_loaded = true;
@@ -95,6 +100,7 @@ void Load() {
     if (ins) {
         s.installMode = ins->GetStr(L"mode", L"unknown");
         s.installDir = ins->GetStr(L"dir", L"");
+        s.installScope = ins->GetStr(L"scope", L"user");
     }
     const json::Value* st = root.Find(L"state");
     if (st) {
@@ -164,6 +170,7 @@ bool Save() {
     json::Value ins = json::Value::MakeObject();
     ins.Set(L"mode", json::Value::MakeString(s.installMode));
     ins.Set(L"dir", json::Value::MakeString(s.installDir));
+    ins.Set(L"scope", json::Value::MakeString(s.installScope));
     root.Set(L"install", ins);
 
     json::Value st = json::Value::MakeObject();

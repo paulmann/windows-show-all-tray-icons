@@ -19,7 +19,7 @@ namespace tig::ui::setup {
 namespace {
 constexpr wchar_t kWndClass[] = L"TrayIconGuard.Setup.v8";
 constexpr int kWinW = 620;
-constexpr int kWinH = 640;
+constexpr int kWinH = 688;  // 8.4: +scope segmented row
 constexpr UINT kShotTimer = 777;
 
 const CLSID* PngClsid() {
@@ -53,6 +53,7 @@ public:
     std::wstring folder;
     Button btnBrowse, btnInstall, btnPortable;
     Toggle tgAutostart, tgDesktop, tgMenu;
+    Segmented segScope;  // 0 = per-user, 1 = all users (machine)
     std::vector<Widget*> widgets;
     Widget* hot = nullptr;
     Widget* pressed = nullptr;
@@ -62,8 +63,7 @@ public:
     int memW = 0, memH = 0;
     UINT_PTR animTimer = 0;
 
-    explicit SetupWnd() {
-        folder = installer::DefaultDir();
+    explicit SetupWnd() : folder(installer::DefaultDir()) {
         btnBrowse.style = Button::Style::Outline;
         btnBrowse.label = l10n::t(l10n::S::SetupBrowse);
         btnBrowse.onClick = [this] { Browse(); };
@@ -73,6 +73,8 @@ public:
         btnInstall.onClick = [this] {
             result.action = Action::Install;
             result.opts.dir = folder;
+            result.opts.scope = segScope.selected == 1 ? installer::Scope::Machine
+                                                       : installer::Scope::User;
             result.opts.autostart = tgAutostart.on;
             result.opts.desktopIcon = tgDesktop.on;
             result.opts.startMenuIcon = tgMenu.on;
@@ -87,7 +89,29 @@ public:
         tgAutostart.on = true;
         tgDesktop.on = true;
         tgMenu.on = true;
-        widgets = {&btnBrowse, &tgAutostart, &tgDesktop, &tgMenu, &btnPortable, &btnInstall};
+        segScope.items = {{l10n::t(l10n::S::SetupScopeMe), 0},
+                          {l10n::t(l10n::S::SetupScopeAll), 0}};
+        segScope.selected = 0;
+        segScope.onChange = [this](int idx) {
+            // keep the default folder in sync with the chosen scope
+            const bool isDefault = folder == installer::DefaultDir() ||
+                                   folder == installer::DefaultMachineDir();
+            if (isDefault)
+                folder = idx == 1 ? installer::DefaultMachineDir() : installer::DefaultDir();
+            InvalidateRect(hwnd, nullptr, FALSE);
+        };
+        widgets = {&btnBrowse, &segScope, &tgAutostart, &tgDesktop,
+                   &tgMenu,   &btnPortable, &btnInstall};
+    }
+
+    void RefreshLabels() {
+        btnBrowse.label = l10n::t(l10n::S::SetupBrowse);
+        btnInstall.label = l10n::t(l10n::S::SetupInstall);
+        btnPortable.label = l10n::t(l10n::S::SetupPortable);
+        if (segScope.items.size() == 2) {
+            segScope.items[0].label = l10n::t(l10n::S::SetupScopeMe);
+            segScope.items[1].label = l10n::t(l10n::S::SetupScopeAll);
+        }
     }
 
     void Browse() {
@@ -120,11 +144,14 @@ public:
         const int pad = 28;
         // folder card row
         const int bw = btnBrowse.PreferredWidth(hwnd);
-        btnBrowse.Layout({W - pad - bw, 168, W - pad, 200});
+        btnBrowse.Layout({W - pad - bw, 156, W - pad, 188});
+        // scope segmented (below the card title, never overlapping it)
+        const int segW = segScope.PreferredWidth(hwnd);
+        segScope.Layout({pad, 292, pad + segW, 324});
         // option rows
-        tgAutostart.Layout({pad, 292, W - pad - 16, 348});
-        tgDesktop.Layout({pad, 364, W - pad - 16, 420});
-        tgMenu.Layout({pad, 436, W - pad - 16, 492});
+        tgAutostart.Layout({pad, 336, W - pad - 16, 392});
+        tgDesktop.Layout({pad, 398, W - pad - 16, 454});
+        tgMenu.Layout({pad, 460, W - pad - 16, 516});
         // footer buttons
         const int iw = btnInstall.PreferredWidth(hwnd);
         const int pw = btnPortable.PreferredWidth(hwnd);
@@ -166,9 +193,11 @@ public:
             // folder card
             RECT card1{28, 96, w - 28, 232};
             DrawCard(pc, card1, l10n::t(l10n::S::SetupWhere));
+            const bool machine = segScope.selected == 1;
             Gdiplus::RectF fh(44.f, 132.f, static_cast<float>(w) - 88.f, 18.f);
-            gfx::DrawString(g, l10n::t(l10n::S::SetupWhereHint), gfx::Font(hwnd, 11.5f), fh,
-                            gfx::C(P.textSecondary));
+            gfx::DrawString(g, l10n::t(machine ? l10n::S::SetupHintMachine
+                                               : l10n::S::SetupWhereHint),
+                            gfx::Font(hwnd, 11.5f), fh, gfx::C(P.textSecondary));
             Gdiplus::RectF fv(44.f, 156.f, static_cast<float>(btnBrowse.rc.left) - 56.f, 32.f);
             gfx::FillRoundRect(g, Gdiplus::RectF(fv.X, fv.Y + 2, fv.Width, 28.f), 4.f,
                                gfx::C(P.searchBg));
@@ -179,8 +208,9 @@ public:
                             gfx::C(P.textPrimary), Gdiplus::StringAlignmentNear);
             btnBrowse.Paint(pc);
             // options card
-            RECT card2{28, 248, w - 28, 500};
+            RECT card2{28, 248, w - 28, 548};
             DrawCard(pc, card2, l10n::t(l10n::S::SetupOptions));
+            segScope.Paint(pc);
             // reuse card title = shortcuts group; draw three rows
             const struct {
                 Toggle* t;
@@ -188,24 +218,24 @@ public:
                 l10n::S desc;
                 int y;
             } rows[3] = {
-                {&tgAutostart, l10n::S::SetupAutostart, l10n::S::SetupAutostartDesc, 292},
-                {&tgDesktop, l10n::S::SetupDesktop, l10n::S::SetupDesktopDesc, 364},
-                {&tgMenu, l10n::S::SetupMenu, l10n::S::SetupMenuDesc, 436},
+                {&tgAutostart, l10n::S::SetupAutostart, l10n::S::SetupAutostartDesc, 336},
+                {&tgDesktop, l10n::S::SetupDesktop, l10n::S::SetupDesktopDesc, 398},
+                {&tgMenu, l10n::S::SetupMenu, l10n::S::SetupMenuDesc, 460},
             };
             for (const auto& row : rows) {
                 RECT rowRc{28, row.y, w - 28, row.y + 56};
                 DrawSettingRow(pc, rowRc, l10n::t(row.label), l10n::t(row.desc),
-                               row.y == 436);
+                               row.y == 460);
                 row.t->Paint(pc);
             }
             // note
-            Gdiplus::RectF note(28.f, 506.f, static_cast<float>(w) - 56.f, 40.f);
+            Gdiplus::RectF note(28.f, 566.f, static_cast<float>(w) - 56.f, 44.f);
             Gdiplus::StringFormat wrap;
             wrap.SetAlignment(Gdiplus::StringAlignmentNear);
             wrap.SetLineAlignment(Gdiplus::StringAlignmentNear);
             Gdiplus::SolidBrush nbrush(gfx::C(P.textSecondary));
-            g.DrawString(l10n::t(l10n::S::SetupNote), -1, gfx::Font(hwnd, 11.f), note, &wrap,
-                         &nbrush);
+            g.DrawString(l10n::t(machine ? l10n::S::SetupNoteMachine : l10n::S::SetupNote), -1,
+                         gfx::Font(hwnd, 11.f), note, &wrap, &nbrush);
             btnPortable.Paint(pc);
             btnInstall.Paint(pc);
         }

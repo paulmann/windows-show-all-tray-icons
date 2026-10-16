@@ -23,6 +23,9 @@ constexpr wchar_t kRepoUrl[] = L"https://github.com/paulmann/windows-show-all-tr
 constexpr wchar_t kAuthorName[] = L"Mikhail Deynekin";
 constexpr wchar_t kAuthorEmail[] = L"icons@Deynekin.com";
 constexpr wchar_t kAuthorSite[] = L"https://Deynekin.com";
+constexpr wchar_t kLicenseUrl[] =
+    L"https://github.com/paulmann/windows-show-all-tray-icons/blob/main/LICENSE";
+constexpr wchar_t kWikiUrl[] = L"https://github.com/paulmann/windows-show-all-tray-icons/wiki";
 
 class AboutPage : public Page {
 public:
@@ -38,6 +41,8 @@ public:
     enum class UpState { Idle, Checking, Available, Failed, Downloading } upState =
         UpState::Idle;
     Button* btnRepo = nullptr;
+    Button* btnLicense = nullptr;
+    Button* btnWiki = nullptr;
     Button* btnSite = nullptr;
     Button* btnDiag = nullptr;
     std::wstring updateStatus;
@@ -146,6 +151,26 @@ public:
         btnInstall = bi.get();
         widgets.push_back(std::move(bi));
 
+        auto bl = std::make_unique<Button>();
+        bl->style = Button::Style::Subtle;
+        bl->glyph = 0xE82D;
+        bl->label = l10n::t(l10n::S::LicenseBtn);
+        bl->onClick = [] {
+            ShellExecuteW(nullptr, L"open", kLicenseUrl, nullptr, nullptr, SW_SHOWNORMAL);
+        };
+        btnLicense = bl.get();
+        widgets.push_back(std::move(bl));
+
+        auto bw = std::make_unique<Button>();
+        bw->style = Button::Style::Subtle;
+        bw->glyph = 0xE897;
+        bw->label = l10n::t(l10n::S::WikiBtn);
+        bw->onClick = [] {
+            ShellExecuteW(nullptr, L"open", kWikiUrl, nullptr, nullptr, SW_SHOWNORMAL);
+        };
+        btnWiki = bw.get();
+        widgets.push_back(std::move(bw));
+
         auto bs = std::make_unique<Button>();
         bs->style = Button::Style::Subtle;
         bs->glyph = 0xE774;
@@ -228,7 +253,8 @@ public:
     }
 
     void CopyDiagnostics() {
-        std::wstring text = L"TrayIconGuard 8.0.0 diagnostics\r\n";
+        std::wstring text =
+            std::wstring(L"TrayIconGuard ") + tig::kVersion + L" diagnostics\r\n";
         text += L"OS: " + os::Get().caption + L"\r\n";
         text += std::wstring(L"Theme: ") +
                 (theme::IsDark() ? L"dark" : L"light") + L"\r\n";
@@ -259,6 +285,8 @@ public:
         Page::Refresh();
         if (btnCheck && !checking) btnCheck->label = l10n::t(l10n::S::CheckUpdates);
         if (btnRepo) btnRepo->label = l10n::t(l10n::S::RepoLink);
+        if (btnLicense) btnLicense->label = l10n::t(l10n::S::LicenseBtn);
+        if (btnWiki) btnWiki->label = l10n::t(l10n::S::WikiBtn);
         if (btnSite) btnSite->label = l10n::t(l10n::S::TrayAuthorSite);
         if (btnDiag) btnDiag->label = l10n::t(l10n::S::CopyDiag);
     }
@@ -273,9 +301,38 @@ public:
         const int updH = 40 + 56 + 44;
         RECT updCard{pad, y, pad + W, y + updH};
         y += updH + 12;
-        const int linksH = 40 + 56 + 96;
+
+        // links card: buttons flow into stable rows at any width (8.4)
+        btnInstall->visible = settings::Get().installMode != L"installed";
+        std::vector<Button*> flow = {btnRepo, btnLicense, btnWiki, btnSite, btnDiag};
+        if (btnInstall->visible) flow.push_back(btnInstall);
+        std::vector<int> widths(flow.size());
+        const int innerW = W - 32;
+        int rows = 1, cx = 16;
+        for (size_t i = 0; i < flow.size(); ++i) {
+            widths[i] = flow[i]->PreferredWidth(hwnd);
+            if (cx > 16 && cx + widths[i] > innerW) {
+                ++rows;
+                cx = 16;
+            }
+            cx += widths[i] + 8;
+        }
+        const int linksH = 44 + rows * 40 + 80;
         RECT linksCard{pad, y, pad + W, y + linksH};
         y += linksH + 16;
+        {
+            int cx2 = 16, row = 0;
+            for (size_t i = 0; i < flow.size(); ++i) {
+                if (cx2 > 16 && cx2 + widths[i] > innerW) {
+                    ++row;
+                    cx2 = 16;
+                }
+                const int t = linksCard.top + 44 + row * 40;
+                flow[i]->Layout({linksCard.left + cx2, t, linksCard.left + cx2 + widths[i],
+                                 t + 32});
+                cx2 += widths[i] + 8;
+            }
+        }
 
         const int bw = btnCheck->PreferredWidth(hwnd);
         btnCheck->Layout({updCard.left + 16, updCard.top + 44, updCard.left + 16 + bw,
@@ -285,22 +342,6 @@ public:
                            btnCheck->rc.right + 8 + bwU, updCard.top + 76});
         tgAutoCheck->Layout({updCard.left + 16, updCard.top + 84, updCard.right - 16,
                              updCard.top + 120});
-        btnInstall->visible = settings::Get().installMode != L"installed";
-        const int bwI = btnInstall->PreferredWidth(hwnd);
-        const int bwR = btnRepo->PreferredWidth(hwnd);
-        const int bwS = btnSite->PreferredWidth(hwnd);
-        const int bwD = btnDiag->PreferredWidth(hwnd);
-        btnRepo->Layout({linksCard.left + 16, linksCard.top + 44, linksCard.left + 16 + bwR,
-                         linksCard.top + 76});
-        btnSite->Layout({btnRepo->rc.right + 8, linksCard.top + 44, btnRepo->rc.right + 8 + bwS,
-                         linksCard.top + 76});
-        btnDiag->Layout({btnRepo->rc.right + 8, linksCard.top + 44, btnRepo->rc.right + 8 + bwD,
-                         linksCard.top + 76});
-        if (btnInstall->visible)
-            btnInstall->Layout({btnSite->rc.right + 8, linksCard.top + 44,
-                                btnSite->rc.right + 8 + bwI, linksCard.top + 76});
-        btnDiag->Layout({linksCard.left + 16, linksCard.top + 84, linksCard.left + 16 + bwD,
-                         linksCard.top + 116});
         geoApp = ToWindow(appCard);
         geoUpd = ToWindow(updCard);
         geoLinks = ToWindow(linksCard);
@@ -333,14 +374,15 @@ public:
                             L"  <" + kAuthorEmail + L">  ·  " + kAuthorSite,
                         gfx::Font(hwnd, 12.f, FontStyle::Medium), ar, gfx::C(P.textPrimary),
                         Gdiplus::StringAlignmentNear);
-
+        // card fills for the update/links cards go BEFORE widgets (z-order fix, 8.4.1)
+        DrawCard(pc, geoUpd, l10n::t(l10n::S::CheckUpdates));
+        DrawCard(pc, geoLinks, l10n::t(l10n::S::Links));
     }
 
     void Paint(PaintCtx& pc) override {
         Page::Paint(pc);
         const Palette& P = theme::Pal();
         const HWND hwnd = hwndRef;
-        DrawCard(pc, geoUpd, l10n::t(l10n::S::CheckUpdates));
         {
             Gdiplus::RectF al(geoUpd.left + 16.f, static_cast<float>(tgAutoCheck->rc.top),
                               300.f, 36.f);
@@ -367,13 +409,21 @@ public:
                             Gdiplus::StringAlignmentNear);
         }
 
-        DrawCard(pc, geoLinks, l10n::t(l10n::S::Links));
-        const std::wstring modeTxt = settings::Get().installMode == L"installed"
-                                           ? l10n::t(l10n::S::ModeInstalled)
-                                           : l10n::t(l10n::S::ModePortable);
-        Gdiplus::RectF mr(geoLinks.left + 16.f, static_cast<float>(geoLinks.top) + 44.f, 200.f, 32.f);
-        gfx::DrawString(pc.g, modeTxt, gfx::Font(hwnd, 12.f, FontStyle::Medium), mr,
-                        gfx::C(P.textSecondary), Gdiplus::StringAlignmentNear);
+        {  // install-mode chip pinned to the card title row (8.4)
+            const bool inst = settings::Get().installMode == L"installed";
+            const std::wstring modeTxt =
+                inst ? l10n::t(l10n::S::ModeInstalled) : l10n::t(l10n::S::ModePortable);
+            Gdiplus::Graphics mg(pc.g.GetHDC());
+            const Gdiplus::RectF meas(0.f, 0.f, 4000.f, 1000.f);
+            Gdiplus::RectF bb;
+            mg.MeasureString(modeTxt.c_str(), -1, gfx::Font(hwnd, 11.f), meas, &bb);
+            mg.ReleaseHDC(nullptr);
+            const int chipW = static_cast<int>(bb.Width) + 24;
+            RECT chip{geoLinks.right - 16 - chipW, geoLinks.top + 8, geoLinks.right - 16,
+                      geoLinks.top + 32};
+            DrawStatusChip(pc, chip, modeTxt, inst ? P.accent : P.textSecondary,
+                           inst ? P.accentSoft : P.controlBg);
+        }
         Gdiplus::RectF cr(geoLinks.left + 16.f, static_cast<float>(btnDiag->rc.bottom) + 10.f,
                           static_cast<float>(geoLinks.right - geoLinks.left) - 32.f, 80.f);
         Gdiplus::StringFormat fmt;

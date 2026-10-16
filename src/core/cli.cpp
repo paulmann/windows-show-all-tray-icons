@@ -63,7 +63,7 @@ int PrintStatus(bool asJson) {
 
     if (asJson) {
         json::Value v = json::Value::MakeObject();
-        v.Set(L"app", json::Value::MakeString(L"TrayIconGuard 8.0.0"));
+        v.Set(L"app", json::Value::MakeString(std::wstring(L"TrayIconGuard ") + kVersion));
         v.Set(L"os", json::Value::MakeString(os::Get().caption));
         v.Set(L"build", json::Value::MakeNumber(static_cast<int>(os::Get().build)));
         v.Set(L"storeSupported", json::Value::MakeBool(supported));
@@ -89,7 +89,7 @@ int PrintStatus(bool asJson) {
         return 0;
     }
 
-    Print(L"TrayIconGuard 8.0.0 \"Aurora\" — status");
+    Print(std::wstring(L"TrayIconGuard ") + kVersion + L" \"Aurora\" — status");
     Print(L"  OS:               " + os::Get().caption);
     Print(std::wstring(L"  Icon store:       ") +
           (supported ? L"NotifyIconSettings (per-icon)" : L"NOT SUPPORTED on this build"));
@@ -108,7 +108,8 @@ int PrintStatus(bool asJson) {
 
 std::wstring HelpText() {
     return
-        L"TrayIconGuard 8.1.0 \"Aurora\" — keep every tray icon visible (Windows 10/11)\n"
+        L"TrayIconGuard " TIG_VERSION_A " \"Aurora\" — keep every tray icon visible "
+        L"(Windows 10/11)\n"
         L"\n"
         L"Usage: TrayIconGuard.exe [options]\n"
         L"\n"
@@ -126,6 +127,8 @@ std::wstring HelpText() {
         L"  --install-autostart  add HKCU Run entry (--minimized)\n"
         L"  --uninstall-autostart remove HKCU Run entry\n"
         L"  --uninstall          remove shortcuts, autostart and the installed copy\n"
+        L"  --install-machine <dir> [--autostart] [--desktop] [--menu]\n"
+        L"                       all-users install body (must run elevated; UAC child)\n"
         L"  --ui-test [page]     QA mode: render GUI offscreen and exit\n"
         L"  --version            print version and exit\n"
         L"  --help               this text\n"
@@ -153,6 +156,14 @@ bool Parse(const std::vector<std::wstring>& args, ParsedArgs& out, std::wstring&
         else if (a == L"--install-autostart") out.mode = Mode::InstallAutostart;
         else if (a == L"--uninstall-autostart") out.mode = Mode::UninstallAutostart;
         else if (a == L"--uninstall") out.mode = Mode::Uninstall;
+        else if (a == L"--autostart") { out.mAutostart = true; }
+        else if (a == L"--desktop") { out.mDesktop = true; }
+        else if (a == L"--menu") { out.mMenu = true; }
+        else if (a == L"--install-machine") {
+            out.mode = Mode::InstallMachine;
+            if (i + 1 < args.size()) { out.machineDir = args[i + 1]; ++i; }
+            else { err = L"--install-machine requires a folder argument"; return false; }
+        }
         else if (a == L"--check-update") out.mode = Mode::CheckUpdate;
         else if (a == L"--update-now") out.mode = Mode::UpdateNow;
         else if (a == L"--mode") {
@@ -172,6 +183,9 @@ bool Parse(const std::vector<std::wstring>& args, ParsedArgs& out, std::wstring&
             err = L"unknown argument: " + args[i];
             return false;
         }
+    }
+    if (out.mode == Mode::InstallMachine && !out.mAutostart && !out.mDesktop && !out.mMenu) {
+        out.mAutostart = out.mDesktop = out.mMenu = true;  // sensible defaults
     }
     return true;
 }
@@ -263,6 +277,23 @@ int ExecuteHeadless(const ParsedArgs& a) {
             Print(applied >= 0 ? str::Format(L"restored %s (%d icons)", list.front().fileName.c_str(), applied)
                                : L"restore failed: " + err);
             return applied >= 0 ? 0 : 3;
+        }
+        case Mode::InstallMachine: {
+            AttachConsoleIfPossible();
+            if (!installer::IsElevated()) {
+                Print(L"error: --install-machine requires elevation (UAC)");
+                return 1;
+            }
+            installer::Options opt;
+            opt.dir = a.machineDir;
+            opt.scope = installer::Scope::Machine;
+            opt.autostart = a.mAutostart;
+            opt.desktopIcon = a.mDesktop;
+            opt.startMenuIcon = a.mMenu;
+            std::wstring err;
+            const bool ok = installer::Install(opt, err);
+            Print(ok ? L"machine install ok" : L"machine install failed: " + err);
+            return ok ? 0 : 3;
         }
         case Mode::InstallAutostart:
             return autostart::Install() ? 0 : 3;

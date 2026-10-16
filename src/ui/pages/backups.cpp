@@ -30,7 +30,7 @@ public:
     int scrollList = 0;
     int hoverIdx = -1;
     RECT listRc{};
-    ScrollBar sbar;
+    ScrollBar listBar;
 
     void Build(HWND) override {
         auto ta = std::make_unique<Toggle>();
@@ -128,17 +128,17 @@ public:
                            btnCreate->rc.bottom});
         geoOpt = ToWindow(opt);
         const int content = static_cast<int>(items.size()) * kRowH;
-        sbar.SetRange(content, listRc.bottom - listRc.top - 2);
-        sbar.pos = scrollList;
+        listBar.SetRange(content, listRc.bottom - listRc.top - 2);
+        listBar.pos = scrollList;
         contentH = Height();  // no page scroll
     }
 
     bool Wheel(HWND hwnd, int delta) override {
-        if (!sbar.Needed()) return false;
-        const int before = sbar.pos;
-        sbar.ScrollBy(-delta / 120 * 60);
-        scrollList = sbar.pos;
-        if (sbar.pos != before) {
+        if (!listBar.Needed()) return false;
+        const int before = listBar.pos;
+        listBar.ScrollBy(-delta / 120 * 60);
+        scrollList = listBar.pos;
+        if (listBar.pos != before) {
             InvalidateRect(hwnd, nullptr, FALSE);
             return true;
         }
@@ -251,8 +251,8 @@ public:
             gfx::FillRect(pc.g, sep, gfx::C(P.separator, 120));
         }
         pc.g.Restore(st);
-        sbar.rc = {listRc.right - 10, listRc.top + 4, listRc.right - 3, listRc.bottom - 4};
-        sbar.Paint(pc);
+        listBar.rc = {listRc.right - 10, listRc.top + 4, listRc.right - 3, listRc.bottom - 4};
+        listBar.Paint(pc);
     }
 
     RECT geoOpt{};

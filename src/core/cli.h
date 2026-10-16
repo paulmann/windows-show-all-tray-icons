@@ -22,6 +22,7 @@ enum class Mode {
     InstallAutostart,
     UninstallAutostart,
     Uninstall,
+    InstallMachine,  // elevated machine-scope install body (--install-machine)
     SetMode,
     CheckUpdate,
     UpdateNow,
@@ -35,6 +36,9 @@ struct ParsedArgs {
     bool json = false;
     bool force = false;
     std::wstring uiTestPage;
+    // --install-machine <dir> [--autostart] [--desktop] [--menu]
+    std::wstring machineDir;
+    bool mAutostart = false, mDesktop = false, mMenu = false;
 };
 
 bool Parse(const std::vector<std::wstring>& args, ParsedArgs& out, std::wstring& err);

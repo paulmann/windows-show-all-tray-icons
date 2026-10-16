@@ -240,6 +240,14 @@ const wchar_t* kEn[] = {
     /* UpdateApplyText */ L"The app will close, replace itself and start the new version.",
     /* UpdateShaFail */ L"Update rejected: checksum mismatch",
     /* UpdateCheckAuto */ L"Check for updates automatically",
+    /* SetupScopeMe */ L"Only for me (recommended)",
+    /* SetupScopeAll */ L"For all users (needs admin once)",
+    /* SetupHintMachine */ L"Per-machine location in Program Files; one UAC prompt",
+    /* SetupNoteMachine */
+    L"Machine-wide install: shortcuts and autostart for all users; uninstall via Apps & "
+    L"Features.",
+    /* LicenseBtn */ L"License",
+    /* WikiBtn */ L"Knowledge base",
 };
 }  // namespace
 

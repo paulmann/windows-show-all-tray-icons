@@ -233,4 +233,12 @@ TIG_E(UpdateApplyTitle, L"Применить обновление сейчас?"
 TIG_E(UpdateApplyText, L"Приложение закроется, заменит себя и запустит новую версию.")
 TIG_E(UpdateShaFail, L"Обновление отклонено: несовпадение контрольной суммы")
 TIG_E(UpdateCheckAuto, L"Проверять обновления автоматически")
+TIG_E(SetupScopeMe, L"Только для меня (рекомендуется)")
+TIG_E(SetupScopeAll, L"Для всех пользователей (нужны права админа)")
+TIG_E(SetupHintMachine, L"Общесистемная папка в Program Files; один запрос UAC")
+TIG_E(SetupNoteMachine,
+      L"Установка для всех пользователей: ярлыки и автозагрузка для всех; удаление через "
+      L"«Приложения и возможности».")
+TIG_E(LicenseBtn, L"Лицензия")
+TIG_E(WikiBtn, L"База знаний")
 TIG_LANG_END(ru, L"Русский", L"Russian")

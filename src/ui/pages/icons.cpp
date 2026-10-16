@@ -413,10 +413,13 @@ public:
         filter->Layout({pad + 356, y, pad + 356 + fw, y + barH});
         const int bw1 = promoteAll->PreferredWidth(hwnd);
         const int bw2 = restore->PreferredWidth(hwnd);
+        // responsive toolbar: action buttons wrap to a second row when narrow (8.4.1)
+        const bool twoRows = (pad + 356 + fw + 8 + bw1 + 8 + bw2) > (width - pad);
+        if (twoRows) y += barH + 8;
         restore->Layout({width - pad - bw2, y, width - pad, y + barH});
         promoteAll->Layout({restore->rc.left - 8 - bw1, y, restore->rc.left - 8, y + barH});
-        y += barH + 4;
-        hintRc = {pad, y, pad + width - pad * 2, y + 16};
+        y += barH + 6;
+        hintRc = ToWindow(RECT{pad, y, pad + width - pad * 2, y + 16});
         y += 18;
         list->hwndCached = hwnd;
         list->Layout({pad, y, pad + width - pad * 2, Height() > 0 ? Height() - 12 : y + 400});

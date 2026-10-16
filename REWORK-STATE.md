@@ -126,6 +126,7 @@ xvfb-run -a wine64 dist/TrayIconGuard.exe --ui-test  # GUI: create window, rende
 | M7 | Wine smoke: CLI ok, 7 pages × light/dark/RU reviewed, cppcheck clean (style only), warnings=0 | ✅ DONE |
 | M8 | Docs EN/RU (README×2, 7 docs), .vscode, CI (cross+MSVC+release), installer ps1/bat/iss, package.sh → zip+SHA256 | ✅ DONE |
 | M9 | Final QA: 0 warnings, cppcheck no errors, wine CLI+GUI matrix, zip+SHA256, tag v8.0.0 | ✅ DONE |
+| M10 | v8.4.1: restored lost 8.4.0 sources (scope engine, wizard picker, About buttons, polish), About z-order fix, beta cycle clean, feed+package 8.4.1 | ✅ DONE |
 
 ## 9. Agent swarm roster (details in AGENTS.md + agents/*.md)
 
@@ -148,6 +149,15 @@ Parallelization: independent bash jobs (compile loops, icon gen, doc drafting) r
 - P12: gcc12 `-Wall -Wextra` must end with zero warnings before M7 sign-off (cast pitfalls: DWORD↔int, LONG↔size_t).
 - P13: Backup dir sync: `scripts/sync-backup.sh` does rsync work→backup/work + git add/commit. Run after EVERY milestone. Do not delete via wildcards; if cleanup needed, verify with `git status` after.
 - P14: wine first run creates ~/.wine (may be slow ~60 s, prints fixme noise; use `WINEDEBUG=-all`).
+- P15: `settings::Load()` latches (`g_loaded`); after an elevated child wrote settings.json the
+  parent MUST call `settings::Reload()` or `NeedsRelaunch()` sees stale state (fixed in 8.4.1).
+- P16: `ThemeMode{System=0, Light=1, Dark=2}` — QA seeds use theme 1/2, NOT 0/1.
+- P17: wine as root reports `TokenIsElevated=TRUE` — the `--install-machine` elevation gate
+  cannot be exercised under wine; verify on real Windows (code path is standard TokenElevation).
+- P18: Page subclasses must draw card FILLS in `PaintBackground`, never in `Paint`
+  (`Page::Paint` draws widgets between them) — About hid all its buttons until 8.4.1.
+- P19: arena harness may rewrite quoted literal `"$ARENA_WORKSPACE"/work/...` paths inside heredocs;
+  use relative paths + `cd` in python snippets.
 
 ## 11. Progress journal (newest last)
 
@@ -166,5 +176,23 @@ Parallelization: independent bash jobs (compile loops, icon gen, doc drafting) r
 - 2026-10-16 J12 (v8.2.1): FIXED Win11 SxS launch failure reported by user (screenshot: 'side-by-side configuration is incorrect'): root cause = non-canonical embedded manifest (duplicate supportedOS GUID + activeCodePage/heapCompatibility/longPathAware elements) rejected by strict Win11 SxS validation; wine CreateActCtx test harness added (build/actctx-test.c) proves embed OK but wine is lenient; manifest rewritten to canonical minimal form; build.sh manifest regression gate added; docs/TROUBLESHOOTING section + hint: avoid parent dirs named *.exe. exe re-packaged 8.2.1.
 - 2026-10-16 J13 (v8.3.0): tray RMB fixed (NOTIFYICON_VERSION_4 removed) + tray menu modes Full/Custom/Compact (+author site, exit); guard mode engine (compact hides all but own icon via OwnIconId); userHidden per-icon intent; icons drag-reorder (settings.iconsOrder); About author block (Mikhail Deynekin <icons@Deynekin.com>, Deynekin.com); license MIT->PolyForm Noncommercial 1.0.0 (LICENSE + strings); toggle OFF redesigned (no outline, dark-orange #9D4A00/#A84A00 track, white knob = ON rotated 180); git updater: update/stable.json feed + WinHTTP + BCrypt sha256 + rename-chain apply + relaunch, --check-update/--update-now, opt-in daily auto-check, About update panel; Updater_SKILL.MD publication contract; E2E verified in wine via local http feed (download->sha->rename->.old->relaunch, exit 0); Store kit store/{AppxManifest.xml,37 assets,make_msix.ps1} + docs/STORE.md + docs/PRIVACY.md; docs/SMARTSCREEN.md (MOTW/installer-copy/signing); dist/git-upload-v8.3.0.zip prepared for user's git push.
 - SESSION CLOSED: M0–M9 ✅, v8.1 installer ✅, v8.2 i18n ✅, v8.2.1 SxS ✅, v8.3.0 updater+modes+store ✅. Continue: AGENTS.md → scripts/build.sh → QA via --ui-test / TIG_SETUP_SHOT=1 + wine.
+- 2026-10-16 J14 (v8.4.1): discovered published 8.4.0 binaries contained features whose sources
+  were never committed (lost session work): install scope (per-user/all-users UAC engine),
+  wizard scope segmented, About License/Wiki buttons, perfectionist pass. Reconstructed from
+  release exe (UTF-16 string mining) + release zip CHANGELOG + wine reference screenshots of
+  the published exe (`.agent/ref/`). Re-implemented in source: installer Scope::Machine
+  (RunElevated runas child `--install-machine`, HKLM Run/Uninstall, common shortcuts,
+  decline-UAC per-user fallback), settings.installScope + Reload(), wizard 688px + segmented +
+  scope-aware hints, About buttons + flow rows + title-row chip, hero tile borders/responsive/
+  12px gap, CLI/help/status version single-sourcing.
+- 2026-10-16 J15 (beta cycle v8.4.1): found+fixed About z-order (cards over widgets — buttons
+  invisible since 8.0.0!), wizard Browse misalignment, GCC missing-field-init warnings,
+  cppcheck sbar shadowing, settings latch bug. Wine matrix 14 pages + 2 wizards re-shot
+  (shots/), loopback updater E2E re-verified (rename-chain + relaunch exit 0), live-feed
+  `--check-update` OK. 0 warnings, cppcheck clean.
+- 2026-10-16 J16: packaged 8.4.1 (exe sha 9f7d6f39…, zip 657abf7f…), update/stable.json → 8.4.1,
+  store manifest 8.4.1.0, docs (USER-GUIDE scope, CLI.md, README badges), dist/git-upload-v8.4.1.zip
+  prepared for the user's git push. SESSION STATE: all user requirements green; awaiting user's
+  git upload of the release assets to verify auto-update from live feed.
 
 

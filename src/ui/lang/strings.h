@@ -61,6 +61,8 @@ enum class S {
     ModeFull, ModeCompact, ModeCustom, TrayAuthorSite, AuthorLbl,
     DragHint, UpdateAvailTitle, UpdateNotesLbl, UpdateNow, UpdateDownloading,
     UpdateApplyTitle, UpdateApplyText, UpdateShaFail, UpdateCheckAuto,
+    // installer scope (8.4)
+    SetupScopeMe, SetupScopeAll, SetupHintMachine, SetupNoteMachine, LicenseBtn, WikiBtn,
     Count_,
 };
 

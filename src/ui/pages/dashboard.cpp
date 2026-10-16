@@ -119,8 +119,8 @@ public:
         const float sc = static_cast<float>(os::DpiFor(hwndRef)) / 96.f;
         (void)sc;
 
-        // hero card
-        const int heroH = 168;
+        // hero card (8.4 polish: +16 px so tiles keep a 12 px gap to the action row)
+        const int heroH = 184;
         RECT hero{pad, y, pad + W, y + heroH};
         // buttons inside hero, right-bottom
         const int bw1 = btnPromote->PreferredWidth(hwnd);
@@ -180,7 +180,7 @@ public:
                                    : !gs.running       ? P.textSecondary
                                    : gs.paused         ? P.warning
                                                        : P.success;
-        Gdiplus::RectF st(geoHero.left + 76.f, geoHero.top + 22.f,
+        Gdiplus::RectF st(geoHero.left + 76.f, geoHero.top + 28.f,
                           static_cast<float>(geoHero.right - geoHero.left) - 100.f, 30.f);
         gfx::DrawString(pc.g, status, gfx::Font(hwnd, 20.f, FontStyle::SemiBold), st,
                         gfx::C(statusCol));
@@ -195,14 +195,19 @@ public:
                       {c.promoted, l10n::t(l10n::S::StatPromoted)},
                       {c.hidden, l10n::t(l10n::S::StatHidden)},
                       {c.excluded, l10n::t(l10n::S::StatExcluded)}};
-        const int tileW = 148, tileGap = 10;
+        const int tileGap = 10;
+        const int heroInner = geoHero.right - geoHero.left - 40;
+        int tileW = (heroInner - 3 * tileGap) / 4;  // responsive width
+        if (tileW > 168) tileW = 168;
+        if (tileW < 112) tileW = 112;
         int tx = geoHero.left + 20;
-        const int ty = geoHero.top + 76;
+        const int ty = geoHero.top + 80;
         for (const auto& t : tiles) {
             Gdiplus::RectF tr(static_cast<float>(tx), static_cast<float>(ty),
                               static_cast<float>(tileW), 44.f);
             gfx::FillRoundRect(pc.g, tr, 6.f,
                                gfx::C(theme::Mix(P.cardBg, P.windowBg, 0.5)));
+            gfx::StrokeRoundRect(pc.g, tr, 6.f, gfx::C(P.cardBorder), 1.f);
             Gdiplus::RectF vr(tr.X + 12.f, tr.Y + 6.f, tr.Width - 24.f, 24.f);
             gfx::DrawString(pc.g, str::Format(L"%d", t.value),
                             gfx::Font(hwnd, 18.f, FontStyle::SemiBold), vr,
@@ -260,7 +265,9 @@ public:
         };
         int ry = geoSys.top + 44;
         for (const auto& r : rows) {
-            Gdiplus::RectF kr(geoSys.left + 16.f, static_cast<float>(ry), 110.f, 20.f);
+            const float keyW = std::max(110.f, std::min(150.f,
+                static_cast<float>(geoSys.right - geoSys.left) * 0.36f - 16.f));
+            Gdiplus::RectF kr(geoSys.left + 16.f, static_cast<float>(ry), keyW, 20.f);
             gfx::DrawString(pc.g, r.k, gfx::Font(hwnd, 12.f), kr, gfx::C(P.textSecondary));
             Gdiplus::RectF vr(kr.GetRight() + 8.f, static_cast<float>(ry),
                               static_cast<float>(geoSys.right) - kr.GetRight() - 24.f, 20.f);

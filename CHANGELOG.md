@@ -1,5 +1,66 @@
 # Changelog
 
+## 8.4.1 — 2026-10-16
+
+### Restored
+- **Source parity with the published 8.4.0 binary**: the install-scope engine, wizard scope
+  picker, About License/Knowledge-base buttons and the perfectionist UI pass had been built
+  and released as binaries but their sources were lost before commit; re-implemented from
+  the released exe (string + UI archaeology) and re-verified against reference screenshots.
+
+### Added
+- Installer: `Scope::Machine` engine — UAC-elevated child (`--install-machine`), Program Files
+  target, common Desktop/Start-Menu shortcuts, HKLM Run + HKLM uninstall entry,
+  decline-UAC fallback to per-user, `--uninstall` auto-elevation for machine installs.
+- Settings: persisted `install.scope` (`user` | `machine`); `settings::Reload()` so the
+  wizard host sees state written by the elevated child (relaunch prompt fix).
+- About: License and Knowledge-base buttons open the GitHub LICENSE / wiki; links flow into
+  stable rows at any width; install-mode chip sits on the Links card title row.
+- CLI: `--install-machine <dir> [--autostart] [--desktop] [--menu]`; help and `--status`
+  banners now take the version from `version.h` (no more hard-coded strings).
+
+### Fixed
+- **About page z-order**: update/links card fills were painted over their widgets — every
+  button on the page was invisible (bug present since 8.0.0, caught by the beta cycle).
+- Wizard: Browse button vertically aligned with the folder field; scope segmented placed
+  below the card title (no overlap); window height 688 px for the new row.
+- Dashboard hero: stat tiles got borders + responsive width, 12 px gap to the action row;
+  System card key column responsive.
+- GCC `-Wmissing-field-initializers` on `SHELLEXECUTEINFOW`; cppcheck shadowed `sbar`
+  members renamed to `listBar` (Activity/Backups); wizard folder moved to the init list.
+
+### Verified (beta cycle)
+- Wine matrix: 7 pages x light/dark + wizard light + wizard dark-RU; CLI matrix incl.
+  `--check-update` against the live git feed and a loopback E2E update
+  (download -> SHA-256 -> rename-chain -> relaunch, exit 0).
+- 0 compiler warnings (`-Wall -Wextra`), cppcheck clean, manifest gate OK,
+  imports = Windows system DLLs only.
+
+## 8.4.0 — 2026-10-16
+
+### Added
+- Installer wizard: **scope choice — “Only for me” / “For all users”** (machine scope runs
+  elevated via UAC: Program Files, common Desktop/Start-Menu shortcuts, HKLM Run +
+  HKLM uninstall entry); `--install-machine <dir> <opts>` headless equivalent;
+  `--uninstall` auto-elevates for machine installs.
+- About: **License** and **Knowledge base (wiki)** buttons, author block, install-mode chip
+  moved to the card title row; links reflow into stable rows at any width.
+- Language default is the **system UI language** (`auto`), verified for all 30 mappings.
+
+### Fixed
+- CI: `bcrypt.dll` added to the dependency whitelist; `scripts/*.sh` exec bits restored.
+- CMake: GCC-only flags no longer passed to MSVC (`/W4 /O2 /utf-8` branch added).
+- Perfectionist pass: hero tiles get borders + responsive width and 12 px gap to the action
+  row; settings-row labels vertically centered when no description; System card columns
+  widened; wizard scope segmented no longer overlaps the card title; scope-aware hints.
+
+### Verified (beta cycle)
+- Real-git updater E2E: feed (raw.githubusercontent) → GitHub release asset → SHA-256 →
+  rename-chain apply → relaunch (8.2.9 → 8.3.0, exit 0); `--check-update`/`--update-now`.
+- Beta screenshot cycle light/dark × 7 pages + wizard; two fix cycles applied.
+
+## 8.3.0 — 2026-10-16
+
 ## 8.3.0 — 2026-10-16
 
 ### Added

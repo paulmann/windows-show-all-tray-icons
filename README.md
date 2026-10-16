@@ -6,7 +6,7 @@
 ![Zero dependencies](https://img.shields.io/badge/Dependencies-ZERO-brightgreen)
 ![Size](https://img.shields.io/badge/EXE-~800%20KB-blue)
 ![License](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-orange)
-![Version](https://img.shields.io/badge/version-8.3.0-green)
+![Version](https://img.shields.io/badge/version-8.4.1-green)
 
 **Keeps every notification-area (system tray) icon visible on Windows 10/11 — and keeps them
 that way.** Icons that Windows hides in the overflow flyout are promoted back to the taskbar,

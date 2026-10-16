@@ -20,7 +20,7 @@ public:
     Toggle* tgFollow = nullptr;
     Button* btnExport = nullptr;
     int scrollList = 0;
-    ScrollBar sbar;
+    ScrollBar listBar;
     RECT listRc{};
     std::deque<log::Entry> entries;
 
@@ -110,18 +110,18 @@ public:
         btnExport->Layout({pad + W - bw, y, pad + W, y + barH});
         y += barH + 12;
         listRc = ToWindow(RECT{pad, y, pad + W, Height() > 0 ? Height() - 12 : y + 400});
-        sbar.SetRange(static_cast<int>(entries.size()) * 22,
+        listBar.SetRange(static_cast<int>(entries.size()) * 22,
                       listRc.bottom - listRc.top - 2);
-        sbar.pos = scrollList;
+        listBar.pos = scrollList;
         contentH = Height();
     }
 
     bool Wheel(HWND hwnd, int delta) override {
-        if (!sbar.Needed()) return false;
-        const int before = sbar.pos;
-        sbar.ScrollBy(-delta / 120 * 44);
-        scrollList = sbar.pos;
-        if (sbar.pos != before) {
+        if (!listBar.Needed()) return false;
+        const int before = listBar.pos;
+        listBar.ScrollBy(-delta / 120 * 44);
+        scrollList = listBar.pos;
+        if (listBar.pos != before) {
             InvalidateRect(hwnd, nullptr, FALSE);
             return true;
         }
@@ -165,8 +165,8 @@ public:
                             Gdiplus::StringAlignmentNear);
         }
         pc.g.Restore(st);
-        sbar.rc = {listRc.right - 10, listRc.top + 4, listRc.right - 3, listRc.bottom - 4};
-        sbar.Paint(pc);
+        listBar.rc = {listRc.right - 10, listRc.top + 4, listRc.right - 3, listRc.bottom - 4};
+        listBar.Paint(pc);
     }
 
     float padLabelX() const { return static_cast<float>(listRc.left) + 300.f + 46.f; }

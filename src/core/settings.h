@@ -42,6 +42,7 @@ struct Settings {
     // install state (embedded installer)
     std::wstring installMode = L"unknown";  // unknown | installed | portable
     std::wstring installDir;
+    std::wstring installScope = L"user";    // user | machine (8.4 install scope)
     // ui state
     bool firstRunDone = false;
     std::wstring lastPage = L"dashboard";
@@ -53,6 +54,7 @@ namespace settings {
 
 Settings& Get();
 void Load();           // idempotent
+void Reload();         // re-read from disk (after elevated child wrote settings)
 bool Save();           // atomic
 bool IsFirstRun();     // true until first successful Save after Load
 std::wstring FilePath();

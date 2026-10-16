@@ -19,6 +19,7 @@ Headless modes attach to the parent console when present (UTF-8 output).
 | `--watch` | Headless event-driven guard loop (Ctrl+C stops). Replaces v7 BAT/PS watcher editions |
 | `--install-autostart` | Add `HKCU\...\Run\TrayIconGuard = "<exe>" --minimized` |
 | `--uninstall-autostart` | Remove the Run value |
+| `--install-machine <dir> [--autostart] [--desktop] [--menu]` | all-users install body; must run elevated (UAC child) |
 | `--uninstall` | Embedded uninstaller: exit running instance, delete shortcuts, autostart, Apps&Features entry; schedules self-delete of the install folder |
 | `--ui-test [page]` | QA: render page (`dashboard icons guard appearance backups activity about`), self-capture PNG to `%TEMP%\tig-uitest-<page>.png`, exit |
 | `--version`, `-v` | Print version |
