@@ -237,4 +237,24 @@ Parallelization: independent bash jobs (compile loops, icon gen, doc drafting) r
   line 64 cuts `flat[:300]`. Left published because the no-rewrite rule forbids editing a
   published feed version; fix the extractor before the next release.
 
-
+- 2026-10-16 J20 (v8.6.1, Windows toolchain fix): installed mingw-w64 on this machine (winget
+  BrechtSanders.WinLibs.POSIX.MSVCRT 16.2.0 + portable CMake 4.4.4) and fixed the CLI output
+  defect found while publishing 8.6.0. src/core/cli.cpp: Print() now writes to the console when
+  one is attached and otherwise to the inherited pipe/file handle as UTF-8 via WriteFile;
+  AttachConsoleIfPossible() binds CONOUT$ only for streams that were not inherited — before, it
+  rebound stdout/stderr unconditionally, so every redirected CLI stream was lost on real Windows
+  (wine had hidden this). src/main.cpp now prints the parser error plus a --help hint instead of
+  exiting 1 in silence (the audit's B3). Measurements, Windows 11 build 26300, released 8.6.0 exe
+  vs this build: `--status --json > file` 0 B vs 20 587 B (valid JSON, 84 icons); piped lines 0 vs
+  603; `--version > file` 0 B vs 52 B; `--help > file` 0 B vs 1 321 B; `--bogus` silent exit 1 vs
+  "error: unknown argument: --bogus" + hint. Gates: 0 GCC warnings (-Wall -Wextra), DLL audit 0
+  non-system imports (msvcrt flavour, matching the ci.yml allow-list), exactly one RT_MANIFEST
+  (id 1) verified with pefile, --ui-test screenshot written, --check-update latest=8.6.0 newer=no
+  (8.6.1 is newer — no downgrade offered). Version bumped to 8.6.1 in version.h / resources.rc /
+  app.manifest / package.sh / store/AppxManifest.xml / CMakeLists.txt (+ packaging/npm/package.json);
+  CHANGELOG.md and docs/CLI.md updated. Local-build pitfall: winlibs ships
+  x86_64-w64-mingw32/lib/default-manifest.o, which GCC's link spec picks up automatically → a
+  second RT_MANIFEST and an ld ".rsrc merge failure" message; rename it to
+  default-manifest.o.disabled for a single canonical manifest (the Debian CI toolchain has none).
+  Shipping 8.6.1 = push tag v8.6.1 (CI builds, creates the release and pins the feed) and bump the
+  winget/npm manifests per their checklists.
