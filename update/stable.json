@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "channel": "stable",
-  "version": "8.4.1",
+  "version": "8.6.0",
   "released": "2026-10-16",
   "minBuild": 15063,
-  "url": "https://github.com/paulmann/windows-show-all-tray-icons/releases/download/v8.4.1/TrayIconGuard.exe",
-  "sha256": "70247913a40ddf331213886db401717e6ef02eb0542ea9b273fea24aaf32130d",
-  "zipUrl": "https://github.com/paulmann/windows-show-all-tray-icons/releases/download/v8.4.1/TrayIconGuard-8.4.1-win-x64.zip",
-  "zipSha256": "aaf64ac2daa0562c457c9e976396afaddd569a23a7d6952d2c8aa8240c592d7e",
-  "notes": "Restored install-scope sources (per-user / all-users UAC), About License & Wiki buttons, About z-order fix (buttons were invisible), wizard alignment, hero tile polish, version single-sourcing, settings reload after elevated install."
+  "url": "https://github.com/paulmann/windows-show-all-tray-icons/releases/download/v8.6.0/TrayIconGuard.exe",
+  "sha256": "20c53316f0661583e52ec94a10df7a861f576d3e623ce2e14aed8e09823a5c47",
+  "zipUrl": "https://github.com/paulmann/windows-show-all-tray-icons/releases/download/v8.6.0/TrayIconGuard-8.6.0-win-x64.zip",
+  "zipSha256": "3986f0c61b1313027eeef44fb4945f70d765a9fd4fbcdfeb7378584ae7e2a9a3",
+  "notes": "**Appearance: theme segments were mis-mapped** (`Light` applied System, `Dark` applied **Tray icons page: per-row toggles and drag-reorder changed state but not the pixels** \u2014 **Tray menu discipline**: `SetForegroundWindow` before `TrackPopupMenu` + `WM_NULL` after **About: install-mode chip** no lo"
 }
