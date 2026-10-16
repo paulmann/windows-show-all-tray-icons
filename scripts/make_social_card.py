@@ -34,7 +34,7 @@ BULLETS = [
     "Fluent GUI  \u00b7  headless --watch  \u00b7  full CLI  \u00b7  30 languages",
     "HKCU only, no admin, no telemetry, SHA-256-pinned self-updates",
 ]
-CHIPS = ["Windows 10 / 11", "Light & Dark", "8.6.2"]
+CHIPS = ["Windows 10 / 11", "Light & Dark", "8.6.3"]
 
 
 def font(name: str, size: int):

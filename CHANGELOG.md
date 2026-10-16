@@ -1,5 +1,29 @@
 # Changelog
 
+## 8.6.3 — 2026-10-16
+
+### Fixed
+- **The guard watcher never woke up in event-driven mode** (the default `pollMs: 0`). The thread
+  armed `RegNotifyChangeKeyValue` and re-armed it after every pass, but waited only on its stop
+  event (`WaitForSingleObject(g_stopEvent, INFINITE)`) — so the notification it had subscribed to
+  was never observed and icons that Explorer hid again stayed hidden until the polling interval
+  was changed or the app restarted. The loop now waits on `{stop, registry, wake}` with
+  `WaitForMultipleObjects`, coalesces bursts of writes in a debounce window that keeps listening,
+  and re-arms the one-shot notification after every pass.
+  Verified end-to-end on Windows 11 (build 26300) against the **released** binaries, with
+  `--watch` running and `pollMs: 0`: setting `IsPromoted = 0` on a real icon is undone within
+  ~2 s by 8.6.3 (`[event] promoted 4|PSExpressBroker.exe`, app log `[EVENT] promoted 4 icon(s)`),
+  while the 8.6.2 binary leaves the value at 0.
+- **`Stop()` closed handles a still-running thread was waiting on** (use-after-close): after a
+  timed-out 4 s join the thread, stop event and registry event were closed anyway. They are now
+  closed only after a successful join; otherwise they are leaked deliberately and a warning is
+  logged.
+- **`Resume()` now takes effect immediately** — pause/resume signals the new wake event, so the
+  guard reconciles without waiting for the next registry change or poll tick.
+
+### Changed
+- Version 8.6.3; store manifest 8.6.3.0.
+
 ## 8.6.2 — 2026-10-16
 
 ### Fixed

@@ -17,6 +17,7 @@ SRWLOCK g_lock = SRWLOCK_INIT;
 HANDLE g_thread = nullptr;
 HANDLE g_stopEvent = nullptr;
 HANDLE g_regEvent = nullptr;
+HANDLE g_wakeEvent = nullptr;  // auto-reset: wakes the loop on resume/settings changes
 HKEY g_watchKey = nullptr;
 EventSink g_sink;
 Stats g_stats;
@@ -99,6 +100,19 @@ int RunPass(bool notifyUi) {
     return changed;
 }
 
+// Coalesces a burst of registry writes into one reconciliation pass: keeps waiting while new
+// changes arrive inside the window. Returns false when a stop was requested meanwhile.
+bool DebounceBurst(DWORD debounceMs) {
+    if (debounceMs == 0) return true;
+    for (;;) {
+        HANDLE waits[2] = {g_stopEvent, g_regEvent};
+        const DWORD w = WaitForMultipleObjects(2, waits, FALSE, debounceMs);
+        if (w == WAIT_OBJECT_0) return false;  // stop requested
+        if (w == WAIT_TIMEOUT) return true;    // quiet period reached
+        // another change arrived inside the window: restart the wait
+    }
+}
+
 DWORD WINAPI ThreadProc(LPVOID) {
     log::Info(L"guard thread started");
     Emit(EventKind::Started, L"");
@@ -106,13 +120,15 @@ DWORD WINAPI ThreadProc(LPVOID) {
     for (;;) {
         const DWORD pollMs = static_cast<DWORD>(settings::Get().pollMs);
         const DWORD timeout = pollMs > 0 ? pollMs : INFINITE;
-        const DWORD wait = WaitForSingleObject(g_stopEvent, timeout);
-        if (wait == WAIT_OBJECT_0) break;
+        // Wait for the stop event, the registry notification and an explicit wake-up.
+        // Waiting only on the stop event made event-driven mode (pollMs == 0, the default)
+        // block forever, so the guard never reconciled after startup.
+        HANDLE waits[3] = {g_stopEvent, g_regEvent, g_wakeEvent};
+        const DWORD wait = WaitForMultipleObjects(3, waits, FALSE, timeout);
+        if (wait == WAIT_OBJECT_0) break;  // stop requested
 
-        // debounce burst writes
-        const int debounce = settings::Get().debounceMs;
-        if (WaitForSingleObject(g_stopEvent, static_cast<DWORD>(debounce)) == WAIT_OBJECT_0)
-            break;
+        // Coalesce a burst of registry writes into a single pass.
+        if (!DebounceBurst(static_cast<DWORD>(settings::Get().debounceMs))) break;
 
         AcquireSRWLockShared(&g_lock);
         const bool paused = g_stats.paused;
@@ -198,6 +214,7 @@ bool Start() {
     if (settings::Get().legacyBelt) legacy::ApplyEnableAutoTray();
     g_stopEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
     g_regEvent = CreateEventW(nullptr, FALSE, FALSE, nullptr);
+    g_wakeEvent = CreateEventW(nullptr, FALSE, FALSE, nullptr);
     g_stats = Stats{};
     g_stats.running = true;
     g_stats.startTick = GetTickCount64();
@@ -205,7 +222,8 @@ bool Start() {
     if (!g_thread) {
         CloseHandle(g_stopEvent);
         CloseHandle(g_regEvent);
-        g_stopEvent = g_regEvent = nullptr;
+        CloseHandle(g_wakeEvent);
+        g_stopEvent = g_regEvent = g_wakeEvent = nullptr;
         g_stats.running = false;
         ReleaseSRWLockExclusive(&g_lock);
         log::Error(L"guard: CreateThread failed");
@@ -220,17 +238,26 @@ void Stop() {
     HANDLE thread = g_thread;
     HANDLE stopEv = g_stopEvent;
     HANDLE regEv = g_regEvent;
+    HANDLE wakeEv = g_wakeEvent;
     g_thread = nullptr;
     g_stopEvent = nullptr;
     g_regEvent = nullptr;
+    g_wakeEvent = nullptr;
     g_stats.running = false;
     ReleaseSRWLockExclusive(&g_lock);
     if (!thread) return;
     SetEvent(stopEv);
-    WaitForSingleObject(thread, 4000);
+    const DWORD waited = WaitForSingleObject(thread, 4000);
+    if (waited != WAIT_OBJECT_0) {
+        // The thread is still running: closing the handles it waits on would be a
+        // use-after-close. Leak them deliberately and say so.
+        log::Warn(L"guard: thread did not stop within 4 s; handles left open");
+        return;
+    }
     CloseHandle(thread);
     CloseHandle(stopEv);
     CloseHandle(regEv);
+    CloseHandle(wakeEv);
 }
 
 void Pause() {
@@ -249,6 +276,7 @@ void Resume() {
         g_stats.paused = false;
         log::Info(L"guard resumed");
         Emit(EventKind::Resumed, L"");
+        if (g_wakeEvent) SetEvent(g_wakeEvent);  // reconcile now instead of waiting for a change
     }
     ReleaseSRWLockExclusive(&g_lock);
 }

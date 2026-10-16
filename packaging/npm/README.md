@@ -36,7 +36,7 @@ Options: `--version <v>`, `--url <direct-exe-url>`, `--feed <url>`, `--force`, `
 `--minimized`, `--machine <dir>`, `--json`, `-h`.
 
 > **Redirecting the wrapper works:** the 8.6.0 binary used to discard CLI output when `stdout` was
-> a pipe or a file; that is fixed in 8.6.2 (the version the feed now serves), so
+> a pipe or a file; that is fixed in 8.6.2, so
 > `trayiconguard status --json > state.json` and `| ConvertFrom-Json` behave as expected.
 
 ## Requirements
@@ -74,11 +74,11 @@ $ rmdir /s "%LOCALAPPDATA%\TrayIconGuard\npm"
 ## Publication status — 2026-10-16
 
 The package is finished and packed; the npm registry name `trayiconguard` is still free.
-The wrapper always downloads the asset the live feed points at (currently **8.6.2**).
+The wrapper always downloads the asset the live feed points at (currently **8.6.3**).
 
 | Check | Result |
 |---|---|
-| `pnpm pack` | valid tarball (`trayiconguard-8.6.2.tgz`, ~7.8 kB) with `bin/trayiconguard.js`, `LICENSE`, `package.json`, `README.md` ✅ |
+| `pnpm pack` | valid tarball (`trayiconguard-8.6.3.tgz`, ~7.8 kB) with `bin/trayiconguard.js`, `LICENSE`, `package.json`, `README.md` ✅ |
 | `trayiconguard download` | downloads the feed's asset and its SHA-256 matches `update/stable.json` ✅ |
 | `trayiconguard status --json` | forwards to the real binary, exit code 0 ✅ |
 | negative test (`--url` pointing at the zip while the feed pins the exe) | `SHA-256 mismatch`, exit 1, corrupted file deleted ✅ |
