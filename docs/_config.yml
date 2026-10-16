@@ -1,0 +1,11 @@
+title: TrayIconGuard
+description: "Keep every Windows 10/11 system-tray icon visible — native C++ Win32 guard, Fluent GUI, headless watcher, CLI, 30 languages, zero dependencies, SHA-256-pinned self-updates."
+theme: jekyll-theme-cayman
+show_downloads: false
+plugins:
+  - jekyll-sitemap
+url: "https://paulmann.github.io"
+baseurl: "/windows-show-all-tray-icons"
+github:
+  repository_url: https://github.com/paulmann/windows-show-all-tray-icons
+  is_project_page: true
