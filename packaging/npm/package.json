@@ -1,0 +1,55 @@
+{
+  "name": "trayiconguard",
+  "version": "8.6.0",
+  "description": "Keep every Windows 10/11 notification-area (system tray) icon visible — downloaded, SHA-256-verified TrayIconGuard binary plus a thin wrapper CLI.",
+  "keywords": [
+    "tray",
+    "system-tray",
+    "notification-area",
+    "taskbar",
+    "tray-icons",
+    "notifyiconsettings",
+    "windows",
+    "windows-10",
+    "windows-11",
+    "portable",
+    "zero-dependencies",
+    "cli"
+  ],
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "author": {
+    "name": "Mikhail Deynekin",
+    "email": "icons@Deynekin.com",
+    "url": "https://Deynekin.com"
+  },
+  "homepage": "https://paulmann.github.io/windows-show-all-tray-icons/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paulmann/windows-show-all-tray-icons.git",
+    "directory": "packaging/npm"
+  },
+  "bugs": {
+    "url": "https://github.com/paulmann/windows-show-all-tray-icons/issues"
+  },
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "trayiconguard": "bin/trayiconguard.js"
+  },
+  "files": [
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node bin/trayiconguard.js --help",
+    "pack:check": "node bin/trayiconguard.js --help > nul && node bin/trayiconguard.js exe --print"
+  }
+}
