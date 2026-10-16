@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.12.0.schema.json
 
 PackageIdentifier: MikhailDeynekin.TrayIconGuard
-PackageVersion: 8.6.0
+PackageVersion: 8.6.1
 Platform:
 - Windows.Desktop
 MinimumOSVersion: 10.0.15063.0
@@ -11,8 +11,8 @@ UpgradeBehavior: install
 ReleaseDate: 2026-10-16
 Installers:
 - Architecture: x64
-  InstallerUrl: https://github.com/paulmann/windows-show-all-tray-icons/releases/download/v8.6.0/TrayIconGuard.exe
-  InstallerSha256: 20c53316f0661583e52ec94a10df7a861f576d3e623ce2e14aed8e09823a5c47
+  InstallerUrl: https://github.com/paulmann/windows-show-all-tray-icons/releases/download/v8.6.1/TrayIconGuard.exe
+  InstallerSha256: 9d4e9ebf4f196b91d8d36d9ca2ed7f60c216c6fae52058c23831f00a642a12dc
   Commands:
   - trayiconguard
 ManifestType: installer

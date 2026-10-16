@@ -1,6 +1,6 @@
 # TrayIconGuard v8 «Aurora» 🛡️✨
 
-[![संस्करण](https://img.shields.io/badge/संस्करण-8.6.0-green)](https://github.com/paulmann/windows-show-all-tray-icons/releases/latest)
+[![संस्करण](https://img.shields.io/badge/संस्करण-8.6.1-green)](https://github.com/paulmann/windows-show-all-tray-icons/releases/latest)
 [![लाइसेंस](https://img.shields.io/badge/लाइसेंस-PolyForm%20Noncommercial%201.0.0-orange)](LICENSE)
 [![नेटिव C++17](https://img.shields.io/badge/नेटिव-C%2B%2B17-00599C?logo=cplusplus&logoColor=white)](https://en.cppreference.com/w/)
 [![शून्य निर्भरता](https://img.shields.io/badge/निर्भरता-शून्य-brightgreen)](docs/BUILD.md)

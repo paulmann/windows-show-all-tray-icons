@@ -35,11 +35,9 @@ $ npx trayiconguard uninstall
 Options: `--version <v>`, `--url <direct-exe-url>`, `--feed <url>`, `--force`, `--no-verify`,
 `--minimized`, `--machine <dir>`, `--json`, `-h`.
 
-> **Known limitation (TrayIconGuard 8.6.0):** the binary prints CLI output through
-> `WriteConsoleW` and rebinds `stdout`/`stderr` to the console, so its output is visible in an
-> interactive terminal but is **lost when redirected** (`> file`, `| more`, RMM capture). This is
-> an upstream defect fixed in the next release, not a wrapper bug — until then, read `--status`
-> output on the console (or use the app's Activity log / `%LOCALAPPDATA%\TrayIconGuard\logs`).
+> **Redirecting the wrapper works:** the 8.6.0 binary used to discard CLI output when `stdout` was
+> a pipe or a file; that is fixed in 8.6.1 (the version the feed now serves), so
+> `trayiconguard status --json > state.json` and `| ConvertFrom-Json` behave as expected.
 
 ## Requirements
 
@@ -75,37 +73,27 @@ $ rmdir /s "%LOCALAPPDATA%\TrayIconGuard\npm"
 
 ## Publication status — 2026-10-16
 
-The package is finished and packed (`pnpm pack` → `trayiconguard-8.6.0.tgz`, 7 798 bytes, containing
-`bin/trayiconguard.js`, `LICENSE`, `package.json`, `README.md`). End-to-end behaviour on Windows 11:
+The package is finished and packed; the npm registry name `trayiconguard` is still free.
+The wrapper always downloads the asset the live feed points at (currently **8.6.1**).
 
 | Check | Result |
 |---|---|
-| `trayiconguard download` | downloads the release asset, SHA-256 matches `update/stable.json` ✅ |
-| `trayiconguard status` / `status --json` | forwards to the real binary, exit code 0 ✅ (output is console-only — see the limitation above) |
+| `pnpm pack` | valid tarball (`trayiconguard-8.6.1.tgz`, ~7.8 kB) with `bin/trayiconguard.js`, `LICENSE`, `package.json`, `README.md` ✅ |
+| `trayiconguard download` | downloads the feed's asset and its SHA-256 matches `update/stable.json` ✅ |
+| `trayiconguard status --json` | forwards to the real binary, exit code 0 ✅ |
 | negative test (`--url` pointing at the zip while the feed pins the exe) | `SHA-256 mismatch`, exit 1, corrupted file deleted ✅ |
-| `pnpm pack` | valid tarball, 7 798 B ✅ |
 
-**Publishing is blocked by credentials.** `pnpm publish` (and `pnpm whoami`) fail with
-`401 Unauthorized` / `404 Not Found`, i.e. the granular token in `%USERPROFILE%\.npmrc` is no
-longer valid (expired or revoked). The registry name `trayiconguard` was free at the time of
-writing.
-
-To publish, refresh the credential and run:
+**Publishing to npmjs.com is blocked by credentials.** `pnpm whoami` and `pnpm publish` fail with
+`401 Unauthorized` / `404 Not Found`: the granular token in `%USERPROFILE%\.npmrc` is expired or
+revoked. Refresh the credential and run:
 
 ```powershell
-# 1. log in (creates a fresh token in %USERPROFILE%\.npmrc), or paste a new granular token with
-#    read+write access to packages:
-#    //registry.npmjs.org/:_authToken=npm_...
-npm login
+npm login                     # writes a fresh token into %USERPROFILE%\.npmrc
+pnpm whoami                   # a 401 here still means the token is bad
 
-# 2. verify the identity first — a 401 here means the token is still bad
-pnpm whoami          # or: npm whoami
-
-# 3. publish from this directory
 cd packaging\npm
 pnpm publish --no-git-checks --access public
 
-# 4. verify what the registry actually serves
 npm view trayiconguard version dist.tarball dist.integrity
 ```
 
@@ -114,7 +102,6 @@ After the package is live, add a row to the READMEs:
 ```text
 npx trayiconguard install
 ```
-
 ## License
 
 [PolyForm Noncommercial License 1.0.0](LICENSE) — free for noncommercial use; commercial

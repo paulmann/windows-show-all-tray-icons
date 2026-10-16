@@ -12,7 +12,7 @@ Modes:
                     use only for emergency re-pins right after `gh release upload --clobber`.
 
 Usage:
-  python3 scripts/make_feed.py --repo owner/name --tag v8.6.0 --out update/stable.json \
+  python3 scripts/make_feed.py --repo owner/name --tag v8.6.1 --out update/stable.json \
       [--notes-from CHANGELOG.md] [--local dist] [--token TOKEN]
 """
 import argparse

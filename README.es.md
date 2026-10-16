@@ -1,6 +1,6 @@
 # TrayIconGuard v8 «Aurora» 🛡️✨
 
-[![Versión](https://img.shields.io/badge/versión-8.6.0-green)](https://github.com/paulmann/windows-show-all-tray-icons/releases/latest)
+[![Versión](https://img.shields.io/badge/versión-8.6.1-green)](https://github.com/paulmann/windows-show-all-tray-icons/releases/latest)
 [![Licencia](https://img.shields.io/badge/licencia-PolyForm%20Noncommercial%201.0.0-orange)](LICENSE)
 [![C++17 nativo](https://img.shields.io/badge/nativo-C%2B%2B17-00599C?logo=cplusplus&logoColor=white)](https://en.cppreference.com/w/)
 [![Sin dependencias](https://img.shields.io/badge/dependencias-CERO-brightgreen)](docs/BUILD.md)

@@ -4,7 +4,7 @@ These are the **Windows Package Manager (winget)** manifests for TrayIconGuard, 
 directory layout `microsoft/winget-pkgs` expects, so submitting a new version is a copy-paste.
 
 ```
-packaging/winget/manifests/m/MikhailDeynekin/TrayIconGuard/8.6.0/
+packaging/winget/manifests/m/MikhailDeynekin/TrayIconGuard/8.6.1/
 ├── MikhailDeynekin.TrayIconGuard.yaml                  # version file
 ├── MikhailDeynekin.TrayIconGuard.locale.en-US.yaml     # defaultLocale file
 └── MikhailDeynekin.TrayIconGuard.installer.yaml        # installer file
@@ -27,13 +27,13 @@ portable” as a warning, and a warning makes `winget validate` exit non-zero
 (`0x8A150028`), which breaks CI gating.
 
 `MinimumOSVersion: 10.0.15063.0` matches the project's own claim (the `minBuild` field of
-[`update/stable.json`](../../../../update/stable.json), i.e. Windows 10 1703+; the app degrades
+[`update/stable.json`](../../update/stable.json), i.e. Windows 10 1703+; the app degrades
 gracefully on builds without the `NotifyIconSettings` store).
 
 ## Validate locally (Windows, winget 1.24+)
 
 ```powershell
-winget validate --manifest packaging\winget\manifests\m\MikhailDeynekin\TrayIconGuard\8.6.0
+winget validate --manifest packaging\winget\manifests\m\MikhailDeynekin\TrayIconGuard\8.6.1
 # expect: "Manifest validation succeeded." and exit code 0
 ```
 
@@ -47,7 +47,7 @@ End-to-end install test (needs an **elevated** shell once, then it persists):
 
 ```powershell
 winget settings --enable LocalManifestFiles
-winget install --manifest packaging\winget\manifests\m\MikhailDeynekin\TrayIconGuard\8.6.0
+winget install --manifest packaging\winget\manifests\m\MikhailDeynekin\TrayIconGuard\8.6.1
 winget list --id MikhailDeynekin.TrayIconGuard
 winget uninstall --id MikhailDeynekin.TrayIconGuard
 ```
@@ -69,8 +69,8 @@ Automated alternative (`wingetcreate`), which forks and opens the PR itself:
 
 ```powershell
 wingetcreate.exe submit `
-  --prtitle "New package: MikhailDeynekin.TrayIconGuard version 8.6.0" `
-  packaging\winget\manifests\m\MikhailDeynekin\TrayIconGuard\8.6.0
+  --prtitle "New package: MikhailDeynekin.TrayIconGuard version 8.6.1" `
+  packaging\winget\manifests\m\MikhailDeynekin\TrayIconGuard\8.6.1
 ```
 
 `wingetcreate` needs a **classic** personal access token with the `public_repo` scope
@@ -81,7 +81,7 @@ variable over `--token`.
 
 1. Bump `PackageVersion` and `ManifestVersion` headers in all three files.
 2. Take the new hashes **from the published release**
-   ([`update/stable.json`](../../../../update/stable.json) is already pinned to the served bytes,
+   ([`update/stable.json`](../../update/stable.json) is already pinned to the served bytes,
    so its `sha256` is authoritative).
 3. Set `ReleaseDate` to the release's `published_at` date and update `LicenseUrl`
    (`…/blob/v<version>/LICENSE`) and `ReleaseNotesUrl` to the new tag.
@@ -89,25 +89,21 @@ variable over `--token`.
 
 ## Publication status — 2026-10-16
 
-The manifests below were validated with `winget validate --manifest <dir>` on winget **v1.29.380**:
-`Manifest validation succeeded.`, exit code `0`.
-
-The submission is staged but **not yet opened**:
-
 | Step | State |
 |---|---|
-| Fork | ✅ created: [`paulmann/winget-pkgs`](https://github.com/paulmann/winget-pkgs) |
-| Branch | ✅ pushed: `MikhailDeynekin.TrayIconGuard-8.6.0` (commit `5db76f25c`), files under `manifests/m/MikhailDeynekin/TrayIconGuard/8.6.0/` |
-| Pull request | ⛔ **needs a human click** — the automation token is a *fine-grained* PAT, and GitHub rejects PR creation in `microsoft/winget-pkgs` with `Resource not accessible by personal access token`. `wingetcreate` has the same limitation (it requires a **classic** PAT with the `public_repo` scope). |
+| Local validation | ✅ `winget validate --manifest <dir>` → “Manifest validation succeeded.”, exit code 0 (winget v1.29.380), run against these 8.6.1 manifests |
+| Fork | ✅ [`paulmann/winget-pkgs`](https://github.com/paulmann/winget-pkgs) |
+| Branch | ✅ pushed: `MikhailDeynekin.TrayIconGuard-8.6.1` with `manifests/m/MikhailDeynekin/TrayIconGuard/8.6.1/`. The superseded 8.6.0 branch was deleted — its installer URL died together with the removed v8.6.0 release. |
+| Pull request | ⛔ **needs a human click** — the automation token is a *fine-grained* PAT and GitHub refuses PR creation in `microsoft/winget-pkgs` (`Resource not accessible by personal access token`, HTTP 403). `wingetcreate` has the same limitation: it requires a **classic** PAT with the `public_repo` scope. |
 
 **Open the PR here (one click, prefilled):**
 
-<https://github.com/paulmann/winget-pkgs/pull/new/MikhailDeynekin.TrayIconGuard-8.6.0>
+<https://github.com/paulmann/winget-pkgs/pull/new/MikhailDeynekin.TrayIconGuard-8.6.1>
 
 Title:
 
 ```text
-New package: MikhailDeynekin.TrayIconGuard version 8.6.0
+New package: MikhailDeynekin.TrayIconGuard version 8.6.1
 ```
 
 Body to paste (the CLA box is yours to tick after signing):
@@ -115,7 +111,7 @@ Body to paste (the CLA box is yours to tick after signing):
 ```markdown
 ## 📖 Description
 
-Adds the **TrayIconGuard 8.6.0** package (publisher: Mikhail Deynekin).
+Adds the **TrayIconGuard 8.6.1** package (publisher: Mikhail Deynekin).
 
 TrayIconGuard keeps every notification-area (system tray) icon visible on Windows 10/11: it
 writes the same `HKCU\Control Panel\NotifyIconSettings` values the Windows Settings toggle
@@ -150,7 +146,7 @@ Manifest notes:
 
 Project: https://github.com/paulmann/windows-show-all-tray-icons
 Docs: https://paulmann.github.io/windows-show-all-tray-icons/
-Release: https://github.com/paulmann/windows-show-all-tray-icons/releases/tag/v8.6.0
+Release: https://github.com/paulmann/windows-show-all-tray-icons/releases/tag/v8.6.1
 ```
 
 After the CLA is signed and the PR is merged, add an install row to the READMEs:

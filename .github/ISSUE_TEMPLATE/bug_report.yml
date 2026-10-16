@@ -19,14 +19,14 @@ body:
       options:
         - label: I searched the existing issues and the wiki (FAQ / Troubleshooting) before reporting.
           required: true
-        - label: I am running the latest release (8.6.0 or newer) and can still reproduce the problem.
+        - label: I am running the latest release (8.6.1 or newer) and can still reproduce the problem.
           required: true
   - type: input
     id: version
     attributes:
       label: TrayIconGuard version
       description: About page → version, or `TrayIconGuard.exe --version`
-      placeholder: "8.6.0"
+      placeholder: "8.6.1"
     validations:
       required: true
   - type: input
