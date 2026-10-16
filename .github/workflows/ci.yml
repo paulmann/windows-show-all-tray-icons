@@ -72,7 +72,7 @@ jobs:
           cp dist/TrayIconGuard.exe dist/out/
           cp dist/TrayIconGuard-*-win-x64.zip dist/out/
           cp dist/SHA256SUMS dist/out/
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           files: |
             dist/out/TrayIconGuard.exe
