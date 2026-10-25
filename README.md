@@ -9,12 +9,15 @@
 [![CI](https://github.com/paulmann/windows-show-all-tray-icons/actions/workflows/ci.yml/badge.svg)](https://github.com/paulmann/windows-show-all-tray-icons/actions/workflows/ci.yml)
 [![Downloads](https://img.shields.io/github/downloads/paulmann/windows-show-all-tray-icons/total?logo=github&color=blue)](https://github.com/paulmann/windows-show-all-tray-icons/releases)
 [![Stars](https://img.shields.io/github/stars/paulmann/windows-show-all-tray-icons?logo=github&color=yellow)](https://github.com/paulmann/windows-show-all-tray-icons/stargazers)
+
+<!-- md-i18n:switcher -->
+**Read this in:** English · [Deutsch](README.de.md) · [中文](README.zh.md) · [हिन्दी](README.hi.md) · [Español](README.es.md) · [Русский](README.ru.md)
+
 📚 [Documentation site](https://paulmann.github.io/windows-show-all-tray-icons/) · [Knowledge base](https://github.com/paulmann/windows-show-all-tray-icons/wiki) · [docs/](docs/)
 
 > **Keep every notification-area (system tray) icon visible on Windows 10/11 — and keep them
 > that way. One native executable, zero dependencies, zero telemetry.**
 
-**Read this in:** English · [Русский](README.ru.md) · [Deutsch](README.de.md) · [中文](README.zh.md) · [Español](README.es.md) · [हिन्दी](README.hi.md)
 
 TrayIconGuard promotes icons that Windows hides in the overflow flyout back to the taskbar —
 and an **event-driven guard** re-promotes them the moment Explorer hides them again (app start,

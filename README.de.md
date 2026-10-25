@@ -9,12 +9,15 @@
 [![CI](https://github.com/paulmann/windows-show-all-tray-icons/actions/workflows/ci.yml/badge.svg)](https://github.com/paulmann/windows-show-all-tray-icons/actions/workflows/ci.yml)
 [![Downloads](https://img.shields.io/github/downloads/paulmann/windows-show-all-tray-icons/total?logo=github&color=blue)](https://github.com/paulmann/windows-show-all-tray-icons/releases)
 [![Stars](https://img.shields.io/github/stars/paulmann/windows-show-all-tray-icons?logo=github&color=yellow)](https://github.com/paulmann/windows-show-all-tray-icons/stargazers)
+
+<!-- md-i18n:switcher -->
+**In anderen Sprachen:** [English](README.md) · Deutsch · [中文](README.zh.md) · [हिन्दी](README.hi.md) · [Español](README.es.md) · [Русский](README.ru.md)
+
 📚 [Documentation site](https://paulmann.github.io/windows-show-all-tray-icons/) · [Knowledge base](https://github.com/paulmann/windows-show-all-tray-icons/wiki) · [docs/](docs/)
 
 > **Hält alle Symbole im Infobereich (System Tray) unter Windows 10/11 sichtbar — und sorgt
 > dafür, dass sie sichtbar bleiben. Eine native exe, null Abhängigkeiten, null Telemetrie.**
 
-**In anderen Sprachen:** [English](README.md) · [Русский](README.ru.md) · Deutsch · [中文](README.zh.md) · [Español](README.es.md) · [हिन्दी](README.hi.md)
 
 TrayIconGuard holt Symbole, die Windows im Overflow-Flyout versteckt, zurück in die Taskleiste —
 und ein **ereignisgesteuerter Guard** holt sie in dem Moment zurück, in dem Explorer sie erneut

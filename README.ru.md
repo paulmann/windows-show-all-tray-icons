@@ -9,12 +9,15 @@
 [![CI](https://github.com/paulmann/windows-show-all-tray-icons/actions/workflows/ci.yml/badge.svg)](https://github.com/paulmann/windows-show-all-tray-icons/actions/workflows/ci.yml)
 [![Downloads](https://img.shields.io/github/downloads/paulmann/windows-show-all-tray-icons/total?logo=github&color=blue)](https://github.com/paulmann/windows-show-all-tray-icons/releases)
 [![Stars](https://img.shields.io/github/stars/paulmann/windows-show-all-tray-icons?logo=github&color=yellow)](https://github.com/paulmann/windows-show-all-tray-icons/stargazers)
+
+<!-- md-i18n:switcher -->
+**На других языках:** [English](README.md) · [Deutsch](README.de.md) · [中文](README.zh.md) · [हिन्दी](README.hi.md) · [Español](README.es.md) · Русский
+
 📚 [Documentation site](https://paulmann.github.io/windows-show-all-tray-icons/) · [Knowledge base](https://github.com/paulmann/windows-show-all-tray-icons/wiki) · [docs/](docs/)
 
 > **Держит все значки области уведомлений (трея) видимыми на Windows 10/11 — и удерживает их
 > такими. Один нативный исполняемый файл, ноль зависимостей, ноль телеметрии.**
 
-**На других языках:** [English](README.md) · Русский · [Deutsch](README.de.md) · [中文](README.zh.md) · [Español](README.es.md) · [हिन्दी](README.hi.md)
 
 TrayIconGuard возвращает на панель задач значки, которые Windows прячет в выпадающий список
 переполнения, — а **событийный guard** возвращает их снова в тот момент, когда Explorer опять

@@ -9,12 +9,15 @@
 [![CI](https://github.com/paulmann/windows-show-all-tray-icons/actions/workflows/ci.yml/badge.svg)](https://github.com/paulmann/windows-show-all-tray-icons/actions/workflows/ci.yml)
 [![Downloads](https://img.shields.io/github/downloads/paulmann/windows-show-all-tray-icons/total?logo=github&color=blue)](https://github.com/paulmann/windows-show-all-tray-icons/releases)
 [![Stars](https://img.shields.io/github/stars/paulmann/windows-show-all-tray-icons?logo=github&color=yellow)](https://github.com/paulmann/windows-show-all-tray-icons/stargazers)
+
+<!-- md-i18n:switcher -->
+**其他语言：** [English](README.md) · [Deutsch](README.de.md) · 中文 · [हिन्दी](README.hi.md) · [Español](README.es.md) · [Русский](README.ru.md)
+
 📚 [Documentation site](https://paulmann.github.io/windows-show-all-tray-icons/) · [Knowledge base](https://github.com/paulmann/windows-show-all-tray-icons/wiki) · [docs/](docs/)
 
 > **让 Windows 10/11 通知区域（系统托盘）的每一个图标都保持可见——并且一直保持下去。
 > 单个原生可执行文件，零依赖，零遥测。**
 
-**其他语言：** [English](README.md) · [Русский](README.ru.md) · [Deutsch](README.de.md) · 中文 · [Español](README.es.md) · [हिन्दी](README.hi.md)
 
 TrayIconGuard 会把被 Windows 收进溢出弹层的图标重新提回任务栏——并且由**事件驱动的守卫**
 在 Explorer 再次隐藏它们的瞬间（应用启动、更新、重新注册）重新提回。它写入的正是 Windows

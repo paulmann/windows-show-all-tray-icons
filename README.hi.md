@@ -9,12 +9,15 @@
 [![CI](https://github.com/paulmann/windows-show-all-tray-icons/actions/workflows/ci.yml/badge.svg)](https://github.com/paulmann/windows-show-all-tray-icons/actions/workflows/ci.yml)
 [![Downloads](https://img.shields.io/github/downloads/paulmann/windows-show-all-tray-icons/total?logo=github&color=blue)](https://github.com/paulmann/windows-show-all-tray-icons/releases)
 [![Stars](https://img.shields.io/github/stars/paulmann/windows-show-all-tray-icons?logo=github&color=yellow)](https://github.com/paulmann/windows-show-all-tray-icons/stargazers)
+
+<!-- md-i18n:switcher -->
+**अन्य भाषाओं में:** [English](README.md) · [Deutsch](README.de.md) · [中文](README.zh.md) · हिन्दी · [Español](README.es.md) · [Русский](README.ru.md)
+
 📚 [Documentation site](https://paulmann.github.io/windows-show-all-tray-icons/) · [Knowledge base](https://github.com/paulmann/windows-show-all-tray-icons/wiki) · [docs/](docs/)
 
 > **Windows 10/11 पर नोटिफ़िकेशन एरिया (सिस्टम ट्रे) के हर आइकन को दृश्य रखता है — और उन्हें
 > दृश्य बनाए रखता है। एक ही नेटिव एक्ज़ेक्यूटेबल, शून्य निर्भरता, शून्य टेलीमेट्री।**
 
-**अन्य भाषाओं में:** [English](README.md) · [Русский](README.ru.md) · [Deutsch](README.de.md) · [中文](README.zh.md) · [Español](README.es.md) · हिन्दी
 
 TrayIconGuard उन आइकनों को टास्कबार पर वापस लाता है जिन्हें Windows ओवरफ़्लो फ़्लाआउट में छिपा
 देता है — और एक **इवेंट-संचालित गार्ड** उसी क्षण उन्हें फिर से वापस लाता है जब Explorer उन्हें
